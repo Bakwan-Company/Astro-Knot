@@ -1,0 +1,32 @@
+[gd_scene format=3 uid="uid://bep5ve8neba5f"]
+
+[ext_resource type="PackedScene" uid="uid://cmn0gfamy7yaj" path="res://entities/castor/Castor.tscn" id="1_sjoxp"]
+[ext_resource type="PackedScene" uid="uid://d3rhk612sc0pl" path="res://entities/pollux/Pollux.tscn" id="2_1qa4p"]
+[ext_resource type="PackedScene" uid="uid://byqxydxhxv7q5" path="res://systems/rope_system/RopeManager.tscn" id="3_1qa4p"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_xhwnm"]
+size = Vector2(1149.5, 81)
+
+[node name="TestLevel" type="Node2D" unique_id=716274276]
+
+[node name="Castor" parent="." unique_id=975424275 instance=ExtResource("1_sjoxp")]
+position = Vector2(391, 200)
+
+[node name="Pollux" parent="." unique_id=1878608427 instance=ExtResource("2_1qa4p")]
+position = Vector2(612, 509)
+
+[node name="StaticBody2D" type="StaticBody2D" parent="." unique_id=1208445088]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D" unique_id=473306225]
+position = Vector2(575.25, 284.5)
+shape = SubResource("RectangleShape2D_xhwnm")
+
+[node name="StaticBody2D2" type="StaticBody2D" parent="." unique_id=1371878103]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D2" unique_id=371735945]
+position = Vector2(983, 600)
+shape = SubResource("RectangleShape2D_xhwnm")
+
+[node name="RopeManager" parent="." unique_id=709923073 node_paths=PackedStringArray("castor", "pollux") instance=ExtResource("3_1qa4p")]
+castor = NodePath("../Castor")
+pollux = NodePath("../Pollux")

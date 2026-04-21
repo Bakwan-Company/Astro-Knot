@@ -1,0 +1,21 @@
+[gd_scene format=3 uid="uid://cmn0gfamy7yaj"]
+
+[ext_resource type="Script" uid="uid://bqv35qm5018jn" path="res://entities/castor/castor.gd" id="1_n7yow"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_453m4"]
+size = Vector2(40, 39)
+
+[node name="Castor" type="CharacterBody2D" unique_id=975424275]
+script = ExtResource("1_n7yow")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1097591767]
+position = Vector2(20, 20.5)
+shape = SubResource("RectangleShape2D_453m4")
+
+[node name="ColorRect" type="ColorRect" parent="." unique_id=32098142]
+offset_right = 40.0
+offset_bottom = 40.0
+color = Color(1, 1, 0.42352942, 1)
+
+[node name="RopeAnchor" type="Marker2D" parent="." unique_id=443895996]
+position = Vector2(20, 20.5)

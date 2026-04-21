@@ -1,0 +1,11 @@
+[gd_scene format=3 uid="uid://byqxydxhxv7q5"]
+
+[ext_resource type="Script" uid="uid://f523tkvawsaf" path="res://systems/rope_system/rope_manager.gd" id="1_yq5y5"]
+
+[node name="RopeManager" type="Node2D" unique_id=709923073]
+script = ExtResource("1_yq5y5")
+
+[node name="HardlightVisual" type="Line2D" parent="." unique_id=72797104]
+z_index = -1
+width = 3.0
+default_color = Color(0, 1, 1, 1)
