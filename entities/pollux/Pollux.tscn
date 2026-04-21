@@ -1,0 +1,20 @@
+[gd_scene format=3 uid="uid://d3rhk612sc0pl"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_sj5q8"]
+size = Vector2(40, 40)
+
+[node name="Pollux" type="RigidBody2D" unique_id=1878608427]
+lock_rotation = true
+linear_damp = 0.5
+
+[node name="ColorRect" type="ColorRect" parent="." unique_id=1434428785]
+offset_right = 40.0
+offset_bottom = 40.0
+color = Color(0.18039216, 0.37254903, 1, 1)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1990002864]
+position = Vector2(20, 20)
+shape = SubResource("RectangleShape2D_sj5q8")
+
+[node name="RopeAnchor" type="Marker2D" parent="." unique_id=1489040497]
+position = Vector2(20, 20.5)
