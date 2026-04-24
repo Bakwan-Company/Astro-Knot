@@ -13,7 +13,7 @@ size = Vector2(1149.5, 81)
 position = Vector2(1020, 194)
 
 [node name="Pollux" parent="." unique_id=1878608427 instance=ExtResource("2_1qa4p")]
-position = Vector2(1304, 499)
+position = Vector2(1250, 405)
 
 [node name="StaticBody2D" type="StaticBody2D" parent="." unique_id=1208445088]
 
