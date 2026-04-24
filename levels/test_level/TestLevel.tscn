@@ -10,10 +10,10 @@ size = Vector2(1149.5, 81)
 [node name="TestLevel" type="Node2D" unique_id=716274276]
 
 [node name="Castor" parent="." unique_id=975424275 instance=ExtResource("1_sjoxp")]
-position = Vector2(391, 200)
+position = Vector2(1020, 194)
 
 [node name="Pollux" parent="." unique_id=1878608427 instance=ExtResource("2_1qa4p")]
-position = Vector2(612, 509)
+position = Vector2(1304, 499)
 
 [node name="StaticBody2D" type="StaticBody2D" parent="." unique_id=1208445088]
 
