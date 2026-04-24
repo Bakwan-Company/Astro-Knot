@@ -1,0 +1,17 @@
+[gd_scene format=3 uid="uid://ck4alac620xrn"]
+
+[ext_resource type="Script" uid="uid://dx1vmb1ptnhvh" path="res://interactables/terminal/terminal.gd" id="1_1tpfj"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_1tpfj"]
+radius = 21.0
+
+[node name="Terminal" type="Area2D" unique_id=1049502516]
+script = ExtResource("1_1tpfj")
+
+[node name="ColorRect" type="ColorRect" parent="." unique_id=1995231666]
+offset_right = 20.0
+offset_bottom = 20.0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1717440507]
+position = Vector2(10, 10)
+shape = SubResource("CircleShape2D_1tpfj")

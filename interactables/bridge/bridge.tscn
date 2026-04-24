@@ -1,0 +1,18 @@
+[gd_scene format=3 uid="uid://chcrb30hqjv5r"]
+
+[ext_resource type="Script" uid="uid://bws7bi2ooedg4" path="res://interactables/bridge/bridge.gd" id="1_c8nbd"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_fjqgq"]
+size = Vector2(22, 20)
+
+[node name="Bridge" type="StaticBody2D" unique_id=115589489]
+script = ExtResource("1_c8nbd")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=405998688]
+shape = SubResource("RectangleShape2D_fjqgq")
+
+[node name="ColorRect" type="ColorRect" parent="." unique_id=1743805602]
+offset_left = -11.0
+offset_top = -10.0
+offset_right = 11.0
+offset_bottom = 10.0
