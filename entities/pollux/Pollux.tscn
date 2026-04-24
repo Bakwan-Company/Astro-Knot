@@ -4,6 +4,7 @@
 size = Vector2(40, 40)
 
 [node name="Pollux" type="RigidBody2D" unique_id=1878608427]
+collision_layer = 5
 lock_rotation = true
 linear_damp = 0.5
 
@@ -18,3 +19,7 @@ shape = SubResource("RectangleShape2D_sj5q8")
 
 [node name="RopeAnchor" type="Marker2D" parent="." unique_id=1489040497]
 position = Vector2(20, 20.5)
+
+[node name="GroundCheck" type="RayCast2D" parent="." unique_id=687677612]
+position = Vector2(20, 20)
+target_position = Vector2(0, 20)
