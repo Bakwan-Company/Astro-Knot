@@ -18,6 +18,7 @@ func _physics_process(delta: float) -> void:
 	
 	if direction:
 		velocity.x = direction * speed
+		
 	else:
 		# move_toward memberikan efek deselerasi agar berhentinya tidak kaku
 		velocity.x = move_toward(velocity.x, 0, speed)

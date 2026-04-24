@@ -20,13 +20,26 @@ func _physics_process(delta: float) -> void:
 	apply_solid_constraint(delta)
 
 func handle_reel_input(delta: float) -> void:
+	var c_ground = castor.get_node_or_null("GroundCheck")
+	var p_ground = pollux.get_node_or_null("GroundCheck")
+	
+	var is_c_grounded = c_ground and c_ground.is_colliding()
+	var is_p_grounded = p_ground and p_ground.is_colliding()
+	
 	if Input.is_action_pressed("reel_in"):
-		current_rope_length -= reel_speed * delta
+		# LOCK MEKANIK: DILARANG MANJAT
+		# Jika Pollux di lantai DAN Castor melayang, tali tidak boleh memendek!
+		if is_p_grounded and not is_c_grounded:
+			pass # Abaikan input, tali terkunci mati.
+		else:
+			current_rope_length -= reel_speed * delta
+			
 	elif Input.is_action_pressed("reel_out"):
 		current_rope_length += reel_speed * delta
+		
 	current_rope_length = clamp(current_rope_length, min_rope_length, max_rope_length)
 
-func apply_solid_constraint(_delta: float) -> void:
+func apply_solid_constraint(delta: float) -> void:
 	var c_pos = castor.global_position
 	var p_pos = pollux.global_position
 	var dist = c_pos.distance_to(p_pos)
@@ -37,57 +50,86 @@ func apply_solid_constraint(_delta: float) -> void:
 	
 	# ==========================================
 	# MEKANIK HYBRID: TALI KENDOR vs PISTON
-	# Jika jarak robot merapat (error negatif), tali seharusnya kendor.
-	# Kita matikan fisika dorongan, KECUALI pemain sengaja menekan tombol dorong (reel_out).
 	# ==========================================
 	if error < 0 and not Input.is_action_pressed("reel_out"):
-		return # Berhenti di sini. Castor bebas bergerak mendekat, Pollux diam.
+		return # Tali kendor, biarkan karakter bebas bergerak.
 	
 	var dir = c_pos.direction_to(p_pos)
-	var is_reeling_in = Input.is_action_pressed("reel_in")
-	var is_castor_anchored = castor.is_on_floor() or is_reeling_in or Input.is_action_pressed("reel_out")
 	
-	var pollux_ground_check = pollux.get_node_or_null("GroundCheck")
+	# ==========================================
+	# SISTEM JANGKAR MURNI (RAYCAST)
+	# ==========================================
+	var c_ground = castor.get_node_or_null("GroundCheck")
+	var p_ground = pollux.get_node_or_null("GroundCheck")
+	
+	var is_c_grounded = c_ground and c_ground.is_colliding()
+	var is_p_grounded = p_ground and p_ground.is_colliding()
+	
+	var is_castor_anchored = false
 	var is_pollux_anchored = false
-	if pollux_ground_check and pollux_ground_check.is_colliding():
+	
+	if is_c_grounded:
+		is_castor_anchored = true
+	elif is_p_grounded:
 		is_pollux_anchored = true
 
-	var pos_correction = clamp(error, -3.0, 3.0)
-	
 	# ==========================================
-	# TAHAP 1: KOREKSI POSISI
+	# EKSEKUSI FISIKA BERDASARKAN STATUS JANGKAR
 	# ==========================================
 	if is_castor_anchored:
+		# --- SKENARIO 1: CASTOR JANGKAR (Narik/Dorong Pollux) ---
+		var pos_correction = clamp(error, -3.0, 3.0)
 		var move_pollux = -(dir * pos_correction)
+		
+		# FIX DORONG KE ATAS: Pindahkan dorongan menjadi tolakan untuk Castor
 		if is_pollux_anchored and move_pollux.y > 0:
-			move_pollux.y = 0
+			castor.global_position.y -= move_pollux.y
+			move_pollux.y = 0 
+			
 		pollux.global_position += move_pollux
+		
+		var c_vel = castor.velocity
+		var p_vel = pollux.linear_velocity
+		var rel_vel = (p_vel - c_vel).dot(dir)
+		var vel_lambda = dir * (-rel_vel)
+		
+		var apply_vel = vel_lambda
+		
+		# FIX MOMENTUM KE ATAS: Berikan velocity lompatan ke Castor
+		if is_pollux_anchored and apply_vel.y > 0:
+			castor.velocity.y -= apply_vel.y
+			apply_vel.y = 0
+			
+		pollux.linear_velocity += apply_vel
+
 	elif is_pollux_anchored:
+		# --- SKENARIO 2: POLLUX JANGKAR (Castor Berayun Pendulum) ---
+		var pos_correction = clamp(error, -5.0, 5.0) 
 		castor.global_position += dir * pos_correction
+
+		# Update ulang arah tali agar tidak nyangkut di titik terendah
+		dir = castor.global_position.direction_to(pollux.global_position)
+
+		# Fisika Pendulum Murni (Spider-Man Slide)
+		var tangent = dir.orthogonal()
+		var swing_speed = castor.velocity.dot(tangent)
+		castor.velocity = tangent * swing_speed
+
+		# Obat Energi Bocor (Momentum Boost)
+		if abs(swing_speed) > 10.0:
+			castor.velocity *= 1.008 
+			
 	else:
+		# --- SKENARIO 3: DUA-DUANYA MELAYANG (Tarik-Menarik 50:50) ---
+		var pos_correction = clamp(error, -3.0, 3.0)
 		castor.global_position += dir * (pos_correction * 0.5)
 		pollux.global_position -= dir * (pos_correction * 0.5)
 
-	c_pos = castor.global_position
-	p_pos = pollux.global_position
-	dir = c_pos.direction_to(p_pos)
+		var c_vel = castor.velocity
+		var p_vel = pollux.linear_velocity
+		var rel_vel = (p_vel - c_vel).dot(dir)
+		var vel_lambda = dir * (-rel_vel)
 
-	var c_vel = castor.velocity
-	var p_vel = pollux.linear_velocity
-	var rel_vel = (p_vel - c_vel).dot(dir)
-	var vel_lambda = dir * (-rel_vel)
-	
-	# ==========================================
-	# TAHAP 2: KOREKSI KECEPATAN
-	# ==========================================
-	if is_castor_anchored:
-		var apply_vel = vel_lambda
-		if is_pollux_anchored and apply_vel.y > 0:
-			apply_vel.y = 0
-		pollux.linear_velocity += apply_vel
-	elif is_pollux_anchored:
-		castor.velocity -= vel_lambda
-	else:
 		castor.velocity -= vel_lambda * 0.5
 		pollux.linear_velocity += vel_lambda * 0.5
 
