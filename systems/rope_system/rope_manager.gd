@@ -48,31 +48,47 @@ func apply_solid_constraint(delta: float) -> void:
 	
 	var error = dist - current_rope_length
 	
-	# ==========================================
-	# MEKANIK HYBRID: TALI KENDOR vs PISTON
-	# ==========================================
 	if error < 0 and not Input.is_action_pressed("reel_out"):
-		return # Tali kendor, biarkan karakter bebas bergerak.
+		return 
 	
 	var dir = c_pos.direction_to(p_pos)
 	
 	# ==========================================
-	# SISTEM JANGKAR MURNI (RAYCAST)
+	# DETEKSI LANTAI DUAL SENSOR (POLLUX & CASTOR)
 	# ==========================================
-	var c_ground = castor.get_node_or_null("GroundCheck")
-	var p_ground = pollux.get_node_or_null("GroundCheck")
+	var c_l = castor.get_node_or_null("GroundCheckL")
+	var c_r = castor.get_node_or_null("GroundCheckR")
+	var p_l = pollux.get_node_or_null("GroundCheckL")
+	var p_r = pollux.get_node_or_null("GroundCheckR")
 	
-	var is_c_grounded = c_ground and c_ground.is_colliding()
-	var is_p_grounded = p_ground and p_ground.is_colliding()
+	var is_c_grounded = (c_l and c_l.is_colliding()) or (c_r and c_r.is_colliding())
+	var is_p_grounded = (p_l and p_l.is_colliding()) or (p_r and p_r.is_colliding())
 	
+	# ==========================================
+	# SISTEM JANGKAR DINAMIS (MUTUAL DRAG)
+	# ==========================================
 	var is_castor_anchored = false
 	var is_pollux_anchored = false
 	
-	if is_c_grounded:
+	if is_c_grounded and is_p_grounded:
+		# Jika dua-duanya di lantai, Castor jadi prioritas jangkar
 		is_castor_anchored = true
-	elif is_p_grounded:
-		is_pollux_anchored = true
+	
+	elif is_c_grounded and not is_p_grounded:
+		# KASUS DI GAMBARMU: Castor di lantai, Pollux melayang.
+		# Cek: Apakah Pollux berada DI BAWAH Castor? (Berayun)
+		if p_pos.y > c_pos.y + 10: 
+			is_castor_anchored = true # Castor jadi jangkar untuk ayunan
+		else:
+			# Jika Pollux melayang di samping (seperti di gambarmu), 
+			# biarkan statusnya FALSE agar mereka masuk ke Skenario 3 (Saling Tarik).
+			# Ini yang bakal bikin Castor keseret ke pinggir tebing.
+			pass
 
+	elif not is_c_grounded and is_p_grounded:
+		# Sebaliknya, Pollux jadi jangkar kalau Castor yang berayun di bawah
+		if c_pos.y > p_pos.y + 10:
+			is_pollux_anchored = true
 	# ==========================================
 	# EKSEKUSI FISIKA BERDASARKAN STATUS JANGKAR
 	# ==========================================
@@ -117,7 +133,7 @@ func apply_solid_constraint(delta: float) -> void:
 
 		# Obat Energi Bocor (Momentum Boost)
 		if abs(swing_speed) > 10.0:
-			castor.velocity *= 1.008 
+			castor.velocity *= 1.00 
 			
 	else:
 		# --- SKENARIO 3: DUA-DUANYA MELAYANG (Tarik-Menarik 50:50) ---
