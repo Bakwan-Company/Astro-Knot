@@ -12,6 +12,9 @@ extends Node2D
 @export var ledge_pull_position_speed: float = 70.0
 @export var ledge_pull_min_vertical_gap: float = 24.0
 @export var ledge_pull_slack_tolerance: float = 10.0
+@export var blocked_rope_error_threshold: float = 12.0
+@export var blocked_castor_pull_factor: float = 0.35
+@export var blocked_castor_pull_max: float = 6.0
 
 func is_body_grounded(body: Node) -> bool:
 	if not body:
@@ -64,12 +67,7 @@ func handle_reel_input(delta: float) -> void:
 	var is_p_grounded = is_body_grounded(pollux)
 	
 	if Input.is_action_pressed("reel_in"):
-		# LOCK MEKANIK: DILARANG MANJAT
-		# Jika Pollux di lantai DAN Castor melayang, tali tidak boleh memendek!
-		if is_p_grounded and not is_c_grounded:
-			pass # Abaikan input, tali terkunci mati.
-		else:
-			current_rope_length -= reel_speed * delta
+		current_rope_length -= reel_speed * delta
 			
 	elif Input.is_action_pressed("reel_out"):
 		current_rope_length += reel_speed * delta
@@ -139,6 +137,17 @@ func apply_solid_constraint(delta: float) -> void:
 			move_pollux.x = 0 # Kunci X Pollux di sini!
 			
 		pollux.global_position += move_pollux
+		
+		if is_pollux_side_blocked() and error > blocked_rope_error_threshold:
+			var castor_away_speed = min(castor.velocity.dot(dir), 0.0)
+			var castor_correction = min(
+				error * blocked_castor_pull_factor + abs(castor_away_speed) * delta,
+				blocked_castor_pull_max
+			)
+			castor.global_position += dir * castor_correction
+
+			if castor_away_speed < 0.0:
+				castor.velocity -= dir * castor_away_speed
 		
 		var c_vel = castor.velocity
 		var p_vel = pollux.linear_velocity
