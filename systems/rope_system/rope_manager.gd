@@ -21,6 +21,8 @@ extends Node2D
 @export var blocked_castor_pull_factor: float = 0.35
 @export var blocked_castor_pull_max: float = 6.0
 
+@export var castor_swing_control_accel: float = 900.0
+
 func is_body_grounded(body: Node) -> bool:
 	if not body:
 		return false
@@ -142,15 +144,25 @@ func apply_castor_anchor_constraint(dir: Vector2, error: float, is_pollux_anchor
 
 	pollux.linear_velocity += apply_vel
 
-func apply_pollux_anchor_constraint(dir: Vector2, error: float) -> void:
+func apply_pollux_anchor_constraint(dir: Vector2, error: float, delta: float) -> void:
 	# Pollux anchored means Castor becomes the pendulum body.
 	var pos_correction = clamp(error, -5.0, 5.0)
 	castor.global_position += dir * pos_correction
-
+	
 	# Recompute the rope direction after the position correction.
 	dir = castor.global_position.direction_to(pollux.global_position)
-	var tangent = dir.orthogonal()
+	var tangent = dir.orthogonal().normalized()
 	var swing_speed = castor.velocity.dot(tangent)
+	var input_dir := Input.get_axis("move_left", "move_right")
+	var tangent_input = Vector2(input_dir, 0.0).dot(tangent)
+	var base_air_control_speed = castor.speed
+	var castor_air_speed = castor.get("air_speed")
+	if typeof(castor_air_speed) == TYPE_FLOAT or typeof(castor_air_speed) == TYPE_INT:
+		base_air_control_speed = max(base_air_control_speed, float(castor_air_speed))
+
+	var target_swing_speed = tangent_input * base_air_control_speed
+	swing_speed = move_toward(swing_speed, target_swing_speed, castor_swing_control_accel * delta)
+
 	castor.velocity = tangent * swing_speed
 
 func apply_free_constraint(dir: Vector2, error: float) -> void:
@@ -211,7 +223,7 @@ func apply_solid_constraint(delta: float) -> void:
 	if anchor_flags.is_castor_anchored:
 		apply_castor_anchor_constraint(dir, error, anchor_flags.is_pollux_anchored, delta)
 	elif anchor_flags.is_pollux_anchored:
-		apply_pollux_anchor_constraint(dir, error)
+		apply_pollux_anchor_constraint(dir, error, delta)
 	else:
 		apply_free_constraint(dir, error)
 

@@ -7,6 +7,6 @@ script = ExtResource("1_yq5y5")
 ledge_pull_up_velocity = 300.0
 
 [node name="HardlightVisual" type="Line2D" parent="." unique_id=72797104]
-z_index = -1
-width = 3.0
-default_color = Color(0, 1, 1, 1)
+z_index = 20
+width = 4.0
+default_color = Color(0.45882353, 0.9607843, 1, 1)

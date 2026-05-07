@@ -1,6 +1,7 @@
 extends CharacterBody2D
 
 @export var speed: float = 300.0 # Sedikit lebih cepat biar enak narik Pollux
+@export var air_speed: float = 300.0
 @export var jump_velocity: float = -400.0
 @export var air_friction: float = 0.5 # Gesekan udara biar ayunan gak abadi (tapi tipis banget)
 @export var terminal_velocity: float = 1000.0 # Biar gak nembus lantai kalau jatuh kecepetan
@@ -24,7 +25,8 @@ func _physics_process(delta: float) -> void:
 	var direction = Input.get_axis("move_left", "move_right")
 	
 	if direction:
-		velocity.x = direction * speed
+		var target_speed = speed if is_on_floor() else air_speed
+		velocity.x = direction * target_speed
 	else:
 		# --- PERBAIKAN AYUNAN DI SINI ---
 		if is_on_floor():
