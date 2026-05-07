@@ -21,6 +21,10 @@ color = Color(1, 1, 0.42352942, 1)
 [node name="RopeAnchor" type="Marker2D" parent="." unique_id=443895996]
 position = Vector2(20, 20.5)
 
-[node name="GroundCheck" type="RayCast2D" parent="." unique_id=1994394445]
-position = Vector2(20, 20)
+[node name="GroundCheckL" type="RayCast2D" parent="." unique_id=1994394445]
+position = Vector2(0, 20)
+target_position = Vector2(0, 21)
+
+[node name="GroundCheckR" type="RayCast2D" parent="." unique_id=537385742]
+position = Vector2(40, 20)
 target_position = Vector2(0, 21)
