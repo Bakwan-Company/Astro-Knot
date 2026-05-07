@@ -1,0 +1,43 @@
+[gd_scene format=3 uid="uid://ck1pb47tdrf7r"]
+
+[ext_resource type="PackedScene" uid="uid://d3rhk612sc0pl" path="res://entities/pollux/Pollux.tscn" id="1_nnxqa"]
+[ext_resource type="PackedScene" uid="uid://cmn0gfamy7yaj" path="res://entities/castor/Castor.tscn" id="2_d8j6y"]
+[ext_resource type="PackedScene" uid="uid://byqxydxhxv7q5" path="res://systems/rope_system/RopeManager.tscn" id="3_t28sf"]
+[ext_resource type="PackedScene" uid="uid://ck4alac620xrn" path="res://interactables/terminal/terminal.tscn" id="4_wqus8"]
+[ext_resource type="PackedScene" uid="uid://chcrb30hqjv5r" path="res://interactables/bridge/bridge.tscn" id="5_ue71k"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_d8j6y"]
+size = Vector2(566.5, 27)
+
+[node name="InteractionTest" type="Node2D" unique_id=2009402040]
+
+[node name="StaticBody2D" type="StaticBody2D" parent="." unique_id=1841981339]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D" unique_id=1204436379]
+position = Vector2(302.75, 116.5)
+shape = SubResource("RectangleShape2D_d8j6y")
+
+[node name="Pollux" parent="." unique_id=1878608427 instance=ExtResource("1_nnxqa")]
+position = Vector2(84, 59)
+
+[node name="Castor" parent="." unique_id=975424275 instance=ExtResource("2_d8j6y")]
+position = Vector2(282, 60)
+
+[node name="RopeManager" parent="." unique_id=709923073 node_paths=PackedStringArray("castor", "pollux") instance=ExtResource("3_t28sf")]
+castor = NodePath("../Castor")
+pollux = NodePath("../Pollux")
+
+[node name="StaticBody2D2" type="StaticBody2D" parent="." unique_id=382556499]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D2" unique_id=1093030283]
+position = Vector2(1309, 117)
+shape = SubResource("RectangleShape2D_d8j6y")
+
+[node name="Terminal" parent="." unique_id=1049502516 instance=ExtResource("4_wqus8")]
+position = Vector2(487, 82)
+
+[node name="Bridge" parent="." unique_id=115589489 instance=ExtResource("5_ue71k")]
+position = Vector2(809, 265)
+scale = Vector2(20, 1)
+
+[connection signal="terminal_activated" from="Terminal" to="Bridge" method="set_bridge_status"]
