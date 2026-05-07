@@ -1,0 +1,220 @@
+[gd_scene format=3 uid="uid://csfndm8dmhu7l"]
+
+[ext_resource type="PackedScene" uid="uid://cmn0gfamy7yaj" path="res://entities/castor/Castor.tscn" id="1_castor"]
+[ext_resource type="PackedScene" uid="uid://d3rhk612sc0pl" path="res://entities/pollux/Pollux.tscn" id="2_pollux"]
+[ext_resource type="PackedScene" uid="uid://byqxydxhxv7q5" path="res://systems/rope_system/RopeManager.tscn" id="3_rope"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ground_start"]
+size = Vector2(1750, 80)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_bump_small"]
+size = Vector2(120, 50)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_bump_medium"]
+size = Vector2(180, 90)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_wall"]
+size = Vector2(220, 190)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ground_end"]
+size = Vector2(1952, 80)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_pillar_one"]
+size = Vector2(220, 180)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_pillar_two"]
+size = Vector2(280, 320)
+
+[node name="Level1Tutorial" type="Node2D" unique_id=800284154]
+
+[node name="GroundStart" type="StaticBody2D" parent="." unique_id=279650626]
+position = Vector2(875, 580)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="GroundStart" unique_id=981072595]
+shape = SubResource("RectangleShape2D_ground_start")
+
+[node name="ColorRect" type="ColorRect" parent="GroundStart" unique_id=1222884346]
+offset_left = -875.0
+offset_top = -40.0
+offset_right = 875.0
+offset_bottom = 40.0
+color = Color(0.56078434, 0.43137255, 0.29803923, 1)
+
+[node name="BumpSmall" type="StaticBody2D" parent="." unique_id=1541268237]
+position = Vector2(700, 515)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="BumpSmall" unique_id=200701392]
+shape = SubResource("RectangleShape2D_bump_small")
+
+[node name="ColorRect" type="ColorRect" parent="BumpSmall" unique_id=1005393052]
+offset_left = -60.0
+offset_top = -25.0
+offset_right = 60.0
+offset_bottom = 25.0
+color = Color(0.49019608, 0.5568628, 0.5294118, 1)
+
+[node name="BumpMedium" type="StaticBody2D" parent="." unique_id=1958785301]
+position = Vector2(1050, 495)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="BumpMedium" unique_id=514225532]
+shape = SubResource("RectangleShape2D_bump_medium")
+
+[node name="ColorRect" type="ColorRect" parent="BumpMedium" unique_id=2098917511]
+offset_left = -90.0
+offset_top = -45.0
+offset_right = 90.0
+offset_bottom = 45.0
+color = Color(0.49019608, 0.5568628, 0.5294118, 1)
+
+[node name="TallWall" type="StaticBody2D" parent="." unique_id=1676110223]
+position = Vector2(1460, 430)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="TallWall" unique_id=579916663]
+position = Vector2(0, 15)
+shape = SubResource("RectangleShape2D_wall")
+
+[node name="ColorRect" type="ColorRect" parent="TallWall" unique_id=290454428]
+offset_left = -110.0
+offset_top = -79.0
+offset_right = 110.0
+offset_bottom = 110.0
+color = Color(0.41568628, 0.42745098, 0.44313726, 1)
+
+[node name="GroundEnd" type="StaticBody2D" parent="." unique_id=1827557574]
+position = Vector2(3320, 580)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="GroundEnd" unique_id=1581763079]
+position = Vector2(74, 0)
+shape = SubResource("RectangleShape2D_ground_end")
+
+[node name="ColorRect" type="ColorRect" parent="GroundEnd" unique_id=1989153960]
+offset_left = -902.0
+offset_top = -40.0
+offset_right = 1050.0
+offset_bottom = 40.0
+color = Color(0.56078434, 0.43137255, 0.29803923, 1)
+
+[node name="PillarOne" type="StaticBody2D" parent="." unique_id=858786901]
+position = Vector2(2890, 450)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="PillarOne" unique_id=501056488]
+shape = SubResource("RectangleShape2D_pillar_one")
+
+[node name="ColorRect" type="ColorRect" parent="PillarOne" unique_id=1888975284]
+offset_left = -110.0
+offset_top = -90.0
+offset_right = 110.0
+offset_bottom = 90.0
+color = Color(0.41568628, 0.42745098, 0.44313726, 1)
+
+[node name="PillarTwo" type="StaticBody2D" parent="." unique_id=1015757450]
+position = Vector2(3480, 380)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="PillarTwo" unique_id=2095975537]
+shape = SubResource("RectangleShape2D_pillar_two")
+
+[node name="ColorRect" type="ColorRect" parent="PillarTwo" unique_id=2138279241]
+offset_left = -140.0
+offset_top = -160.0
+offset_right = 140.0
+offset_bottom = 160.0
+color = Color(0.41568628, 0.42745098, 0.44313726, 1)
+
+[node name="GoalBeacon" type="Node2D" parent="." unique_id=1615903235]
+position = Vector2(4100, 430)
+
+[node name="ColorRect" type="ColorRect" parent="GoalBeacon" unique_id=1171250926]
+offset_left = -60.0
+offset_top = -110.0
+offset_right = 60.0
+offset_bottom = 110.0
+color = Color(0.3529412, 0.78039217, 0.5411765, 0.45)
+
+[node name="Castor" parent="." unique_id=960200625 instance=ExtResource("1_castor")]
+position = Vector2(160, 500)
+
+[node name="Camera2D" type="Camera2D" parent="Castor" unique_id=1743783001]
+position = Vector2(240, -120)
+limit_left = 0
+limit_top = 0
+limit_right = 4300
+limit_bottom = 900
+position_smoothing_enabled = true
+
+[node name="Pollux" parent="." unique_id=1033228459 instance=ExtResource("2_pollux")]
+position = Vector2(80, 500)
+
+[node name="RopeManager" parent="." unique_id=902987426 node_paths=PackedStringArray("castor", "pollux") instance=ExtResource("3_rope")]
+castor = NodePath("../Castor")
+pollux = NodePath("../Pollux")
+current_rope_length = 140.0
+max_rope_length = 560.0
+
+[node name="Title" type="Label" parent="." unique_id=1766839120]
+offset_left = 60.0
+offset_top = 360.0
+offset_right = 420.0
+offset_bottom = 420.0
+theme_override_font_sizes/font_size = 28
+text = "LEVEL 1 // TUTORIAL"
+
+[node name="ControlsMove" type="Label" parent="." unique_id=368984903]
+offset_left = 230.0
+offset_top = 395.0
+offset_right = 630.0
+offset_bottom = 470.0
+theme_override_font_sizes/font_size = 20
+text = "A / D untuk gerak   |   SPACE untuk lompat"
+
+[node name="ControlsRope" type="Label" parent="." unique_id=1086193321]
+offset_left = 760.0
+offset_top = 360.0
+offset_right = 1120.0
+offset_bottom = 460.0
+theme_override_font_sizes/font_size = 20
+text = "Q untuk tarik tali
+E untuk ulur tali"
+
+[node name="HintShorten" type="Label" parent="." unique_id=517817603]
+offset_left = 1120.0
+offset_top = 300.0
+offset_right = 1430.0
+offset_bottom = 420.0
+theme_override_font_sizes/font_size = 18
+text = "Coba ubah panjang tali
+buat ngatur posisi Pollux."
+
+[node name="HintMaxReach" type="Label" parent="." unique_id=1051873857]
+offset_left = 1370.0
+offset_top = 180.0
+offset_right = 1700.0
+offset_bottom = 320.0
+theme_override_font_sizes/font_size = 18
+text = "Platform ini buat ngetes
+jarak tali maksimum."
+
+[node name="GapHint" type="Label" parent="." unique_id=1053359716]
+offset_left = 1800.0
+offset_top = 390.0
+offset_right = 2180.0
+offset_bottom = 490.0
+theme_override_font_sizes/font_size = 22
+text = "Atur posisi Pollux buat bantu
+Castor nyeberangin lobang."
+
+[node name="SwingHint" type="Label" parent="." unique_id=1230305994]
+offset_left = 2850.0
+offset_top = 240.0
+offset_right = 3320.0
+offset_bottom = 330.0
+theme_override_font_sizes/font_size = 20
+text = "Bangun momentum dulu,
+lalu ayun ke platform tinggi."
+
+[node name="GoalText" type="Label" parent="." unique_id=612447586]
+offset_left = 4020.0
+offset_top = 280.0
+offset_right = 4260.0
+offset_bottom = 340.0
+theme_override_font_sizes/font_size = 24
+text = "GOAL"

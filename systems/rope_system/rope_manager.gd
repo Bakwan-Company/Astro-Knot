@@ -8,6 +8,46 @@ extends Node2D
 @export var reel_speed: float = 250.0
 @export var min_rope_length: float = 60.0 
 @export var max_rope_length: float = 500.0
+@export var ledge_pull_up_velocity: float = 220.0
+@export var ledge_pull_position_speed: float = 70.0
+@export var ledge_pull_min_vertical_gap: float = 24.0
+@export var ledge_pull_slack_tolerance: float = 10.0
+
+func is_body_grounded(body: Node) -> bool:
+	if not body:
+		return false
+
+	var ground_left = body.get_node_or_null("GroundCheckL")
+	var ground_right = body.get_node_or_null("GroundCheckR")
+
+	return (ground_left and ground_left.is_colliding()) or (ground_right and ground_right.is_colliding())
+
+func is_pollux_side_blocked() -> bool:
+	var wall_left = pollux.get_node_or_null("WallCheckL") as RayCast2D
+	var wall_right = pollux.get_node_or_null("WallCheckR") as RayCast2D
+
+	return (wall_left and wall_left.is_colliding()) or (wall_right and wall_right.is_colliding())
+
+func apply_pollux_ledge_pull(delta: float, error: float, is_p_grounded: bool) -> bool:
+	if not Input.is_action_pressed("reel_in"):
+		return false
+
+	if is_p_grounded:
+		return false
+
+	if error < -ledge_pull_slack_tolerance:
+		return false
+
+	if not is_pollux_side_blocked():
+		return false
+
+	var vertical_gap = pollux.global_position.y - castor.global_position.y
+	if vertical_gap < ledge_pull_min_vertical_gap:
+		return false
+
+	pollux.linear_velocity.y = min(pollux.linear_velocity.y, -ledge_pull_up_velocity)
+	pollux.global_position.y -= ledge_pull_position_speed * delta
+	return true
 
 func _process(_delta: float) -> void:
 	update_rope_visual()
@@ -20,11 +60,8 @@ func _physics_process(delta: float) -> void:
 	apply_solid_constraint(delta)
 
 func handle_reel_input(delta: float) -> void:
-	var c_ground = castor.get_node_or_null("GroundCheck")
-	var p_ground = pollux.get_node_or_null("GroundCheck")
-	
-	var is_c_grounded = c_ground and c_ground.is_colliding()
-	var is_p_grounded = p_ground and p_ground.is_colliding()
+	var is_c_grounded = is_body_grounded(castor)
+	var is_p_grounded = is_body_grounded(pollux)
 	
 	if Input.is_action_pressed("reel_in"):
 		# LOCK MEKANIK: DILARANG MANJAT
@@ -56,13 +93,9 @@ func apply_solid_constraint(delta: float) -> void:
 	# ==========================================
 	# DETEKSI LANTAI DUAL SENSOR
 	# ==========================================
-	var c_l = castor.get_node_or_null("GroundCheckL")
-	var c_r = castor.get_node_or_null("GroundCheckR")
-	var p_l = pollux.get_node_or_null("GroundCheckL")
-	var p_r = pollux.get_node_or_null("GroundCheckR")
-	
-	var is_c_grounded = (c_l and c_l.is_colliding()) or (c_r and c_r.is_colliding())
-	var is_p_grounded = (p_l and p_l.is_colliding()) or (p_r and p_r.is_colliding())
+	var is_c_grounded = is_body_grounded(castor)
+	var is_p_grounded = is_body_grounded(pollux)
+	var is_ledge_pulling = apply_pollux_ledge_pull(delta, error, is_p_grounded)
 	
 	# ==========================================
 	# SISTEM JANGKAR DINAMIS (FIX POLLUX GESER)
@@ -92,6 +125,9 @@ func apply_solid_constraint(delta: float) -> void:
 	# ==========================================
 	# EKSEKUSI FISIKA
 	# ==========================================
+	if is_ledge_pulling:
+		pollux.linear_velocity.x *= 0.9
+
 	if is_castor_anchored:
 		var pos_correction = clamp(error, -3.0, 3.0)
 		var move_pollux = -(dir * pos_correction)

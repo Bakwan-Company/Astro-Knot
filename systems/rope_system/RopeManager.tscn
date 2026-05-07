@@ -4,6 +4,7 @@
 
 [node name="RopeManager" type="Node2D" unique_id=709923073]
 script = ExtResource("1_yq5y5")
+ledge_pull_up_velocity = 300.0
 
 [node name="HardlightVisual" type="Line2D" parent="." unique_id=72797104]
 z_index = -1
