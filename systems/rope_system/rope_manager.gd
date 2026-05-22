@@ -6,16 +6,19 @@ extends Node2D
 @onready var aim_indicator: Line2D = $AimIndicator
 @onready var power_meter_bg: Line2D = $PowerMeterBg
 @onready var power_meter_fill: Line2D = $PowerMeterFill
+@onready var debug_panel: Control = $DebugOverlay/Panel
+@onready var debug_readout: Label = $DebugOverlay/Panel/DebugReadout
 
 # Base rope tuning
 @export var current_rope_length: float = 200.0
 @export var reel_speed: float = 250.0
 @export var min_rope_length: float = 60.0
 @export var max_rope_length: float = 500.0
+@export var power_limit_length: float = 540.0
 
 # Pollux ledge-pull assist
-@export var ledge_pull_up_velocity: float = 220.0
-@export var ledge_pull_position_speed: float = 70.0
+@export var ledge_pull_up_velocity: float = 300.0
+@export var ledge_pull_position_speed: float = 100.0
 @export var ledge_pull_min_vertical_gap: float = 24.0
 @export var ledge_pull_slack_tolerance: float = 10.0
 
@@ -24,7 +27,11 @@ extends Node2D
 @export var blocked_castor_pull_factor: float = 0.35
 @export var blocked_castor_pull_max: float = 6.0
 
-@export var castor_swing_control_accel: float = 900.0
+@export var castor_swing_pump_accel: float = 520.0
+@export var castor_swing_max_speed: float = 360.0
+
+# Rope debug
+@export var debug_enabled: bool = true
 
 # Pollux throw tuning
 @export var throw_pickup_radius: float = 72.0
@@ -71,13 +78,27 @@ var throw_cached_rope_length: float = 0.0
 var rope_default_color: Color
 var pollux_default_gravity_scale: float = 1.0
 var pollux_default_linear_damp: float = 0.0
+var debug_rope_distance: float = 0.0
+var debug_rope_error: float = 0.0
+var debug_castor_grounded: bool = false
+var debug_pollux_grounded: bool = false
+var debug_castor_anchored: bool = false
+var debug_pollux_anchored: bool = false
+var debug_pollux_side_blocked: bool = false
+var debug_ledge_pulling: bool = false
+var debug_grounded_pollux_y_lock: bool = false
+var debug_constraint_state: String = "idle"
 
 func is_body_grounded(body: Node) -> bool:
 	if not body:
 		return false
 
-	var ground_left = body.get_node_or_null("GroundCheckL")
-	var ground_right = body.get_node_or_null("GroundCheckR")
+	var character_body: CharacterBody2D = body as CharacterBody2D
+	if character_body and character_body.is_on_floor():
+		return true
+
+	var ground_left: RayCast2D = body.get_node_or_null("GroundCheckL") as RayCast2D
+	var ground_right: RayCast2D = body.get_node_or_null("GroundCheckR") as RayCast2D
 	return (ground_left and ground_left.is_colliding()) or (ground_right and ground_right.is_colliding())
 
 func is_pollux_side_blocked() -> bool:
@@ -95,6 +116,7 @@ func _ready() -> void:
 func _process(_delta: float) -> void:
 	update_rope_visual()
 	update_throw_visuals()
+	update_debug_readout()
 
 func _physics_process(delta: float) -> void:
 	if not castor or not pollux:
@@ -107,12 +129,17 @@ func _physics_process(delta: float) -> void:
 
 	if throw_state in [ThrowState.THROW_READY, ThrowState.THROW_CHARGING]:
 		sync_pollux_to_throw_anchor()
+		debug_constraint_state = "throw_hold"
+		debug_ledge_pulling = false
+		debug_grounded_pollux_y_lock = false
+		update_rope_debug_snapshot()
 		return
 
 	if throw_state == ThrowState.NORMAL:
 		handle_reel_input(delta)
 
 	apply_solid_constraint(delta)
+	update_rope_debug_snapshot()
 
 func apply_pollux_ledge_pull(delta: float, error: float, is_p_grounded: bool) -> bool:
 	# Small assist for the specific case where Pollux is airborne, side-blocked,
@@ -166,11 +193,11 @@ func get_anchor_flags(
 			flags.is_castor_anchored = true
 
 	elif not is_c_grounded and is_p_grounded:
-		# Pollux becomes the anchor when Castor is hanging below it,
-		# or when Castor is directly above it in a narrow X band.
-		if c_pos.y > p_pos.y + 10:
-			flags.is_pollux_anchored = true
-		elif c_pos.y < p_pos.y - 10 and abs(c_pos.x - p_pos.x) < 40:
+		# Keep Pollux as lift support only when Castor is above it. Castor
+		# passing below grounded Pollux should stay under normal air control.
+		if Input.is_action_pressed("reel_out") \
+		and c_pos.y < p_pos.y - 10 \
+		and abs(c_pos.x - p_pos.x) < 40:
 			flags.is_pollux_anchored = true
 
 	return flags
@@ -196,11 +223,24 @@ func apply_blocked_pollux_fallback(dir: Vector2, error: float, delta: float) -> 
 	if castor_away_speed < 0.0:
 		castor.velocity -= dir * castor_away_speed
 
-func apply_castor_anchor_constraint(dir: Vector2, error: float, is_pollux_anchored: bool, delta: float) -> void:
+func apply_castor_anchor_constraint(
+	dir: Vector2,
+	error: float,
+	is_pollux_anchored: bool,
+	is_pollux_grounded: bool,
+	delta: float,
+	allow_blocked_fallback: bool = true
+) -> void:
 	# error > 0 means the rope is longer than allowed, so we must correct it.
 	# In this branch, Castor is the anchor and Pollux is the body we try to drag.
 	var pos_correction = clamp(error, -3.0, 3.0)
 	var move_pollux = -(dir * pos_correction)
+	var lock_grounded_pollux_y: bool = (
+		is_pollux_grounded
+		and not is_pollux_anchored
+		and throw_state == ThrowState.NORMAL
+		and not Input.is_action_pressed("reel_in")
+	)
 
 	if is_pollux_anchored and move_pollux.y > 0:
 		# In lift mode we suppress Pollux's X/Y drift and instead push Castor upward
@@ -209,8 +249,13 @@ func apply_castor_anchor_constraint(dir: Vector2, error: float, is_pollux_anchor
 		move_pollux.y = 0
 		move_pollux.x = 0
 
+	if lock_grounded_pollux_y and move_pollux.y < 0.0:
+		move_pollux.y = 0.0
+		debug_grounded_pollux_y_lock = true
+
 	pollux.global_position += move_pollux
-	apply_blocked_pollux_fallback(dir, error, delta)
+	if allow_blocked_fallback:
+		apply_blocked_pollux_fallback(dir, error, delta)
 
 	var c_vel = castor.velocity
 	var p_vel = pollux.linear_velocity
@@ -222,6 +267,10 @@ func apply_castor_anchor_constraint(dir: Vector2, error: float, is_pollux_anchor
 		castor.velocity.y -= apply_vel.y * 2.0
 		apply_vel.y = 0
 		apply_vel.x = 0
+
+	if lock_grounded_pollux_y and apply_vel.y < 0.0:
+		apply_vel.y = 0.0
+		debug_grounded_pollux_y_lock = true
 
 	pollux.linear_velocity += apply_vel
 
@@ -236,13 +285,9 @@ func apply_pollux_anchor_constraint(dir: Vector2, error: float, delta: float) ->
 	var swing_speed = castor.velocity.dot(tangent)
 	var input_dir := Input.get_axis("move_left", "move_right")
 	var tangent_input = Vector2(input_dir, 0.0).dot(tangent)
-	var base_air_control_speed = castor.speed
-	var castor_air_speed = castor.get("air_speed")
-	if typeof(castor_air_speed) == TYPE_FLOAT or typeof(castor_air_speed) == TYPE_INT:
-		base_air_control_speed = max(base_air_control_speed, float(castor_air_speed))
 
-	var target_swing_speed = tangent_input * base_air_control_speed
-	swing_speed = move_toward(swing_speed, target_swing_speed, castor_swing_control_accel * delta)
+	swing_speed += tangent_input * castor_swing_pump_accel * delta
+	swing_speed = clamp(swing_speed, -castor_swing_max_speed, castor_swing_max_speed)
 
 	castor.velocity = tangent * swing_speed
 
@@ -272,8 +317,12 @@ func apply_solid_constraint(delta: float) -> void:
 	var c_pos = castor.global_position
 	var p_pos = pollux.global_position
 	var dist = c_pos.distance_to(p_pos)
+	debug_constraint_state = "idle"
+	debug_ledge_pulling = false
+	debug_grounded_pollux_y_lock = false
 
 	if dist < 0.1:
+		debug_constraint_state = "overlap"
 		return
 
 	if throw_state == ThrowState.THROW_FLIGHT and is_pollux_moving_away_from_castor():
@@ -288,15 +337,18 @@ func apply_solid_constraint(delta: float) -> void:
 	# error < 0: rope is slack, so we usually let it be
 	var error = dist - effective_rope_length
 	if error < 0 and not (throw_state == ThrowState.NORMAL and Input.is_action_pressed("reel_out")):
+		debug_constraint_state = "slack"
 		return
 
 	var dir = c_pos.direction_to(p_pos)
 
 	if throw_state == ThrowState.THROW_FLIGHT:
+		debug_constraint_state = "throw_flight"
 		apply_throw_flight_constraint(dir, error)
 		return
 
 	if throw_state == ThrowState.THROW_RECOVERY and throw_state_timer < throw_recovery_time * 0.5:
+		debug_constraint_state = "throw_recovery"
 		apply_free_constraint(dir, error)
 		return
 
@@ -304,15 +356,24 @@ func apply_solid_constraint(delta: float) -> void:
 	var is_p_grounded = is_body_grounded(pollux)
 	var is_ledge_pulling = apply_pollux_ledge_pull(delta, error, is_p_grounded)
 	var anchor_flags = get_anchor_flags(c_pos, p_pos, is_c_grounded, is_p_grounded)
+	var is_castor_anchored: bool = bool(anchor_flags.get("is_castor_anchored", false))
+	var is_pollux_anchored: bool = bool(anchor_flags.get("is_pollux_anchored", false))
+	debug_ledge_pulling = is_ledge_pulling
 
 	if is_ledge_pulling:
 		pollux.linear_velocity.x *= 0.9
 
-	if anchor_flags.is_castor_anchored:
-		apply_castor_anchor_constraint(dir, error, anchor_flags.is_pollux_anchored, delta)
-	elif anchor_flags.is_pollux_anchored:
+	if is_ledge_pulling:
+		debug_constraint_state = "ledge_haul"
+		apply_castor_anchor_constraint(dir, error, false, is_p_grounded, delta, false)
+	elif is_castor_anchored:
+		debug_constraint_state = "castor_anchor"
+		apply_castor_anchor_constraint(dir, error, is_pollux_anchored, is_p_grounded, delta)
+	elif is_pollux_anchored:
+		debug_constraint_state = "pollux_anchor"
 		apply_pollux_anchor_constraint(dir, error, delta)
 	else:
+		debug_constraint_state = "free"
 		apply_free_constraint(dir, error)
 
 func update_rope_visual() -> void:
@@ -322,6 +383,51 @@ func update_rope_visual() -> void:
 		rope_visual.clear_points()
 		rope_visual.add_point(c_anchor.global_position if c_anchor else castor.global_position)
 		rope_visual.add_point(p_anchor.global_position if p_anchor else pollux.global_position)
+
+func update_rope_debug_snapshot() -> void:
+	if not castor or not pollux:
+		return
+
+	debug_rope_distance = castor.global_position.distance_to(pollux.global_position)
+	debug_rope_error = debug_rope_distance - current_rope_length
+	debug_castor_grounded = is_body_grounded(castor)
+	debug_pollux_grounded = is_body_grounded(pollux)
+	debug_pollux_side_blocked = is_pollux_side_blocked()
+
+	var anchor_flags: Dictionary = get_anchor_flags(
+		castor.global_position,
+		pollux.global_position,
+		debug_castor_grounded,
+		debug_pollux_grounded
+	)
+	debug_castor_anchored = bool(anchor_flags.get("is_castor_anchored", false))
+	debug_pollux_anchored = bool(anchor_flags.get("is_pollux_anchored", false))
+
+func update_debug_readout() -> void:
+	if not debug_panel or not debug_readout:
+		return
+
+	debug_panel.visible = debug_enabled
+	if not debug_enabled:
+		return
+
+	var power_state: String = "over" if debug_rope_distance > power_limit_length else "ok"
+	debug_readout.text = "\n".join([
+		"len %.1f dst %.1f" % [current_rope_length, debug_rope_distance],
+		"err %.1f limit %.1f %s" % [debug_rope_error, power_limit_length, power_state],
+		"gnd C:%s P:%s anc C:%s P:%s" % [
+			debug_castor_grounded,
+			debug_pollux_grounded,
+			debug_castor_anchored,
+			debug_pollux_anchored,
+		],
+		"state %s throw %s" % [debug_constraint_state, get_throw_state_name()],
+		"ledge %s block %s ylock %s" % [
+			debug_ledge_pulling,
+			debug_pollux_side_blocked,
+			debug_grounded_pollux_y_lock,
+		],
+	])
 
 func handle_throw_state(delta: float) -> void:
 	match throw_state:
@@ -611,6 +717,19 @@ func set_throw_state(new_state: int) -> void:
 			rope_visual.default_color = Color(1.0, 0.48, 0.2, 1.0)
 		ThrowState.THROW_RECOVERY:
 			rope_visual.default_color = Color(0.75, 0.88, 1.0, 1.0)
+
+func get_throw_state_name() -> String:
+	match throw_state:
+		ThrowState.THROW_READY:
+			return "ready"
+		ThrowState.THROW_CHARGING:
+			return "charge"
+		ThrowState.THROW_FLIGHT:
+			return "flight"
+		ThrowState.THROW_RECOVERY:
+			return "recover"
+		_:
+			return "normal"
 
 func update_throw_visuals() -> void:
 	var show_throw_visuals = throw_state in [ThrowState.THROW_READY, ThrowState.THROW_CHARGING]
