@@ -1,5 +1,6 @@
 extends Node2D
 
+@export_group("Actors")
 @export var castor: CharacterBody2D
 @export var pollux: RigidBody2D
 @onready var rope_visual: Line2D = $HardlightVisual
@@ -9,31 +10,46 @@ extends Node2D
 @onready var debug_panel: Control = $DebugOverlay/Panel
 @onready var debug_readout: Label = $DebugOverlay/Panel/DebugReadout
 
-# Base rope tuning
+@export_group("Rope Length")
 @export var current_rope_length: float = 200.0
 @export var reel_speed: float = 250.0
 @export var min_rope_length: float = 60.0
 @export var max_rope_length: float = 500.0
 @export var power_limit_length: float = 540.0
 
-# Pollux ledge-pull assist
+@export_group("Anchor Poses")
+@export var lift_grounded_vertical_gap: float = 15.0
+@export var lift_airborne_vertical_gap: float = 10.0
+@export var lift_x_band: float = 40.0
+@export var hanging_pollux_vertical_gap: float = 10.0
+
+@export_group("Constraint")
+@export var castor_anchor_position_correction_max: float = 3.0
+@export var pollux_anchor_position_correction_max: float = 5.0
+@export var free_position_correction_max: float = 3.0
+@export var lift_castor_position_factor: float = 1.5
+@export var lift_castor_velocity_factor: float = 2.0
+
+@export_group("Pollux Ledge Pull")
 @export var ledge_pull_up_velocity: float = 300.0
 @export var ledge_pull_position_speed: float = 100.0
 @export var ledge_pull_min_vertical_gap: float = 24.0
 @export var ledge_pull_slack_tolerance: float = 10.0
+@export var ledge_pull_horizontal_damp: float = 0.9
 
-# Fallback when Pollux is blocked by geometry and the rope keeps stretching
+@export_group("Blocked Pollux")
 @export var blocked_rope_error_threshold: float = 12.0
 @export var blocked_castor_pull_factor: float = 0.35
 @export var blocked_castor_pull_max: float = 6.0
 
+@export_group("Castor Swing")
 @export var castor_swing_pump_accel: float = 520.0
 @export var castor_swing_max_speed: float = 360.0
 
-# Rope debug
+@export_group("Debug")
 @export var debug_enabled: bool = true
 
-# Pollux throw tuning
+@export_group("Pollux Throw")
 @export var throw_pickup_radius: float = 72.0
 @export var throw_requires_line_of_sight: bool = true
 @export var throw_ready_offset: Vector2 = Vector2(64.0, 8.0)
@@ -184,20 +200,20 @@ func get_anchor_flags(
 		flags.is_castor_anchored = true
 
 		# Lift mode: Castor is directly above Pollux on the same X band.
-		if c_pos.y < p_pos.y - 15 and abs(c_pos.x - p_pos.x) < 40:
+		if c_pos.y < p_pos.y - lift_grounded_vertical_gap and abs(c_pos.x - p_pos.x) < lift_x_band:
 			flags.is_pollux_anchored = true
 
 	elif is_c_grounded and not is_p_grounded:
 		# Castor can anchor Pollux when Pollux is hanging below it.
-		if p_pos.y > c_pos.y + 10:
+		if p_pos.y > c_pos.y + hanging_pollux_vertical_gap:
 			flags.is_castor_anchored = true
 
 	elif not is_c_grounded and is_p_grounded:
 		# Keep Pollux as lift support only when Castor is above it. Castor
 		# passing below grounded Pollux should stay under normal air control.
 		if Input.is_action_pressed("reel_out") \
-		and c_pos.y < p_pos.y - 10 \
-		and abs(c_pos.x - p_pos.x) < 40:
+		and c_pos.y < p_pos.y - lift_airborne_vertical_gap \
+		and abs(c_pos.x - p_pos.x) < lift_x_band:
 			flags.is_pollux_anchored = true
 
 	return flags
@@ -233,7 +249,11 @@ func apply_castor_anchor_constraint(
 ) -> void:
 	# error > 0 means the rope is longer than allowed, so we must correct it.
 	# In this branch, Castor is the anchor and Pollux is the body we try to drag.
-	var pos_correction = clamp(error, -3.0, 3.0)
+	var pos_correction = clamp(
+		error,
+		-castor_anchor_position_correction_max,
+		castor_anchor_position_correction_max
+	)
 	var move_pollux = -(dir * pos_correction)
 	var lock_grounded_pollux_y: bool = (
 		is_pollux_grounded
@@ -245,7 +265,7 @@ func apply_castor_anchor_constraint(
 	if is_pollux_anchored and move_pollux.y > 0:
 		# In lift mode we suppress Pollux's X/Y drift and instead push Castor upward
 		# a bit to sell the idea that Pollux is helping lift Castor.
-		castor.global_position.y -= move_pollux.y * 1.5
+		castor.global_position.y -= move_pollux.y * lift_castor_position_factor
 		move_pollux.y = 0
 		move_pollux.x = 0
 
@@ -264,7 +284,7 @@ func apply_castor_anchor_constraint(
 
 	var apply_vel = vel_lambda
 	if is_pollux_anchored and apply_vel.y > 0:
-		castor.velocity.y -= apply_vel.y * 2.0
+		castor.velocity.y -= apply_vel.y * lift_castor_velocity_factor
 		apply_vel.y = 0
 		apply_vel.x = 0
 
@@ -276,7 +296,11 @@ func apply_castor_anchor_constraint(
 
 func apply_pollux_anchor_constraint(dir: Vector2, error: float, delta: float) -> void:
 	# Pollux anchored means Castor becomes the pendulum body.
-	var pos_correction = clamp(error, -5.0, 5.0)
+	var pos_correction = clamp(
+		error,
+		-pollux_anchor_position_correction_max,
+		pollux_anchor_position_correction_max
+	)
 	castor.global_position += dir * pos_correction
 	
 	# Recompute the rope direction after the position correction.
@@ -293,7 +317,7 @@ func apply_pollux_anchor_constraint(dir: Vector2, error: float, delta: float) ->
 
 func apply_free_constraint(dir: Vector2, error: float) -> void:
 	# Both bodies are effectively free, so share the correction 50:50.
-	var pos_correction = clamp(error, -3.0, 3.0)
+	var pos_correction = clamp(error, -free_position_correction_max, free_position_correction_max)
 	castor.global_position += dir * (pos_correction * 0.5)
 	pollux.global_position -= dir * (pos_correction * 0.5)
 
@@ -361,7 +385,7 @@ func apply_solid_constraint(delta: float) -> void:
 	debug_ledge_pulling = is_ledge_pulling
 
 	if is_ledge_pulling:
-		pollux.linear_velocity.x *= 0.9
+		pollux.linear_velocity.x *= ledge_pull_horizontal_damp
 
 	if is_ledge_pulling:
 		debug_constraint_state = "ledge_haul"
