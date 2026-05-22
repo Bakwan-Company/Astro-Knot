@@ -1,0 +1,17 @@
+[gd_scene format=3 uid="uid://l7gnalq5r6h2"]
+
+[ext_resource type="Script" uid="uid://5sxt3uiwqprx" path="res://hazards/environmental_hazard/environmental_hazard.gd" id="1_5xq3f"]
+[ext_resource type="Texture2D" uid="uid://upjbh2vncb58" path="res://asset/Interactables and Hazards/16-bit-spike-Sheet.png" id="2_dhyyo"]
+
+[node name="SpikeHazard" type="Area2D" unique_id=1397185794]
+collision_mask = 7
+script = ExtResource("1_5xq3f")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=162788148]
+position = Vector2(0, -8)
+texture = ExtResource("2_dhyyo")
+region_enabled = true
+region_rect = Rect2(0, 0, 16, 16)
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="." unique_id=646097630]
+polygon = PackedVector2Array(0, 0, 8, 0, 0, -14, -8, 0)

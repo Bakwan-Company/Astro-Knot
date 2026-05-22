@@ -17,6 +17,9 @@ shape = SubResource("RectangleShape2D_453m4")
 [node name="RopeAnchor" type="Marker2D" parent="." unique_id=443895996]
 position = Vector2(20, 20.5)
 
+[node name="ThrowAnchor" type="Marker2D" parent="." unique_id=443895997]
+position = Vector2(64, 8)
+
 [node name="GroundCheckL" type="RayCast2D" parent="." unique_id=1994394445]
 position = Vector2(0, 20)
 target_position = Vector2(0, 21)

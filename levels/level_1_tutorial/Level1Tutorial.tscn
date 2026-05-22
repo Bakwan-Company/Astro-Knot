@@ -210,6 +210,8 @@ pollux = NodePath("../Pollux")
 current_rope_length = 100.0
 min_rope_length = 64.0
 max_rope_length = 300.0
+min_throw_power = 200.0
+throw_auto_extend_limit = 300.0
 
 [node name="PlatformSuperjump" type="StaticBody2D" parent="." unique_id=663396460]
 visible = false

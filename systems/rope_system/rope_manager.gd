@@ -3,6 +3,9 @@ extends Node2D
 @export var castor: CharacterBody2D
 @export var pollux: RigidBody2D
 @onready var rope_visual: Line2D = $HardlightVisual
+@onready var aim_indicator: Line2D = $AimIndicator
+@onready var power_meter_bg: Line2D = $PowerMeterBg
+@onready var power_meter_fill: Line2D = $PowerMeterFill
 
 # Base rope tuning
 @export var current_rope_length: float = 200.0
@@ -23,6 +26,52 @@ extends Node2D
 
 @export var castor_swing_control_accel: float = 900.0
 
+# Pollux throw tuning
+@export var throw_pickup_radius: float = 72.0
+@export var throw_requires_line_of_sight: bool = true
+@export var throw_ready_offset: Vector2 = Vector2(64.0, 8.0)
+@export var throw_charge_time: float = 0.7
+@export var min_throw_power: float = 320.0
+@export var max_throw_power: float = 700.0
+@export var throw_aim_rotate_speed_deg: float = 180.0
+@export var throw_max_up_angle_deg: float = 75.0
+@export var throw_max_down_angle_deg: float = 60.0
+@export var throw_gravity_scale: float = 1.1
+@export var throw_linear_damp: float = 0.1
+@export var throw_flight_grace_time: float = 0.18
+@export var throw_recovery_time: float = 0.28
+@export var throw_cooldown: float = 0.2
+@export var throw_wall_bounce_damp: float = 0.35
+@export var throw_stop_speed_threshold: float = 40.0
+@export var throw_max_bonus_slack: float = 120.0
+@export var throw_auto_extend_limit: float = 220.0
+@export var throw_aim_preview_length: float = 68.0
+@export var throw_power_meter_width: float = 38.0
+
+enum ThrowState {
+	NORMAL,
+	THROW_READY,
+	THROW_CHARGING,
+	THROW_FLIGHT,
+	THROW_RECOVERY,
+}
+
+var throw_state: int = ThrowState.NORMAL
+var throw_state_timer: float = 0.0
+var throw_cooldown_timer: float = 0.0
+var throw_charge_elapsed: float = 0.0
+var throw_charge_ratio: float = 0.0
+var throw_aim_dir: Vector2 = Vector2.RIGHT
+var throw_aim_side: int = 1
+var throw_aim_angle_deg: float = 0.0
+var throw_ready_wait_for_release: bool = false
+var throw_collision_exception_active: bool = false
+var throw_cached_pollux_position: Vector2 = Vector2.ZERO
+var throw_cached_rope_length: float = 0.0
+var rope_default_color: Color
+var pollux_default_gravity_scale: float = 1.0
+var pollux_default_linear_damp: float = 0.0
+
 func is_body_grounded(body: Node) -> bool:
 	if not body:
 		return false
@@ -36,9 +85,41 @@ func is_pollux_side_blocked() -> bool:
 	var wall_right = pollux.get_node_or_null("WallCheckR") as RayCast2D
 	return (wall_left and wall_left.is_colliding()) or (wall_right and wall_right.is_colliding())
 
+func _ready() -> void:
+	rope_default_color = rope_visual.default_color
+	pollux_default_gravity_scale = pollux.gravity_scale
+	pollux_default_linear_damp = pollux.linear_damp
+	initialize_throw_aim_from_current()
+	set_throw_state(ThrowState.NORMAL)
+
+func _process(_delta: float) -> void:
+	update_rope_visual()
+	update_throw_visuals()
+
+func _physics_process(delta: float) -> void:
+	if not castor or not pollux:
+		return
+
+	throw_cooldown_timer = max(throw_cooldown_timer - delta, 0.0)
+	throw_state_timer += delta
+
+	handle_throw_state(delta)
+
+	if throw_state in [ThrowState.THROW_READY, ThrowState.THROW_CHARGING]:
+		sync_pollux_to_throw_anchor()
+		return
+
+	if throw_state == ThrowState.NORMAL:
+		handle_reel_input(delta)
+
+	apply_solid_constraint(delta)
+
 func apply_pollux_ledge_pull(delta: float, error: float, is_p_grounded: bool) -> bool:
 	# Small assist for the specific case where Pollux is airborne, side-blocked,
 	# and the player is still reeling the rope inward.
+	if throw_state != ThrowState.NORMAL:
+		return false
+
 	if not Input.is_action_pressed("reel_in"):
 		return false
 
@@ -179,16 +260,6 @@ func apply_free_constraint(dir: Vector2, error: float) -> void:
 	castor.velocity -= vel_lambda * 0.5
 	pollux.linear_velocity += vel_lambda * 0.5
 
-func _process(_delta: float) -> void:
-	update_rope_visual()
-
-func _physics_process(delta: float) -> void:
-	if not castor or not pollux:
-		return
-
-	handle_reel_input(delta)
-	apply_solid_constraint(delta)
-
 func handle_reel_input(delta: float) -> void:
 	if Input.is_action_pressed("reel_in"):
 		current_rope_length -= reel_speed * delta
@@ -205,13 +276,30 @@ func apply_solid_constraint(delta: float) -> void:
 	if dist < 0.1:
 		return
 
+	if throw_state == ThrowState.THROW_FLIGHT and is_pollux_moving_away_from_castor():
+		current_rope_length = min(
+			max(current_rope_length, dist),
+			get_throw_auto_extend_cap()
+		)
+
+	var effective_rope_length = current_rope_length
+
 	# error > 0: rope is overstretched and must be corrected
 	# error < 0: rope is slack, so we usually let it be
-	var error = dist - current_rope_length
-	if error < 0 and not Input.is_action_pressed("reel_out"):
+	var error = dist - effective_rope_length
+	if error < 0 and not (throw_state == ThrowState.NORMAL and Input.is_action_pressed("reel_out")):
 		return
 
 	var dir = c_pos.direction_to(p_pos)
+
+	if throw_state == ThrowState.THROW_FLIGHT:
+		apply_throw_flight_constraint(dir, error)
+		return
+
+	if throw_state == ThrowState.THROW_RECOVERY and throw_state_timer < throw_recovery_time * 0.5:
+		apply_free_constraint(dir, error)
+		return
+
 	var is_c_grounded = is_body_grounded(castor)
 	var is_p_grounded = is_body_grounded(pollux)
 	var is_ledge_pulling = apply_pollux_ledge_pull(delta, error, is_p_grounded)
@@ -234,3 +322,317 @@ func update_rope_visual() -> void:
 		rope_visual.clear_points()
 		rope_visual.add_point(c_anchor.global_position if c_anchor else castor.global_position)
 		rope_visual.add_point(p_anchor.global_position if p_anchor else pollux.global_position)
+
+func handle_throw_state(delta: float) -> void:
+	match throw_state:
+		ThrowState.NORMAL:
+			if Input.is_action_just_pressed("throw_pollux") and can_enter_throw_mode():
+				begin_throw_mode()
+		ThrowState.THROW_READY:
+			if should_cancel_throw_mode():
+				cancel_throw_mode()
+				return
+			update_throw_aim_direction(delta)
+			if Input.is_action_just_pressed("interact"):
+				cancel_throw_mode()
+				return
+			if throw_ready_wait_for_release:
+				if not Input.is_action_pressed("throw_pollux"):
+					throw_ready_wait_for_release = false
+				return
+			if Input.is_action_just_pressed("throw_pollux"):
+				set_throw_state(ThrowState.THROW_CHARGING)
+				throw_charge_elapsed = 0.0
+				throw_charge_ratio = 0.0
+		ThrowState.THROW_CHARGING:
+			if should_cancel_throw_mode():
+				cancel_throw_mode()
+				return
+			update_throw_aim_direction(delta)
+			if Input.is_action_just_pressed("interact"):
+				cancel_throw_mode()
+				return
+			if Input.is_action_pressed("throw_pollux"):
+				throw_charge_elapsed = min(throw_charge_elapsed + delta, throw_charge_time)
+				throw_charge_ratio = get_throw_charge_ratio()
+			if Input.is_action_just_released("throw_pollux"):
+				release_throw()
+		ThrowState.THROW_FLIGHT:
+			handle_throw_flight(delta)
+		ThrowState.THROW_RECOVERY:
+			if throw_state_timer >= throw_recovery_time:
+				set_throw_state(ThrowState.NORMAL)
+
+func can_enter_throw_mode() -> bool:
+	if throw_cooldown_timer > 0.0:
+		return false
+
+	if not is_body_grounded(castor) or not is_body_grounded(pollux):
+		return false
+
+	if Input.is_action_pressed("reel_in") or Input.is_action_pressed("reel_out"):
+		return false
+
+	if castor.global_position.distance_to(pollux.global_position) > throw_pickup_radius:
+		return false
+
+	if throw_requires_line_of_sight and not has_throw_line_of_sight():
+		return false
+
+	return true
+
+func has_throw_line_of_sight() -> bool:
+	var c_anchor = castor.get_node_or_null("RopeAnchor") as Marker2D
+	var p_anchor = pollux.get_node_or_null("RopeAnchor") as Marker2D
+	var from_pos = c_anchor.global_position if c_anchor else castor.global_position
+	var to_pos = p_anchor.global_position if p_anchor else pollux.global_position
+	var query = PhysicsRayQueryParameters2D.create(from_pos, to_pos)
+	query.exclude = [castor.get_rid(), pollux.get_rid()]
+	query.collision_mask = 1
+	var result = get_world_2d().direct_space_state.intersect_ray(query)
+	return result.is_empty()
+
+func begin_throw_mode() -> void:
+	throw_cached_pollux_position = pollux.global_position
+	throw_cached_rope_length = current_rope_length
+	throw_charge_elapsed = 0.0
+	throw_charge_ratio = 0.0
+	throw_ready_wait_for_release = Input.is_action_pressed("throw_pollux")
+	initialize_throw_aim_from_current()
+	set_throw_state(ThrowState.THROW_READY)
+	sync_pollux_to_throw_anchor()
+
+func cancel_throw_mode() -> void:
+	pollux.freeze = false
+	pollux.global_position = throw_cached_pollux_position
+	pollux.linear_velocity = Vector2.ZERO
+	current_rope_length = clamp(throw_cached_rope_length, min_rope_length, max_rope_length)
+	throw_cooldown_timer = max(throw_cooldown_timer, throw_cooldown * 0.5)
+	set_throw_state(ThrowState.NORMAL)
+
+func should_cancel_throw_mode() -> bool:
+	if not is_body_grounded(castor):
+		return true
+
+	if Input.is_action_pressed("reel_in") or Input.is_action_pressed("reel_out"):
+		return true
+
+	return false
+
+func sync_pollux_to_throw_anchor() -> void:
+	var ready_pos = get_throw_ready_position()
+	pollux.freeze = true
+	pollux.sleeping = false
+	pollux.linear_velocity = Vector2.ZERO
+	pollux.global_position = ready_pos
+
+func get_throw_ready_position() -> Vector2:
+	var throw_anchor = castor.get_node_or_null("ThrowAnchor") as Marker2D
+	var castor_rope_anchor = castor.get_node_or_null("RopeAnchor") as Marker2D
+	var base_anchor_local = castor_rope_anchor.position if castor_rope_anchor else Vector2.ZERO
+	var target_anchor_local = throw_anchor.position if throw_anchor else throw_ready_offset
+	var anchor_delta = target_anchor_local - base_anchor_local
+	anchor_delta.x = abs(anchor_delta.x) * float(get_throw_ready_facing())
+	var ready_anchor_global = castor.to_global(base_anchor_local + anchor_delta)
+	var pollux_anchor = pollux.get_node_or_null("RopeAnchor") as Marker2D
+	var pollux_anchor_offset = pollux_anchor.position if pollux_anchor else Vector2.ZERO
+	return ready_anchor_global - pollux_anchor_offset
+
+func update_throw_aim_direction(delta: float) -> void:
+	var horizontal_input = Input.get_action_strength("move_right") - Input.get_action_strength("move_left")
+	var vertical_input = Input.get_action_strength("aim_down") - Input.get_action_strength("aim_up")
+
+	if horizontal_input > 0.001:
+		throw_aim_side = 1
+	elif horizontal_input < -0.001:
+		throw_aim_side = -1
+
+	if abs(vertical_input) > 0.001:
+		throw_aim_angle_deg += vertical_input * throw_aim_rotate_speed_deg * delta
+		throw_aim_angle_deg = clamp(throw_aim_angle_deg, -throw_max_up_angle_deg, throw_max_down_angle_deg)
+
+	rebuild_throw_aim_dir()
+
+func release_throw() -> void:
+	var throw_power = lerp(min_throw_power, max_throw_power, get_throw_charge_ratio())
+	pollux.freeze = false
+	pollux.sleeping = false
+	pollux.linear_velocity = throw_aim_dir * throw_power
+	current_rope_length = max(current_rope_length, throw_cached_rope_length)
+	throw_cooldown_timer = max(throw_cooldown_timer, throw_cooldown)
+	set_throw_state(ThrowState.THROW_FLIGHT)
+
+func handle_throw_flight(delta: float) -> void:
+	dampen_throw_wall_hits()
+
+	if throw_state_timer < throw_flight_grace_time:
+		return
+
+	if current_rope_length >= get_throw_auto_extend_cap() and is_pollux_moving_away_from_castor():
+		begin_throw_recovery()
+		return
+
+	if not is_pollux_moving_away_from_castor():
+		begin_throw_recovery()
+		return
+
+	if is_body_grounded(pollux) and pollux.linear_velocity.length() <= throw_stop_speed_threshold:
+		begin_throw_recovery()
+		return
+
+	if is_body_grounded(pollux) and throw_state_timer >= throw_flight_grace_time + 0.2:
+		begin_throw_recovery()
+		return
+
+	if not is_body_grounded(castor):
+		begin_throw_recovery()
+
+func dampen_throw_wall_hits() -> void:
+	var wall_left = pollux.get_node_or_null("WallCheckL") as RayCast2D
+	var wall_right = pollux.get_node_or_null("WallCheckR") as RayCast2D
+	if wall_left and wall_left.is_colliding() and pollux.linear_velocity.x < 0.0:
+		pollux.linear_velocity.x *= -throw_wall_bounce_damp
+		pollux.linear_velocity.y *= 0.92
+	if wall_right and wall_right.is_colliding() and pollux.linear_velocity.x > 0.0:
+		pollux.linear_velocity.x *= -throw_wall_bounce_damp
+		pollux.linear_velocity.y *= 0.92
+
+func begin_throw_recovery() -> void:
+	set_throw_state(ThrowState.THROW_RECOVERY)
+
+func get_throw_auto_extend_cap() -> float:
+	return throw_cached_rope_length + max(throw_auto_extend_limit, 0.0)
+
+func get_pollux_throw_radial_speed() -> float:
+	var dir = castor.global_position.direction_to(pollux.global_position)
+	var relative_velocity = pollux.linear_velocity - castor.velocity
+	return relative_velocity.dot(dir)
+
+func is_pollux_moving_away_from_castor() -> bool:
+	return get_pollux_throw_radial_speed() > 5.0
+
+func apply_throw_flight_constraint(dir: Vector2, error: float) -> void:
+	var soft_error = max(error, 0.0) * 0.35
+	if soft_error <= 0.0:
+		return
+
+	var pos_correction = clamp(soft_error, 0.0, 2.0)
+	castor.global_position += dir * (pos_correction * 0.2)
+	pollux.global_position -= dir * (pos_correction * 0.8)
+
+	var c_vel = castor.velocity
+	var p_vel = pollux.linear_velocity
+	var rel_vel = (p_vel - c_vel).dot(dir)
+	var vel_lambda = dir * (-rel_vel * 0.35)
+	castor.velocity -= vel_lambda * 0.15
+	pollux.linear_velocity += vel_lambda * 0.85
+
+func get_throw_charge_ratio() -> float:
+	if throw_charge_time <= 0.0:
+		return 1.0
+	return clamp(throw_charge_elapsed / throw_charge_time, 0.0, 1.0)
+
+func get_castor_facing() -> int:
+	if castor.has_method("get_facing_direction"):
+		return castor.get_facing_direction()
+	return 1
+
+func get_throw_ready_facing() -> int:
+	return throw_aim_side if throw_aim_side != 0 else get_castor_facing()
+
+func initialize_throw_aim_from_current() -> void:
+	var base_dir = throw_aim_dir
+	if base_dir.length() <= 0.001:
+		base_dir = Vector2(float(get_castor_facing()), 0.0)
+
+	throw_aim_side = 1 if base_dir.x >= 0.0 else -1
+	throw_aim_angle_deg = rad_to_deg(atan2(base_dir.y, abs(base_dir.x)))
+	throw_aim_angle_deg = clamp(throw_aim_angle_deg, -throw_max_up_angle_deg, throw_max_down_angle_deg)
+	rebuild_throw_aim_dir()
+
+func rebuild_throw_aim_dir() -> void:
+	var angle_radians = deg_to_rad(throw_aim_angle_deg)
+	throw_aim_dir = Vector2(cos(angle_radians) * float(throw_aim_side), sin(angle_radians))
+	if throw_aim_dir.length() <= 0.001:
+		throw_aim_dir = Vector2(float(get_throw_ready_facing()), 0.0)
+	else:
+		throw_aim_dir = throw_aim_dir.normalized()
+
+func set_throw_collision_exception(active: bool) -> void:
+	if throw_collision_exception_active == active:
+		return
+
+	throw_collision_exception_active = active
+
+	if not castor or not pollux:
+		return
+
+	if active:
+		castor.add_collision_exception_with(pollux)
+		pollux.add_collision_exception_with(castor)
+	else:
+		castor.remove_collision_exception_with(pollux)
+		pollux.remove_collision_exception_with(castor)
+
+func set_pollux_throw_physics(active: bool) -> void:
+	if not pollux:
+		return
+
+	if active:
+		pollux.gravity_scale = throw_gravity_scale
+		pollux.linear_damp = throw_linear_damp
+	else:
+		pollux.gravity_scale = pollux_default_gravity_scale
+		pollux.linear_damp = pollux_default_linear_damp
+
+func set_throw_state(new_state: int) -> void:
+	throw_state = new_state
+	throw_state_timer = 0.0
+
+	var is_locking_castor = throw_state in [ThrowState.THROW_READY, ThrowState.THROW_CHARGING]
+	if castor.has_method("set_throw_mode_locked"):
+		castor.set_throw_mode_locked(is_locking_castor)
+
+	set_throw_collision_exception(throw_state != ThrowState.NORMAL)
+	set_pollux_throw_physics(throw_state == ThrowState.THROW_FLIGHT)
+
+	if pollux:
+		pollux.set_meta("throw_mode_active", throw_state in [ThrowState.THROW_READY, ThrowState.THROW_CHARGING, ThrowState.THROW_FLIGHT])
+
+	match throw_state:
+		ThrowState.NORMAL:
+			throw_charge_elapsed = 0.0
+			throw_charge_ratio = 0.0
+			throw_ready_wait_for_release = false
+			rope_visual.default_color = rope_default_color
+		ThrowState.THROW_READY, ThrowState.THROW_CHARGING:
+			rope_visual.default_color = Color(1.0, 0.85, 0.26, 1.0)
+		ThrowState.THROW_FLIGHT:
+			rope_visual.default_color = Color(1.0, 0.48, 0.2, 1.0)
+		ThrowState.THROW_RECOVERY:
+			rope_visual.default_color = Color(0.75, 0.88, 1.0, 1.0)
+
+func update_throw_visuals() -> void:
+	var show_throw_visuals = throw_state in [ThrowState.THROW_READY, ThrowState.THROW_CHARGING]
+	aim_indicator.visible = show_throw_visuals
+	power_meter_bg.visible = show_throw_visuals
+	power_meter_fill.visible = show_throw_visuals
+
+	if not show_throw_visuals:
+		return
+
+	var start = get_throw_ready_position()
+	var end = start + throw_aim_dir * throw_aim_preview_length
+	aim_indicator.clear_points()
+	aim_indicator.add_point(start)
+	aim_indicator.add_point(end)
+
+	var bar_start = start + Vector2(-throw_power_meter_width * 0.5, -16.0)
+	var bar_end = bar_start + Vector2(throw_power_meter_width, 0.0)
+	power_meter_bg.clear_points()
+	power_meter_bg.add_point(bar_start)
+	power_meter_bg.add_point(bar_end)
+
+	power_meter_fill.clear_points()
+	power_meter_fill.add_point(bar_start)
+	power_meter_fill.add_point(bar_start + Vector2(throw_power_meter_width * get_throw_charge_ratio(), 0.0))

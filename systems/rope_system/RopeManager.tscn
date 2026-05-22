@@ -10,3 +10,21 @@ ledge_pull_up_velocity = 300.0
 z_index = 20
 width = 4.0
 default_color = Color(0.45882353, 0.9607843, 1, 1)
+
+[node name="AimIndicator" type="Line2D" parent="." unique_id=72797105]
+visible = false
+z_index = 21
+width = 3.0
+default_color = Color(1, 0.854902, 0.262745, 1)
+
+[node name="PowerMeterBg" type="Line2D" parent="." unique_id=72797106]
+visible = false
+z_index = 21
+width = 4.0
+default_color = Color(0.137255, 0.160784, 0.176471, 0.85)
+
+[node name="PowerMeterFill" type="Line2D" parent="." unique_id=72797107]
+visible = false
+z_index = 22
+width = 4.0
+default_color = Color(1, 0.427451, 0.113725, 1)

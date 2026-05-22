@@ -10,10 +10,13 @@ size = Vector2(1149.5, 81)
 [node name="TestLevel" type="Node2D" unique_id=716274276]
 
 [node name="Castor" parent="." unique_id=975424275 instance=ExtResource("1_sjoxp")]
-position = Vector2(1020, 194)
+position = Vector2(225, 204)
+
+[node name="Camera2D" type="Camera2D" parent="Castor" unique_id=627264759]
+position = Vector2(98, -48)
 
 [node name="Pollux" parent="." unique_id=1878608427 instance=ExtResource("2_1qa4p")]
-position = Vector2(1250, 405)
+position = Vector2(56, 204)
 
 [node name="StaticBody2D" type="StaticBody2D" parent="." unique_id=1208445088]
 
@@ -30,3 +33,9 @@ shape = SubResource("RectangleShape2D_xhwnm")
 [node name="RopeManager" parent="." unique_id=709923073 node_paths=PackedStringArray("castor", "pollux") instance=ExtResource("3_1qa4p")]
 castor = NodePath("../Castor")
 pollux = NodePath("../Pollux")
+
+[node name="CastorSpawn" type="Marker2D" parent="." unique_id=2022301161]
+position = Vector2(1020, 194)
+
+[node name="PolluxSpawn" type="Marker2D" parent="." unique_id=196168164]
+position = Vector2(1250, 405)
