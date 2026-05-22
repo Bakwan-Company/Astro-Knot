@@ -1,17 +1,18 @@
 [gd_scene format=3 uid="uid://ck4alac620xrn"]
 
 [ext_resource type="Script" uid="uid://dx1vmb1ptnhvh" path="res://interactables/terminal/terminal.gd" id="1_1tpfj"]
+[ext_resource type="Texture2D" uid="uid://wa1sshhqandr" path="res://asset/Interactables and Hazards/terminal_on.png" id="2_1bku6"]
 
-[sub_resource type="CircleShape2D" id="CircleShape2D_1tpfj"]
-radius = 21.0
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_1bku6"]
+size = Vector2(69, 47)
 
 [node name="Terminal" type="Area2D" unique_id=1049502516]
 script = ExtResource("1_1tpfj")
-
-[node name="ColorRect" type="ColorRect" parent="." unique_id=1995231666]
-offset_right = 20.0
-offset_bottom = 20.0
+terminal_on = ExtResource("2_1bku6")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1717440507]
-position = Vector2(10, 10)
-shape = SubResource("CircleShape2D_1tpfj")
+position = Vector2(2.5, -9.5)
+shape = SubResource("RectangleShape2D_1bku6")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=2091121235]
+texture = ExtResource("2_1bku6")
