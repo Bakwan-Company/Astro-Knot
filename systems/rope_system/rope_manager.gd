@@ -1,5 +1,7 @@
 extends Node2D
 
+signal tether_broken(death_type: String)
+
 @export_group("Actors")
 @export var castor: CharacterBody2D
 @export var pollux: RigidBody2D
@@ -14,8 +16,14 @@ extends Node2D
 @export var current_rope_length: float = 200.0
 @export var reel_speed: float = 250.0
 @export var min_rope_length: float = 60.0
-@export var max_rope_length: float = 500.0
+@export var max_rope_length: float = 300.0
+
+@export_group("Rope Power")
 @export var power_limit_length: float = 540.0
+@export_range(0.0, 1.0) var power_warning_ratio: float = 0.6
+@export var power_break_grace_time: float = 0.15
+@export var power_warning_color: Color = Color(1.0, 0.86, 0.3, 1.0)
+@export var power_break_color: Color = Color(1.0, 0.24, 0.18, 1.0)
 
 @export_group("Anchor Poses")
 @export var lift_grounded_vertical_gap: float = 15.0
@@ -48,6 +56,10 @@ extends Node2D
 
 @export_group("Debug")
 @export var debug_enabled: bool = true
+
+@export_group("Game Over")
+@export var tether_break_death_type: String = "tether_break"
+@export var game_over_scene: PackedScene = preload("res://ui/game_over/GameOverOverlay.tscn")
 
 @export_group("Pollux Throw")
 @export var throw_pickup_radius: float = 72.0
@@ -104,6 +116,8 @@ var debug_pollux_side_blocked: bool = false
 var debug_ledge_pulling: bool = false
 var debug_grounded_pollux_y_lock: bool = false
 var debug_constraint_state: String = "idle"
+var power_limit_over_time: float = 0.0
+var tether_is_broken: bool = false
 
 func is_body_grounded(body: Node) -> bool:
 	if not body:
@@ -132,10 +146,11 @@ func _ready() -> void:
 func _process(_delta: float) -> void:
 	update_rope_visual()
 	update_throw_visuals()
+	update_power_rope_visual()
 	update_debug_readout()
 
 func _physics_process(delta: float) -> void:
-	if not castor or not pollux:
+	if tether_is_broken or not castor or not pollux:
 		return
 
 	throw_cooldown_timer = max(throw_cooldown_timer - delta, 0.0)
@@ -149,6 +164,7 @@ func _physics_process(delta: float) -> void:
 		debug_ledge_pulling = false
 		debug_grounded_pollux_y_lock = false
 		update_rope_debug_snapshot()
+		update_power_limit(delta)
 		return
 
 	if throw_state == ThrowState.NORMAL:
@@ -156,6 +172,7 @@ func _physics_process(delta: float) -> void:
 
 	apply_solid_constraint(delta)
 	update_rope_debug_snapshot()
+	update_power_limit(delta)
 
 func apply_pollux_ledge_pull(delta: float, error: float, is_p_grounded: bool) -> bool:
 	# Small assist for the specific case where Pollux is airborne, side-blocked,
@@ -427,6 +444,75 @@ func update_rope_debug_snapshot() -> void:
 	debug_castor_anchored = bool(anchor_flags.get("is_castor_anchored", false))
 	debug_pollux_anchored = bool(anchor_flags.get("is_pollux_anchored", false))
 
+func update_power_limit(delta: float) -> void:
+	if tether_is_broken:
+		return
+
+	if debug_rope_distance <= power_limit_length:
+		power_limit_over_time = 0.0
+		return
+
+	power_limit_over_time += delta
+	if power_limit_over_time >= power_break_grace_time:
+		trigger_game_over(tether_break_death_type)
+
+func update_power_rope_visual() -> void:
+	if not rope_visual:
+		return
+
+	var base_color: Color = get_throw_rope_color()
+	var warning_start_length: float = power_limit_length * power_warning_ratio
+	if power_limit_length <= 0.0 or debug_rope_distance <= warning_start_length:
+		rope_visual.default_color = base_color
+		return
+
+	var warning_span: float = maxf(power_limit_length - warning_start_length, 0.001)
+	var warning_amount: float = clampf(
+		(debug_rope_distance - warning_start_length) / warning_span,
+		0.0,
+		1.0
+	)
+	rope_visual.default_color = base_color.lerp(power_warning_color, warning_amount)
+
+	if debug_rope_distance > power_limit_length:
+		rope_visual.default_color = power_break_color
+
+func trigger_game_over(death_type: String) -> void:
+	if tether_is_broken:
+		return
+
+	tether_is_broken = true
+	debug_constraint_state = "tether_broken"
+	rope_visual.default_color = power_break_color
+	tether_broken.emit(death_type)
+
+	if not game_over_scene:
+		get_tree().call_deferred("reload_current_scene")
+		return
+
+	var overlay: Node = game_over_scene.instantiate()
+	var overlay_parent: Node = self
+	if get_tree().current_scene:
+		overlay_parent = get_tree().current_scene
+
+	overlay_parent.add_child(overlay)
+	if overlay.has_method("show_death"):
+		overlay.call("show_death", death_type)
+
+	get_tree().paused = true
+
+func get_power_state_name() -> String:
+	if tether_is_broken:
+		return "broken"
+
+	if debug_rope_distance > power_limit_length:
+		return "over"
+
+	if debug_rope_distance > power_limit_length * power_warning_ratio:
+		return "warn"
+
+	return "ok"
+
 func update_debug_readout() -> void:
 	if not debug_panel or not debug_readout:
 		return
@@ -435,10 +521,14 @@ func update_debug_readout() -> void:
 	if not debug_enabled:
 		return
 
-	var power_state: String = "over" if debug_rope_distance > power_limit_length else "ok"
 	debug_readout.text = "\n".join([
 		"len %.1f dst %.1f" % [current_rope_length, debug_rope_distance],
-		"err %.1f limit %.1f %s" % [debug_rope_error, power_limit_length, power_state],
+		"err %.1f limit %.1f %s %.2f" % [
+			debug_rope_error,
+			power_limit_length,
+			get_power_state_name(),
+			power_limit_over_time,
+		],
 		"gnd C:%s P:%s anc C:%s P:%s" % [
 			debug_castor_grounded,
 			debug_pollux_grounded,
@@ -734,13 +824,8 @@ func set_throw_state(new_state: int) -> void:
 			throw_charge_elapsed = 0.0
 			throw_charge_ratio = 0.0
 			throw_ready_wait_for_release = false
-			rope_visual.default_color = rope_default_color
-		ThrowState.THROW_READY, ThrowState.THROW_CHARGING:
-			rope_visual.default_color = Color(1.0, 0.85, 0.26, 1.0)
-		ThrowState.THROW_FLIGHT:
-			rope_visual.default_color = Color(1.0, 0.48, 0.2, 1.0)
-		ThrowState.THROW_RECOVERY:
-			rope_visual.default_color = Color(0.75, 0.88, 1.0, 1.0)
+
+	rope_visual.default_color = get_throw_rope_color()
 
 func get_throw_state_name() -> String:
 	match throw_state:
@@ -754,6 +839,17 @@ func get_throw_state_name() -> String:
 			return "recover"
 		_:
 			return "normal"
+
+func get_throw_rope_color() -> Color:
+	match throw_state:
+		ThrowState.THROW_READY, ThrowState.THROW_CHARGING:
+			return Color(1.0, 0.85, 0.26, 1.0)
+		ThrowState.THROW_FLIGHT:
+			return Color(1.0, 0.48, 0.2, 1.0)
+		ThrowState.THROW_RECOVERY:
+			return Color(0.75, 0.88, 1.0, 1.0)
+		_:
+			return rope_default_color
 
 func update_throw_visuals() -> void:
 	var show_throw_visuals = throw_state in [ThrowState.THROW_READY, ThrowState.THROW_CHARGING]
