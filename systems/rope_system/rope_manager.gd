@@ -1,32 +1,67 @@
 extends Node2D
 
+signal tether_broken(death_type: String)
+
+@export_group("Actors")
 @export var castor: CharacterBody2D
 @export var pollux: RigidBody2D
 @onready var rope_visual: Line2D = $HardlightVisual
 @onready var aim_indicator: Line2D = $AimIndicator
 @onready var power_meter_bg: Line2D = $PowerMeterBg
 @onready var power_meter_fill: Line2D = $PowerMeterFill
+@onready var debug_panel: Control = $DebugOverlay/Panel
+@onready var debug_readout: Label = $DebugOverlay/Panel/DebugReadout
 
-# Base rope tuning
+@export_group("Rope Length")
 @export var current_rope_length: float = 200.0
 @export var reel_speed: float = 250.0
 @export var min_rope_length: float = 60.0
-@export var max_rope_length: float = 500.0
+@export var max_rope_length: float = 300.0
 
-# Pollux ledge-pull assist
-@export var ledge_pull_up_velocity: float = 220.0
-@export var ledge_pull_position_speed: float = 70.0
+@export_group("Rope Power")
+@export var power_limit_length: float = 540.0
+@export_range(0.0, 1.0) var power_warning_ratio: float = 0.6
+@export var power_break_grace_time: float = 0.15
+@export var power_warning_color: Color = Color(1.0, 0.86, 0.3, 1.0)
+@export var power_break_color: Color = Color(1.0, 0.24, 0.18, 1.0)
+
+@export_group("Anchor Poses")
+@export var lift_grounded_vertical_gap: float = 15.0
+@export var lift_airborne_vertical_gap: float = 10.0
+@export var lift_x_band: float = 40.0
+@export var hanging_pollux_vertical_gap: float = 10.0
+
+@export_group("Constraint")
+@export var castor_anchor_position_correction_max: float = 3.0
+@export var pollux_anchor_position_correction_max: float = 5.0
+@export var free_position_correction_max: float = 3.0
+@export var lift_castor_position_factor: float = 1.5
+@export var lift_castor_velocity_factor: float = 2.0
+
+@export_group("Pollux Ledge Pull")
+@export var ledge_pull_up_velocity: float = 300.0
+@export var ledge_pull_position_speed: float = 100.0
 @export var ledge_pull_min_vertical_gap: float = 24.0
 @export var ledge_pull_slack_tolerance: float = 10.0
+@export var ledge_pull_horizontal_damp: float = 0.9
 
-# Fallback when Pollux is blocked by geometry and the rope keeps stretching
+@export_group("Blocked Pollux")
 @export var blocked_rope_error_threshold: float = 12.0
 @export var blocked_castor_pull_factor: float = 0.35
 @export var blocked_castor_pull_max: float = 6.0
 
-@export var castor_swing_control_accel: float = 900.0
+@export_group("Castor Swing")
+@export var castor_swing_pump_accel: float = 520.0
+@export var castor_swing_max_speed: float = 360.0
 
-# Pollux throw tuning
+@export_group("Debug")
+@export var debug_enabled: bool = true
+
+@export_group("Game Over")
+@export var tether_break_death_type: String = "tether_break"
+@export var game_over_scene: PackedScene = preload("res://ui/game_over/GameOverOverlay.tscn")
+
+@export_group("Pollux Throw")
 @export var throw_pickup_radius: float = 72.0
 @export var throw_requires_line_of_sight: bool = true
 @export var throw_ready_offset: Vector2 = Vector2(64.0, 8.0)
@@ -71,13 +106,29 @@ var throw_cached_rope_length: float = 0.0
 var rope_default_color: Color
 var pollux_default_gravity_scale: float = 1.0
 var pollux_default_linear_damp: float = 0.0
+var debug_rope_distance: float = 0.0
+var debug_rope_error: float = 0.0
+var debug_castor_grounded: bool = false
+var debug_pollux_grounded: bool = false
+var debug_castor_anchored: bool = false
+var debug_pollux_anchored: bool = false
+var debug_pollux_side_blocked: bool = false
+var debug_ledge_pulling: bool = false
+var debug_grounded_pollux_y_lock: bool = false
+var debug_constraint_state: String = "idle"
+var power_limit_over_time: float = 0.0
+var tether_is_broken: bool = false
 
 func is_body_grounded(body: Node) -> bool:
 	if not body:
 		return false
 
-	var ground_left = body.get_node_or_null("GroundCheckL")
-	var ground_right = body.get_node_or_null("GroundCheckR")
+	var character_body: CharacterBody2D = body as CharacterBody2D
+	if character_body and character_body.is_on_floor():
+		return true
+
+	var ground_left: RayCast2D = body.get_node_or_null("GroundCheckL") as RayCast2D
+	var ground_right: RayCast2D = body.get_node_or_null("GroundCheckR") as RayCast2D
 	return (ground_left and ground_left.is_colliding()) or (ground_right and ground_right.is_colliding())
 
 func is_pollux_side_blocked() -> bool:
@@ -95,9 +146,11 @@ func _ready() -> void:
 func _process(_delta: float) -> void:
 	update_rope_visual()
 	update_throw_visuals()
+	update_power_rope_visual()
+	update_debug_readout()
 
 func _physics_process(delta: float) -> void:
-	if not castor or not pollux:
+	if tether_is_broken or not castor or not pollux:
 		return
 
 	throw_cooldown_timer = max(throw_cooldown_timer - delta, 0.0)
@@ -107,12 +160,19 @@ func _physics_process(delta: float) -> void:
 
 	if throw_state in [ThrowState.THROW_READY, ThrowState.THROW_CHARGING]:
 		sync_pollux_to_throw_anchor()
+		debug_constraint_state = "throw_hold"
+		debug_ledge_pulling = false
+		debug_grounded_pollux_y_lock = false
+		update_rope_debug_snapshot()
+		update_power_limit(delta)
 		return
 
 	if throw_state == ThrowState.NORMAL:
 		handle_reel_input(delta)
 
 	apply_solid_constraint(delta)
+	update_rope_debug_snapshot()
+	update_power_limit(delta)
 
 func apply_pollux_ledge_pull(delta: float, error: float, is_p_grounded: bool) -> bool:
 	# Small assist for the specific case where Pollux is airborne, side-blocked,
@@ -157,20 +217,20 @@ func get_anchor_flags(
 		flags.is_castor_anchored = true
 
 		# Lift mode: Castor is directly above Pollux on the same X band.
-		if c_pos.y < p_pos.y - 15 and abs(c_pos.x - p_pos.x) < 40:
+		if c_pos.y < p_pos.y - lift_grounded_vertical_gap and abs(c_pos.x - p_pos.x) < lift_x_band:
 			flags.is_pollux_anchored = true
 
 	elif is_c_grounded and not is_p_grounded:
 		# Castor can anchor Pollux when Pollux is hanging below it.
-		if p_pos.y > c_pos.y + 10:
+		if p_pos.y > c_pos.y + hanging_pollux_vertical_gap:
 			flags.is_castor_anchored = true
 
 	elif not is_c_grounded and is_p_grounded:
-		# Pollux becomes the anchor when Castor is hanging below it,
-		# or when Castor is directly above it in a narrow X band.
-		if c_pos.y > p_pos.y + 10:
-			flags.is_pollux_anchored = true
-		elif c_pos.y < p_pos.y - 10 and abs(c_pos.x - p_pos.x) < 40:
+		# Keep Pollux as lift support only when Castor is above it. Castor
+		# passing below grounded Pollux should stay under normal air control.
+		if Input.is_action_pressed("reel_out") \
+		and c_pos.y < p_pos.y - lift_airborne_vertical_gap \
+		and abs(c_pos.x - p_pos.x) < lift_x_band:
 			flags.is_pollux_anchored = true
 
 	return flags
@@ -196,21 +256,43 @@ func apply_blocked_pollux_fallback(dir: Vector2, error: float, delta: float) -> 
 	if castor_away_speed < 0.0:
 		castor.velocity -= dir * castor_away_speed
 
-func apply_castor_anchor_constraint(dir: Vector2, error: float, is_pollux_anchored: bool, delta: float) -> void:
+func apply_castor_anchor_constraint(
+	dir: Vector2,
+	error: float,
+	is_pollux_anchored: bool,
+	is_pollux_grounded: bool,
+	delta: float,
+	allow_blocked_fallback: bool = true
+) -> void:
 	# error > 0 means the rope is longer than allowed, so we must correct it.
 	# In this branch, Castor is the anchor and Pollux is the body we try to drag.
-	var pos_correction = clamp(error, -3.0, 3.0)
+	var pos_correction = clamp(
+		error,
+		-castor_anchor_position_correction_max,
+		castor_anchor_position_correction_max
+	)
 	var move_pollux = -(dir * pos_correction)
+	var lock_grounded_pollux_y: bool = (
+		is_pollux_grounded
+		and not is_pollux_anchored
+		and throw_state == ThrowState.NORMAL
+		and not Input.is_action_pressed("reel_in")
+	)
 
 	if is_pollux_anchored and move_pollux.y > 0:
 		# In lift mode we suppress Pollux's X/Y drift and instead push Castor upward
 		# a bit to sell the idea that Pollux is helping lift Castor.
-		castor.global_position.y -= move_pollux.y * 1.5
+		castor.global_position.y -= move_pollux.y * lift_castor_position_factor
 		move_pollux.y = 0
 		move_pollux.x = 0
 
+	if lock_grounded_pollux_y and move_pollux.y < 0.0:
+		move_pollux.y = 0.0
+		debug_grounded_pollux_y_lock = true
+
 	pollux.global_position += move_pollux
-	apply_blocked_pollux_fallback(dir, error, delta)
+	if allow_blocked_fallback:
+		apply_blocked_pollux_fallback(dir, error, delta)
 
 	var c_vel = castor.velocity
 	var p_vel = pollux.linear_velocity
@@ -219,15 +301,23 @@ func apply_castor_anchor_constraint(dir: Vector2, error: float, is_pollux_anchor
 
 	var apply_vel = vel_lambda
 	if is_pollux_anchored and apply_vel.y > 0:
-		castor.velocity.y -= apply_vel.y * 2.0
+		castor.velocity.y -= apply_vel.y * lift_castor_velocity_factor
 		apply_vel.y = 0
 		apply_vel.x = 0
+
+	if lock_grounded_pollux_y and apply_vel.y < 0.0:
+		apply_vel.y = 0.0
+		debug_grounded_pollux_y_lock = true
 
 	pollux.linear_velocity += apply_vel
 
 func apply_pollux_anchor_constraint(dir: Vector2, error: float, delta: float) -> void:
 	# Pollux anchored means Castor becomes the pendulum body.
-	var pos_correction = clamp(error, -5.0, 5.0)
+	var pos_correction = clamp(
+		error,
+		-pollux_anchor_position_correction_max,
+		pollux_anchor_position_correction_max
+	)
 	castor.global_position += dir * pos_correction
 	
 	# Recompute the rope direction after the position correction.
@@ -236,19 +326,15 @@ func apply_pollux_anchor_constraint(dir: Vector2, error: float, delta: float) ->
 	var swing_speed = castor.velocity.dot(tangent)
 	var input_dir := Input.get_axis("move_left", "move_right")
 	var tangent_input = Vector2(input_dir, 0.0).dot(tangent)
-	var base_air_control_speed = castor.speed
-	var castor_air_speed = castor.get("air_speed")
-	if typeof(castor_air_speed) == TYPE_FLOAT or typeof(castor_air_speed) == TYPE_INT:
-		base_air_control_speed = max(base_air_control_speed, float(castor_air_speed))
 
-	var target_swing_speed = tangent_input * base_air_control_speed
-	swing_speed = move_toward(swing_speed, target_swing_speed, castor_swing_control_accel * delta)
+	swing_speed += tangent_input * castor_swing_pump_accel * delta
+	swing_speed = clamp(swing_speed, -castor_swing_max_speed, castor_swing_max_speed)
 
 	castor.velocity = tangent * swing_speed
 
 func apply_free_constraint(dir: Vector2, error: float) -> void:
 	# Both bodies are effectively free, so share the correction 50:50.
-	var pos_correction = clamp(error, -3.0, 3.0)
+	var pos_correction = clamp(error, -free_position_correction_max, free_position_correction_max)
 	castor.global_position += dir * (pos_correction * 0.5)
 	pollux.global_position -= dir * (pos_correction * 0.5)
 
@@ -272,8 +358,12 @@ func apply_solid_constraint(delta: float) -> void:
 	var c_pos = castor.global_position
 	var p_pos = pollux.global_position
 	var dist = c_pos.distance_to(p_pos)
+	debug_constraint_state = "idle"
+	debug_ledge_pulling = false
+	debug_grounded_pollux_y_lock = false
 
 	if dist < 0.1:
+		debug_constraint_state = "overlap"
 		return
 
 	if throw_state == ThrowState.THROW_FLIGHT and is_pollux_moving_away_from_castor():
@@ -288,15 +378,18 @@ func apply_solid_constraint(delta: float) -> void:
 	# error < 0: rope is slack, so we usually let it be
 	var error = dist - effective_rope_length
 	if error < 0 and not (throw_state == ThrowState.NORMAL and Input.is_action_pressed("reel_out")):
+		debug_constraint_state = "slack"
 		return
 
 	var dir = c_pos.direction_to(p_pos)
 
 	if throw_state == ThrowState.THROW_FLIGHT:
+		debug_constraint_state = "throw_flight"
 		apply_throw_flight_constraint(dir, error)
 		return
 
 	if throw_state == ThrowState.THROW_RECOVERY and throw_state_timer < throw_recovery_time * 0.5:
+		debug_constraint_state = "throw_recovery"
 		apply_free_constraint(dir, error)
 		return
 
@@ -304,15 +397,24 @@ func apply_solid_constraint(delta: float) -> void:
 	var is_p_grounded = is_body_grounded(pollux)
 	var is_ledge_pulling = apply_pollux_ledge_pull(delta, error, is_p_grounded)
 	var anchor_flags = get_anchor_flags(c_pos, p_pos, is_c_grounded, is_p_grounded)
+	var is_castor_anchored: bool = bool(anchor_flags.get("is_castor_anchored", false))
+	var is_pollux_anchored: bool = bool(anchor_flags.get("is_pollux_anchored", false))
+	debug_ledge_pulling = is_ledge_pulling
 
 	if is_ledge_pulling:
-		pollux.linear_velocity.x *= 0.9
+		pollux.linear_velocity.x *= ledge_pull_horizontal_damp
 
-	if anchor_flags.is_castor_anchored:
-		apply_castor_anchor_constraint(dir, error, anchor_flags.is_pollux_anchored, delta)
-	elif anchor_flags.is_pollux_anchored:
+	if is_ledge_pulling:
+		debug_constraint_state = "ledge_haul"
+		apply_castor_anchor_constraint(dir, error, false, is_p_grounded, delta, false)
+	elif is_castor_anchored:
+		debug_constraint_state = "castor_anchor"
+		apply_castor_anchor_constraint(dir, error, is_pollux_anchored, is_p_grounded, delta)
+	elif is_pollux_anchored:
+		debug_constraint_state = "pollux_anchor"
 		apply_pollux_anchor_constraint(dir, error, delta)
 	else:
+		debug_constraint_state = "free"
 		apply_free_constraint(dir, error)
 
 func update_rope_visual() -> void:
@@ -322,6 +424,124 @@ func update_rope_visual() -> void:
 		rope_visual.clear_points()
 		rope_visual.add_point(c_anchor.global_position if c_anchor else castor.global_position)
 		rope_visual.add_point(p_anchor.global_position if p_anchor else pollux.global_position)
+
+func update_rope_debug_snapshot() -> void:
+	if not castor or not pollux:
+		return
+
+	debug_rope_distance = castor.global_position.distance_to(pollux.global_position)
+	debug_rope_error = debug_rope_distance - current_rope_length
+	debug_castor_grounded = is_body_grounded(castor)
+	debug_pollux_grounded = is_body_grounded(pollux)
+	debug_pollux_side_blocked = is_pollux_side_blocked()
+
+	var anchor_flags: Dictionary = get_anchor_flags(
+		castor.global_position,
+		pollux.global_position,
+		debug_castor_grounded,
+		debug_pollux_grounded
+	)
+	debug_castor_anchored = bool(anchor_flags.get("is_castor_anchored", false))
+	debug_pollux_anchored = bool(anchor_flags.get("is_pollux_anchored", false))
+
+func update_power_limit(delta: float) -> void:
+	if tether_is_broken:
+		return
+
+	if debug_rope_distance <= power_limit_length:
+		power_limit_over_time = 0.0
+		return
+
+	power_limit_over_time += delta
+	if power_limit_over_time >= power_break_grace_time:
+		trigger_game_over(tether_break_death_type)
+
+func update_power_rope_visual() -> void:
+	if not rope_visual:
+		return
+
+	var base_color: Color = get_throw_rope_color()
+	var warning_start_length: float = power_limit_length * power_warning_ratio
+	if power_limit_length <= 0.0 or debug_rope_distance <= warning_start_length:
+		rope_visual.default_color = base_color
+		return
+
+	var warning_span: float = maxf(power_limit_length - warning_start_length, 0.001)
+	var warning_amount: float = clampf(
+		(debug_rope_distance - warning_start_length) / warning_span,
+		0.0,
+		1.0
+	)
+	rope_visual.default_color = base_color.lerp(power_warning_color, warning_amount)
+
+	if debug_rope_distance > power_limit_length:
+		rope_visual.default_color = power_break_color
+
+func trigger_game_over(death_type: String) -> void:
+	if tether_is_broken:
+		return
+
+	tether_is_broken = true
+	debug_constraint_state = "tether_broken"
+	rope_visual.default_color = power_break_color
+	tether_broken.emit(death_type)
+
+	if not game_over_scene:
+		get_tree().call_deferred("reload_current_scene")
+		return
+
+	var overlay: Node = game_over_scene.instantiate()
+	var overlay_parent: Node = self
+	if get_tree().current_scene:
+		overlay_parent = get_tree().current_scene
+
+	overlay_parent.add_child(overlay)
+	if overlay.has_method("show_death"):
+		overlay.call("show_death", death_type)
+
+	get_tree().paused = true
+
+func get_power_state_name() -> String:
+	if tether_is_broken:
+		return "broken"
+
+	if debug_rope_distance > power_limit_length:
+		return "over"
+
+	if debug_rope_distance > power_limit_length * power_warning_ratio:
+		return "warn"
+
+	return "ok"
+
+func update_debug_readout() -> void:
+	if not debug_panel or not debug_readout:
+		return
+
+	debug_panel.visible = debug_enabled
+	if not debug_enabled:
+		return
+
+	debug_readout.text = "\n".join([
+		"len %.1f dst %.1f" % [current_rope_length, debug_rope_distance],
+		"err %.1f limit %.1f %s %.2f" % [
+			debug_rope_error,
+			power_limit_length,
+			get_power_state_name(),
+			power_limit_over_time,
+		],
+		"gnd C:%s P:%s anc C:%s P:%s" % [
+			debug_castor_grounded,
+			debug_pollux_grounded,
+			debug_castor_anchored,
+			debug_pollux_anchored,
+		],
+		"state %s throw %s" % [debug_constraint_state, get_throw_state_name()],
+		"ledge %s block %s ylock %s" % [
+			debug_ledge_pulling,
+			debug_pollux_side_blocked,
+			debug_grounded_pollux_y_lock,
+		],
+	])
 
 func handle_throw_state(delta: float) -> void:
 	match throw_state:
@@ -604,13 +824,32 @@ func set_throw_state(new_state: int) -> void:
 			throw_charge_elapsed = 0.0
 			throw_charge_ratio = 0.0
 			throw_ready_wait_for_release = false
-			rope_visual.default_color = rope_default_color
-		ThrowState.THROW_READY, ThrowState.THROW_CHARGING:
-			rope_visual.default_color = Color(1.0, 0.85, 0.26, 1.0)
+
+	rope_visual.default_color = get_throw_rope_color()
+
+func get_throw_state_name() -> String:
+	match throw_state:
+		ThrowState.THROW_READY:
+			return "ready"
+		ThrowState.THROW_CHARGING:
+			return "charge"
 		ThrowState.THROW_FLIGHT:
-			rope_visual.default_color = Color(1.0, 0.48, 0.2, 1.0)
+			return "flight"
 		ThrowState.THROW_RECOVERY:
-			rope_visual.default_color = Color(0.75, 0.88, 1.0, 1.0)
+			return "recover"
+		_:
+			return "normal"
+
+func get_throw_rope_color() -> Color:
+	match throw_state:
+		ThrowState.THROW_READY, ThrowState.THROW_CHARGING:
+			return Color(1.0, 0.85, 0.26, 1.0)
+		ThrowState.THROW_FLIGHT:
+			return Color(1.0, 0.48, 0.2, 1.0)
+		ThrowState.THROW_RECOVERY:
+			return Color(0.75, 0.88, 1.0, 1.0)
+		_:
+			return rope_default_color
 
 func update_throw_visuals() -> void:
 	var show_throw_visuals = throw_state in [ThrowState.THROW_READY, ThrowState.THROW_CHARGING]
