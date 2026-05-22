@@ -1,5 +1,7 @@
 [gd_scene format=3 uid="uid://d3rhk612sc0pl"]
 
+[ext_resource type="Texture2D" uid="uid://ee0seugtfppg" path="res://asset/Castor and Pollux/PolluxAsli.png" id="1_f1yap"]
+
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_sj5q8"]
 size = Vector2(40, 40)
 
@@ -8,11 +10,6 @@ collision_layer = 5
 gravity_scale = 2.0
 lock_rotation = true
 linear_damp = 0.5
-
-[node name="ColorRect" type="ColorRect" parent="." unique_id=1434428785]
-offset_right = 40.0
-offset_bottom = 40.0
-color = Color(0.18039216, 0.37254903, 1, 1)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1990002864]
 position = Vector2(20, 20)
@@ -28,3 +25,16 @@ target_position = Vector2(0, 21)
 [node name="GroundCheckR" type="RayCast2D" parent="." unique_id=188929640]
 position = Vector2(40, 20)
 target_position = Vector2(0, 21)
+
+[node name="WallCheckL" type="RayCast2D" parent="." unique_id=138229640]
+position = Vector2(2, 20)
+target_position = Vector2(-12, 0)
+
+[node name="WallCheckR" type="RayCast2D" parent="." unique_id=138229641]
+position = Vector2(38, 20)
+target_position = Vector2(12, 0)
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1347957140]
+position = Vector2(20.500002, 18.5)
+scale = Vector2(0.671875, 0.671875)
+texture = ExtResource("1_f1yap")
