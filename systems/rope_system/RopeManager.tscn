@@ -4,9 +4,44 @@
 
 [node name="RopeManager" type="Node2D" unique_id=709923073]
 script = ExtResource("1_yq5y5")
-ledge_pull_up_velocity = 300.0
 
 [node name="HardlightVisual" type="Line2D" parent="." unique_id=72797104]
 z_index = 20
 width = 4.0
 default_color = Color(0.45882353, 0.9607843, 1, 1)
+
+[node name="AimIndicator" type="Line2D" parent="." unique_id=72797105]
+visible = false
+z_index = 21
+width = 3.0
+default_color = Color(1, 0.854902, 0.262745, 1)
+
+[node name="PowerMeterBg" type="Line2D" parent="." unique_id=72797106]
+visible = false
+z_index = 21
+width = 4.0
+default_color = Color(0.137255, 0.160784, 0.176471, 0.85)
+
+[node name="PowerMeterFill" type="Line2D" parent="." unique_id=72797107]
+visible = false
+z_index = 22
+width = 4.0
+default_color = Color(1, 0.427451, 0.113725, 1)
+
+[node name="DebugOverlay" type="CanvasLayer" parent="." unique_id=1743546038]
+
+[node name="Panel" type="PanelContainer" parent="DebugOverlay" unique_id=1160512051]
+offset_left = 5.0
+offset_top = 5.0
+offset_right = 151.0
+offset_bottom = 64.0
+mouse_filter = 2
+
+[node name="DebugReadout" type="Label" parent="DebugOverlay/Panel" unique_id=101201703]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 6
+text = "Rope debug"

@@ -7,6 +7,8 @@ extends CharacterBody2D
 @export var terminal_velocity: float = 1000.0 # Biar gak nembus lantai kalau jatuh kecepetan
 
 var gravity: float = ProjectSettings.get_setting("physics/2d/default_gravity")
+var facing_direction: int = 1
+var is_throw_mode_locked: bool = false
 
 func _physics_process(delta: float) -> void:
 	# 1. GRAVITASI
@@ -17,12 +19,19 @@ func _physics_process(delta: float) -> void:
 	# Cap kecepatan jatuh
 	velocity.y = min(velocity.y, terminal_velocity)
 
+	if is_throw_mode_locked:
+		velocity.x = 0.0
+		move_and_slide()
+		return
+
 	# 2. LOMPAT
 	if Input.is_action_just_pressed("jump") and is_on_floor():
 		velocity.y = jump_velocity
 
 	# 3. INPUT GERAK HORIZONTAL
 	var direction = Input.get_axis("move_left", "move_right")
+	if direction != 0.0:
+		facing_direction = -1 if direction < 0.0 else 1
 	
 	if direction:
 		var target_speed = speed if is_on_floor() else air_speed
@@ -40,3 +49,9 @@ func _physics_process(delta: float) -> void:
 	# 4. EKSEKUSI
 	# move_and_slide bakal pake velocity yang udah kita modif di RopeManager
 	move_and_slide()
+
+func set_throw_mode_locked(locked: bool) -> void:
+	is_throw_mode_locked = locked
+
+func get_facing_direction() -> int:
+	return facing_direction
