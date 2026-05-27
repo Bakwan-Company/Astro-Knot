@@ -192,3 +192,44 @@ script = ExtResource("5_ive15")
 castor = NodePath("../Castor")
 pollux = NodePath("../Pollux")
 smoothing_speed = 10.0
+
+[node name="Label2" type="Label" parent="." unique_id=150130281]
+offset_left = 7805.0
+offset_top = 332.0
+offset_right = 9230.0
+offset_bottom = 464.0
+theme_override_font_sizes/font_size = 30
+text = "terminal ----- tembok
+
+
+
+
+
+
+
+
+
+laser ------- tombol buat ngangkat tembot atas
+
+
+
+
+
+
+
+
+
+
+
+
+                                                                                                                                                               data log                                                                                                             next level"
+
+[node name="Label" type="Label" parent="." unique_id=1756328452]
+offset_left = 5563.0
+offset_top = 283.0
+offset_right = 6988.0
+offset_bottom = 415.0
+theme_override_font_sizes/font_size = 30
+text = "1. bagian ini kayanya harus castor yang diatas soalnya kalo dibawah di terbang2 kaya orang tolol, 
+ini platform masih pake format castor bawah, nanti gw tuker kalo udh fix
+2. kok pas digeret si polluxnya sendat2 gitu"
