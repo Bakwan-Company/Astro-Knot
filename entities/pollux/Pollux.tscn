@@ -1,15 +1,51 @@
 [gd_scene format=3 uid="uid://d3rhk612sc0pl"]
 
-[ext_resource type="Texture2D" uid="uid://ee0seugtfppg" path="res://asset/Castor and Pollux/PolluxAsli.png" id="1_f1yap"]
+[ext_resource type="Script" path="res://entities/pollux/pollux.gd" id="1_pollux_script"]
+[ext_resource type="Texture2D" path="res://asset/AstroKnot_Chars/Pollux/PolluxV2.png" id="pollux_idle"]
+[ext_resource type="Texture2D" path="res://asset/AstroKnot_Chars/Pollux/PolluxPreTurnLeft.png" id="pollux_preturn_left"]
+[ext_resource type="Texture2D" path="res://asset/AstroKnot_Chars/Pollux/PolluxTurnLeft1.png" id="pollux_left_1"]
+[ext_resource type="Texture2D" path="res://asset/AstroKnot_Chars/Pollux/PolluxTurnLeft2.png" id="pollux_left_2"]
+[ext_resource type="Texture2D" path="res://asset/AstroKnot_Chars/Pollux/PolluxPreTurnRight.png" id="pollux_preturn_right"]
+[ext_resource type="Texture2D" path="res://asset/AstroKnot_Chars/Pollux/PolluxTurnRight1.png" id="pollux_right_1"]
+[ext_resource type="Texture2D" path="res://asset/AstroKnot_Chars/Pollux/PolluxTurnRight2.png" id="pollux_right_2"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_sj5q8"]
 size = Vector2(40, 40)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_pollux"]
+animations = [{
+"frames": [{"duration": 1.0, "texture": ExtResource("pollux_idle")}],
+"loop": true,
+"name": &"idle",
+"speed": 5.0
+}, {
+"frames": [{"duration": 1.0, "texture": ExtResource("pollux_preturn_right")}],
+"loop": false,
+"name": &"preturn_left",
+"speed": 8.0
+}, {
+"frames": [{"duration": 1.0, "texture": ExtResource("pollux_right_1")}, {"duration": 1.0, "texture": ExtResource("pollux_right_2")}],
+"loop": true,
+"name": &"walk_left",
+"speed": 6.0
+}, {
+"frames": [{"duration": 1.0, "texture": ExtResource("pollux_preturn_left")}],
+"loop": false,
+"name": &"preturn_right",
+"speed": 8.0
+}, {
+"frames": [{"duration": 1.0, "texture": ExtResource("pollux_left_1")}, {"duration": 1.0, "texture": ExtResource("pollux_left_2")}],
+"loop": true,
+"name": &"walk_right",
+"speed": 6.0
+}]
 
 [node name="Pollux" type="RigidBody2D" unique_id=1878608427]
 collision_layer = 5
 gravity_scale = 2.0
 lock_rotation = true
 linear_damp = 0.5
+script = ExtResource("1_pollux_script")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1990002864]
 position = Vector2(20, 20)
@@ -34,7 +70,9 @@ target_position = Vector2(-12, 0)
 position = Vector2(38, 20)
 target_position = Vector2(12, 0)
 
-[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1347957140]
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1347957140]
 position = Vector2(20.500002, 18.5)
 scale = Vector2(0.671875, 0.671875)
-texture = ExtResource("1_f1yap")
+sprite_frames = SubResource("SpriteFrames_pollux")
+animation = &"idle"
+autoplay = "idle"
