@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://c84utwcb082j"
-path="res://.godot/imported/CastorPreTurnLeftThird.png-f5e187390e73706d073d691aa3c5c5ff.ctex"
+path="res://.godot/imported/CastorPreTurnLeftThird.png-c4a33cde5cf2f25a1bb822f90cc61f63.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://asset/AstroKnot_Chars/Castor/ThirdBattery/CastorPreTurnLeftThird.png"
-dest_files=["res://.godot/imported/CastorPreTurnLeftThird.png-f5e187390e73706d073d691aa3c5c5ff.ctex"]
+dest_files=["res://.godot/imported/CastorPreTurnLeftThird.png-c4a33cde5cf2f25a1bb822f90cc61f63.ctex"]
 
 [params]
 

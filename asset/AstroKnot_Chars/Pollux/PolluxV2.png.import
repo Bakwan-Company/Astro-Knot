@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bq246n4e2u4wx"
-path="res://.godot/imported/PolluxV2.png-b2af667b96e07e77041745bf5f9465bd.ctex"
+path="res://.godot/imported/PolluxV2.png-8d50a533920809b041ca2abc47d7cd4b.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://asset/AstroKnot_Chars/Pollux/PolluxV2.png"
-dest_files=["res://.godot/imported/PolluxV2.png-b2af667b96e07e77041745bf5f9465bd.ctex"]
+dest_files=["res://.godot/imported/PolluxV2.png-8d50a533920809b041ca2abc47d7cd4b.ctex"]
 
 [params]
 
