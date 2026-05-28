@@ -6,7 +6,7 @@
 [ext_resource type="Texture2D" uid="uid://b38bour4sfmeh" path="res://asset/Interactables and Hazards/door_open.png" id="4_open"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_door"]
-size = Vector2(25, 75)
+size = Vector2(32, 64)
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_door"]
 animations = [{
@@ -59,7 +59,7 @@ animations = [{
 script = ExtResource("1_rixxk")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1187053215]
-position = Vector2(-3.5, -8.5)
+position = Vector2(0, -5)
 shape = SubResource("RectangleShape2D_door")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1713347493]

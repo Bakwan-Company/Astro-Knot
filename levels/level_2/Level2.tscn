@@ -148,10 +148,10 @@ position = Vector2(910, 83)
 position = Vector2(1383, 499)
 
 [node name="Castor" parent="." unique_id=975424275 instance=ExtResource("1_ks41y")]
-position = Vector2(268, 21)
+position = Vector2(210, 23)
 
 [node name="Pollux" parent="." unique_id=1878608427 instance=ExtResource("2_747xn")]
-position = Vector2(172, 22)
+position = Vector2(118, 23)
 
 [node name="RopeManager" parent="." unique_id=709923073 node_paths=PackedStringArray("castor", "pollux") instance=ExtResource("3_hclcj")]
 castor = NodePath("../Castor")
@@ -170,16 +170,13 @@ tile_map_data = PackedByteArray("AAD5/wIAAQAAAAAAAAD6/wIAAQABAAAAAAD7/wIAAQABAAA
 tile_set = SubResource("TileSet_a8vd6")
 
 [node name="Door1" parent="." unique_id=1073054213 instance=ExtResource("6_a8vd6")]
-position = Vector2(1011, 69)
+position = Vector2(1008, 69)
 
 [node name="SpikeHazard" parent="." unique_id=1397185794 instance=ExtResource("8_qvp8n")]
 position = Vector2(479, 345)
 
-[node name="Door3" parent="." unique_id=1346292779 instance=ExtResource("6_a8vd6")]
-position = Vector2(3257, 82)
-
 [node name="Door2" parent="." unique_id=2033424197 instance=ExtResource("6_a8vd6")]
-position = Vector2(1634, 292)
+position = Vector2(1631, 293)
 
 [node name="SpikeHazard3" parent="." unique_id=213412823 instance=ExtResource("8_qvp8n")]
 position = Vector2(1488, 504)
