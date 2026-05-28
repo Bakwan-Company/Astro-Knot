@@ -398,4 +398,4 @@ pollux = NodePath("../Pollux")
 [node name="LevelExit" parent="." unique_id=1578466031 instance=ExtResource("28_382gh")]
 position = Vector2(7824, 52)
 open_confirm_on_body_entered = true
-cancel_walk_distance = 110.0
+cancel_walk_distance = 90.0
