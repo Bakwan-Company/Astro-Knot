@@ -1,18 +1,28 @@
-extends Node2D
+extends Area2D
 
-@onready var button_laser = $ButtonLaser 
-@onready var laser_gate = $LaserGate     
+signal laser_button_pressed
+
+@onready var anim_sprite = $AnimatedSprite2D
+
+var is_pressed: bool = false
 
 func _ready() -> void:
-	if button_laser and laser_gate:
-		button_laser.laser_button_pressed.connect(laser_gate.turn_off_laser)
-		print("--- SYSTEM: Sinyal Tombol -> Laser Berhasil Disambungkan via Kode! ---")
-	else:
-		print("--- ERROR: Node ButtonLaser atau LaserGate nggak ketemu! Cek lagi namanya ---")
+	body_entered.connect(_on_body_entered)
+	anim_sprite.play("unpressed")
 
-func _on_button_laser_body_entered(body: Node2D) -> void:
-	pass # Replace with function body.
+func _on_body_entered(body: Node2D) -> void:
+	if is_pressed:
+		return
+		
+	# Pengecekan aman, asal karakternya punya fungsi die() (kayak Castor/Pollux), tombol bakal bereaksi
+	if body.has_method("die"):
+		press_button()
 
+func press_button() -> void:
+	is_pressed = true
+	anim_sprite.play("pressed") 
+	laser_button_pressed.emit()
+	print("Tombol diinjek - Laser Mati!")
 
-func _on_laser_gate_body_entered(body: Node2D) -> void:
+func _on_laser_button_pressed() -> void:
 	pass # Replace with function body.

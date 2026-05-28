@@ -394,5 +394,6 @@ scale = Vector2(0.05, 0.05)
 position = Vector2(7281.0005, 610.00006)
 scale = Vector2(2.6, 2.6)
 
+[connection signal="laser_button_pressed" from="." to="." method="_on_laser_button_pressed"]
 [connection signal="body_entered" from="ButtonLaser" to="." method="_on_button_laser_body_entered"]
 [connection signal="body_entered" from="LaserGate" to="." method="_on_laser_gate_body_entered"]

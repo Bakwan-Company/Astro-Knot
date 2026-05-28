@@ -44,5 +44,3 @@ autoplay = "unpressed"
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1966145712]
 position = Vector2(5, 2)
 shape = SubResource("RectangleShape2D_eml06")
-
-[connection signal="body_entered" from="." to="." method="_on_body_entered"]
