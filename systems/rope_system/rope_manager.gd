@@ -5,6 +5,10 @@ signal tether_broken(death_type: String)
 @export_group("Actors")
 @export var castor: CharacterBody2D
 @export var pollux: RigidBody2D
+
+@export_group("Connection")
+@export var start_connected: bool = true
+
 @onready var rope_visual: Line2D = $HardlightVisual
 @onready var aim_indicator: Line2D = $AimIndicator
 @onready var power_meter_bg: Line2D = $PowerMeterBg
@@ -82,6 +86,12 @@ signal tether_broken(death_type: String)
 @export var throw_auto_extend_limit: float = 220.0
 @export var throw_aim_preview_length: float = 68.0
 @export var throw_power_meter_width: float = 38.0
+@export var throw_ready_color: Color = Color(1.0, 0.85, 0.26, 1.0)
+@export var throw_flight_color: Color = Color(1.0, 0.48, 0.2, 1.0)
+@export var throw_recovery_color: Color = Color(0.75, 0.88, 1.0, 1.0)
+@export var throw_aim_color: Color = Color(1.0, 0.85, 0.26, 1.0)
+@export var throw_power_meter_bg_color: Color = Color(0.137, 0.161, 0.176, 0.85)
+@export var throw_power_meter_fill_color: Color = Color(1.0, 0.427, 0.114, 1.0)
 
 enum ThrowState {
 	NORMAL,
@@ -118,6 +128,7 @@ var debug_grounded_pollux_y_lock: bool = false
 var debug_constraint_state: String = "idle"
 var power_limit_over_time: float = 0.0
 var tether_is_broken: bool = false
+var tether_connected: bool = true
 
 func is_body_grounded(body: Node) -> bool:
 	if not body:
@@ -141,16 +152,23 @@ func _ready() -> void:
 	pollux_default_gravity_scale = pollux.gravity_scale
 	pollux_default_linear_damp = pollux.linear_damp
 	initialize_throw_aim_from_current()
+	apply_throw_visual_colors()
 	set_throw_state(ThrowState.NORMAL)
+	set_tether_connected(start_connected)
 
 func _process(_delta: float) -> void:
+	if not tether_connected:
+		update_rope_visual()
+		update_debug_readout()
+		return
+
 	update_rope_visual()
 	update_throw_visuals()
 	update_power_rope_visual()
 	update_debug_readout()
 
 func _physics_process(delta: float) -> void:
-	if tether_is_broken or not castor or not pollux:
+	if not tether_connected or tether_is_broken or not castor or not pollux:
 		return
 
 	throw_cooldown_timer = max(throw_cooldown_timer - delta, 0.0)
@@ -173,6 +191,37 @@ func _physics_process(delta: float) -> void:
 	apply_solid_constraint(delta)
 	update_rope_debug_snapshot()
 	update_power_limit(delta)
+
+func set_tether_connected(value: bool) -> void:
+	tether_connected = value
+	visible = value
+
+	if rope_visual != null:
+		rope_visual.visible = value
+		if not value:
+			rope_visual.clear_points()
+
+	if aim_indicator != null:
+		aim_indicator.visible = false
+	if power_meter_bg != null:
+		power_meter_bg.visible = false
+	if power_meter_fill != null:
+		power_meter_fill.visible = false
+
+	if pollux != null:
+		pollux.freeze = not value
+		pollux.sleeping = not value
+		pollux.modulate = Color.WHITE if value else Color(0.48, 0.48, 0.48, 1.0)
+
+	if value:
+		tether_is_broken = false
+		power_limit_over_time = 0.0
+		debug_constraint_state = "idle"
+	else:
+		debug_constraint_state = "disconnected"
+
+func is_tether_connected() -> bool:
+	return tether_connected
 
 func apply_pollux_ledge_pull(delta: float, error: float, is_p_grounded: bool) -> bool:
 	# Small assist for the specific case where Pollux is airborne, side-blocked,
@@ -418,6 +467,11 @@ func apply_solid_constraint(delta: float) -> void:
 		apply_free_constraint(dir, error)
 
 func update_rope_visual() -> void:
+	if not tether_connected:
+		if rope_visual:
+			rope_visual.clear_points()
+		return
+
 	if castor and pollux and rope_visual:
 		var c_anchor = castor.get_node_or_null("RopeAnchor")
 		var p_anchor = pollux.get_node_or_null("RopeAnchor")
@@ -843,15 +897,21 @@ func get_throw_state_name() -> String:
 func get_throw_rope_color() -> Color:
 	match throw_state:
 		ThrowState.THROW_READY, ThrowState.THROW_CHARGING:
-			return Color(1.0, 0.85, 0.26, 1.0)
+			return throw_ready_color
 		ThrowState.THROW_FLIGHT:
-			return Color(1.0, 0.48, 0.2, 1.0)
+			return throw_flight_color
 		ThrowState.THROW_RECOVERY:
-			return Color(0.75, 0.88, 1.0, 1.0)
+			return throw_recovery_color
 		_:
 			return rope_default_color
 
+func apply_throw_visual_colors() -> void:
+	aim_indicator.default_color = throw_aim_color
+	power_meter_bg.default_color = throw_power_meter_bg_color
+	power_meter_fill.default_color = throw_power_meter_fill_color
+
 func update_throw_visuals() -> void:
+	apply_throw_visual_colors()
 	var show_throw_visuals = throw_state in [ThrowState.THROW_READY, ThrowState.THROW_CHARGING]
 	aim_indicator.visible = show_throw_visuals
 	power_meter_bg.visible = show_throw_visuals
