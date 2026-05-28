@@ -1,0 +1,67 @@
+[gd_scene format=3 uid="uid://cq0phginw8lck"]
+
+[ext_resource type="Script" uid="uid://b4ltnr5133gi" path="res://interactables/door/door.gd" id="1_rixxk"]
+[ext_resource type="Texture2D" uid="uid://wndq1ih54hso" path="res://asset/Interactables and Hazards/door_closed.png" id="2_closed"]
+[ext_resource type="Texture2D" uid="uid://yfmqjuqqkxwe" path="res://asset/Interactables and Hazards/door_halfopen.png" id="3_halfopen"]
+[ext_resource type="Texture2D" uid="uid://b38bour4sfmeh" path="res://asset/Interactables and Hazards/door_open.png" id="4_open"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_door"]
+size = Vector2(32, 64)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_door"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("4_open")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3_halfopen")
+}, {
+"duration": 1.0,
+"texture": ExtResource("2_closed")
+}],
+"loop": false,
+"name": &"close",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_closed")
+}],
+"loop": true,
+"name": &"closed",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_closed")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3_halfopen")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_open")
+}],
+"loop": false,
+"name": &"open",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("4_open")
+}],
+"loop": true,
+"name": &"opened",
+"speed": 5.0
+}]
+
+[node name="Door" type="StaticBody2D" unique_id=1073054213]
+script = ExtResource("1_rixxk")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1187053215]
+position = Vector2(0, -5)
+shape = SubResource("RectangleShape2D_door")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1713347493]
+sprite_frames = SubResource("SpriteFrames_door")
+animation = &"closed"
