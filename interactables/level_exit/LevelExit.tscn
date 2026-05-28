@@ -1,0 +1,54 @@
+[gd_scene load_steps=5 format=4]
+
+[ext_resource type="Script" path="res://interactables/level_exit/level_exit.gd" id="1_level_exit"]
+[ext_resource type="Texture2D" uid="uid://wovydx02i7" path="res://asset/Interactables and Hazards/damaged-beacon.png" id="2_beacon"]
+[ext_resource type="PackedScene" path="res://interactables/level_exit/LevelExitConfirmWindow.tscn" id="3_confirm_window"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_exit_area"]
+size = Vector2(160, 180)
+
+[node name="LevelExit" type="Area2D"]
+collision_layer = 0
+collision_mask = 7
+script = ExtResource("1_level_exit")
+confirm_window_scene = ExtResource("3_confirm_window")
+castor_path = NodePath("../Castor")
+pollux_path = NodePath("../Pollux")
+rope_manager_path = NodePath("../RopeManager")
+camera_path = NodePath("../Camera2D")
+exit_sprite_texture = ExtResource("2_beacon")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, 70)
+shape = SubResource("RectangleShape2D_exit_area")
+
+[node name="SignLabel" type="Label" parent="."]
+offset_left = -80.0
+offset_top = -28.0
+offset_right = 80.0
+offset_bottom = -5.0
+theme_override_colors/font_color = Color(0.18, 0.11, 0.07, 1)
+theme_override_colors/font_shadow_color = Color(1, 0.78, 0.42, 0.45)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+text = "Old Signal Relay"
+horizontal_alignment = 1
+
+[node name="PromptLabel" type="Label" parent="."]
+visible = false
+offset_left = -122.0
+offset_top = -58.0
+offset_right = 122.0
+offset_bottom = -35.0
+theme_override_colors/font_color = Color(0.18, 0.11, 0.07, 1)
+theme_override_colors/font_shadow_color = Color(1, 0.78, 0.42, 0.75)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+text = "Old signal relay detected"
+horizontal_alignment = 1
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+z_index = -10
+position = Vector2(-0.5, 84)
+scale = Vector2(0.2630715, 0.2745098)
+texture = ExtResource("2_beacon")
