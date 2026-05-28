@@ -25,22 +25,24 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_bxhla")
 }],
-"loop": true,
+"loop": false,
 "name": &"unpressed",
 "speed": 5.0
 }]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_eml06"]
-size = Vector2(454, 270)
+size = Vector2(454, 314)
 
 [node name="ButtonLaser" type="Area2D" unique_id=1410914400]
+collision_mask = 15
 script = ExtResource("1_0mj4n")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=873561260]
 sprite_frames = SubResource("SpriteFrames_fgwgb")
 animation = &"unpressed"
 autoplay = "unpressed"
+frame_progress = 1.0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1966145712]
-position = Vector2(5, 2)
+position = Vector2(5, -20)
 shape = SubResource("RectangleShape2D_eml06")

@@ -1,6 +1,6 @@
 extends Area2D
 
-signal laser_button_pressed
+signal button_toggled(is_on: bool)
 
 @onready var anim_sprite = $AnimatedSprite2D
 
@@ -13,11 +13,11 @@ func _ready() -> void:
 func _on_body_entered(body: Node2D) -> void:
 	if is_pressed:
 		return
-	if body.has_method("die"):
+		
+	if body.name == "Castor" or body.name == "Pollux" or "Castor" in body.name or "Pollux" in body.name:
 		press_button()
 
 func press_button() -> void:
 	is_pressed = true
-	anim_sprite.play("pressed") 
-	laser_button_pressed.emit()
-	print("Tombol diinjek - Laser Mati!")
+	anim_sprite.play("pressed")
+	button_toggled.emit(true)

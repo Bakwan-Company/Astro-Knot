@@ -48,7 +48,7 @@ animations = [{
 }],
 "loop": false,
 "name": &"turn_off",
-"speed": 8.0
+"speed": 5.0
 }]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_rwndm"]
@@ -60,8 +60,10 @@ script = ExtResource("1_lj7mt")
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1949450853]
 rotation = 1.5707964
 sprite_frames = SubResource("SpriteFrames_vhtfq")
-animation = &"idle"
+animation = &"turn_off"
 autoplay = "idle"
+frame = 3
+frame_progress = 1.0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=613853746]
 position = Vector2(-5.5, 0.5)
