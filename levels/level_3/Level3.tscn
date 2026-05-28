@@ -1,5 +1,6 @@
 [gd_scene format=4 uid="uid://ce8jflybvujrt"]
 
+[ext_resource type="Script" uid="uid://ce5pioxeu7obq" path="res://levels/level_3/level_3.gd" id="1_iey6c"]
 [ext_resource type="Texture2D" uid="uid://ch2vg7uydp7df" path="res://asset/Platfromer/lv3/1 Tiles/Tileset.png" id="1_xs6vc"]
 [ext_resource type="Texture2D" uid="uid://b13ecfxkq5ub1" path="res://asset/Platfromer/lv3/1 Tiles/BackTileset.png" id="2_dddj2"]
 [ext_resource type="Texture2D" uid="uid://dmw2f42u5ybeq" path="res://asset/Platfromer/lv3/2 Background/Night/2.png" id="2_qu0p3"]
@@ -12,6 +13,8 @@
 [ext_resource type="Texture2D" uid="uid://bh550ofal56q7" path="res://asset/Platfromer/lv3/2 Background/Night/5.png" id="5_f386o"]
 [ext_resource type="Script" uid="uid://enw6wcalsly1" path="res://levels/level_3/camera.gd" id="5_ive15"]
 [ext_resource type="Texture2D" uid="uid://d4mw0gbqjco5s" path="res://asset/Platfromer/lv3/2 Background/Night/1.png" id="8_6si6m"]
+[ext_resource type="PackedScene" uid="uid://dw5c2a8vr8m0l" path="res://interactables/button_laser/button_laser.tscn" id="13_g1xxd"]
+[ext_resource type="PackedScene" uid="uid://83ggwk22vorl" path="res://hazards/laser_gate/LaserGate.tscn" id="14_iey6c"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_wh162"]
 texture = ExtResource("1_xs6vc")
@@ -307,6 +310,7 @@ sources/1 = SubResource("TileSetAtlasSource_1pwd6")
 sources/2 = SubResource("TileSetAtlasSource_6si6m")
 
 [node name="Level3" type="Node2D" unique_id=476251660]
+script = ExtResource("1_iey6c")
 
 [node name="sky" type="Parallax2D" parent="." unique_id=1225097320]
 scroll_scale = Vector2(0.1, 0.1)
@@ -363,16 +367,17 @@ tile_map_data = PackedByteArray("AAAVAAQAAgAAAAAAAAAVAAUAAgAAAAEAAAAVAAYAAgAAAAE
 tile_set = SubResource("TileSet_1s8r7")
 
 [node name="Castor" parent="." unique_id=975424275 instance=ExtResource("2_wh162")]
-position = Vector2(-51, 95)
+position = Vector2(6832, 659)
 
 [node name="Pollux" parent="." unique_id=1878608427 instance=ExtResource("3_1s8r7")]
-position = Vector2(-109, 98)
+position = Vector2(6889, 950)
 
 [node name="RopeManager" parent="." unique_id=709923073 node_paths=PackedStringArray("castor", "pollux") instance=ExtResource("4_3dgl3")]
 castor = NodePath("../Castor")
 pollux = NodePath("../Pollux")
 current_rope_length = 100.0
 min_rope_length = 64.0
+debug_enabled = false
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=2114119201 node_paths=PackedStringArray("castor", "pollux")]
 zoom = Vector2(0.6, 0.6)
@@ -380,3 +385,14 @@ script = ExtResource("5_ive15")
 castor = NodePath("../Castor")
 pollux = NodePath("../Pollux")
 smoothing_speed = 10.0
+
+[node name="ButtonLaser" parent="." unique_id=1410914400 instance=ExtResource("13_g1xxd")]
+position = Vector2(7076, 1018)
+scale = Vector2(0.05, 0.05)
+
+[node name="LaserGate" parent="." unique_id=230749045 instance=ExtResource("14_iey6c")]
+position = Vector2(7281.0005, 610.00006)
+scale = Vector2(2.6, 2.6)
+
+[connection signal="body_entered" from="ButtonLaser" to="." method="_on_button_laser_body_entered"]
+[connection signal="body_entered" from="LaserGate" to="." method="_on_laser_gate_body_entered"]

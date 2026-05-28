@@ -1,0 +1,70 @@
+[gd_scene format=3 uid="uid://83ggwk22vorl"]
+
+[ext_resource type="Script" uid="uid://dx0jgwstrqn05" path="res://hazards/laser_gate/laser_gate.gd" id="1_lj7mt"]
+[ext_resource type="Texture2D" uid="uid://dkxbmahqj02xq" path="res://asset/Interactables and Hazards/LaserGate1.PNG" id="2_q5qwq"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dlbsr"]
+atlas = ExtResource("2_q5qwq")
+region = Rect2(192, 0, 96, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ikgla"]
+atlas = ExtResource("2_q5qwq")
+region = Rect2(192, 0, 96, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_3tw2w"]
+atlas = ExtResource("2_q5qwq")
+region = Rect2(192, 64, 96, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_x0nwq"]
+atlas = ExtResource("2_q5qwq")
+region = Rect2(192, 128, 96, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_n6xho"]
+atlas = ExtResource("2_q5qwq")
+region = Rect2(192, 192, 96, 64)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_vhtfq"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_dlbsr")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ikgla")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_3tw2w")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_x0nwq")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_n6xho")
+}],
+"loop": false,
+"name": &"turn_off",
+"speed": 8.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_rwndm"]
+size = Vector2(53, 95)
+
+[node name="LaserGate" type="Area2D" unique_id=230749045]
+script = ExtResource("1_lj7mt")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1949450853]
+rotation = 1.5707964
+sprite_frames = SubResource("SpriteFrames_vhtfq")
+animation = &"idle"
+autoplay = "idle"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=613853746]
+position = Vector2(-5.5, 0.5)
+shape = SubResource("RectangleShape2D_rwndm")
+
+[connection signal="body_entered" from="." to="." method="_on_body_entered"]

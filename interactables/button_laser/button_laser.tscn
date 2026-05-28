@@ -1,0 +1,48 @@
+[gd_scene format=3 uid="uid://dw5c2a8vr8m0l"]
+
+[ext_resource type="Script" uid="uid://clfr0cpt3lkiw" path="res://interactables/button_laser/button_laser.gd" id="1_0mj4n"]
+[ext_resource type="Texture2D" uid="uid://rvd2vfl327ro" path="res://asset/Interactables and Hazards/press_button.png" id="2_5ochr"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_q4hqe"]
+atlas = ExtResource("2_5ochr")
+region = Rect2(455, 0, 455, 274)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_bxhla"]
+atlas = ExtResource("2_5ochr")
+region = Rect2(0, 0, 455, 274)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_fgwgb"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_q4hqe")
+}],
+"loop": true,
+"name": &"pressed",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_bxhla")
+}],
+"loop": true,
+"name": &"unpressed",
+"speed": 5.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_eml06"]
+size = Vector2(454, 270)
+
+[node name="ButtonLaser" type="Area2D" unique_id=1410914400]
+script = ExtResource("1_0mj4n")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=873561260]
+sprite_frames = SubResource("SpriteFrames_fgwgb")
+animation = &"unpressed"
+autoplay = "unpressed"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1966145712]
+position = Vector2(5, 2)
+shape = SubResource("RectangleShape2D_eml06")
+
+[connection signal="body_entered" from="." to="." method="_on_body_entered"]
