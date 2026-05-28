@@ -14,7 +14,7 @@ extends Node2D
 @export var exit_confirm_detail: String = "Continue toward The Silent Ruins"
 @export var finish_walk_distance: float = 420.0
 @export var finish_walk_time: float = 1.8
-@export var exit_cancel_walk_distance: float = 72.0
+@export var exit_cancel_walk_distance: float = 110.0
 @export var exit_cancel_walk_time: float = 0.35
 @export var game_over_scene: PackedScene = preload("res://ui/game_over/GameOverOverlay.tscn")
 
@@ -26,9 +26,10 @@ extends Node2D
 @onready var pollux: RigidBody2D = $Pollux
 @onready var rope_manager: Node2D = $RopeManager
 @onready var camera: Camera2D = $Camera2D
-@onready var fall_zone: Area2D = $FallZone
-@onready var exit_sign: Area2D = $SilentRuinsSign
-@onready var exit_prompt: Label = $SilentRuinsSign/PromptLabel
+@onready var fall_zone: Area2D = get_node_or_null("FallZone") as Area2D
+@onready var exit_sign: Area2D = get_node_or_null("SilentRuinsSign") as Area2D
+@onready var exit_prompt: Label = get_node_or_null("SilentRuinsSign/PromptLabel") as Label
+@onready var level_exit: Area2D = get_node_or_null("LevelExit") as Area2D
 
 var tether_connected: bool = false
 var castor_in_connect_range: bool = false
@@ -46,16 +47,34 @@ var exit_confirm_layer: CanvasLayer
 var exit_confirm_open: bool = false
 
 func _ready() -> void:
-	fall_zone.body_entered.connect(_on_fall_zone_body_entered)
-	exit_sign.body_entered.connect(_on_exit_sign_body_entered)
-	exit_sign.body_exited.connect(_on_exit_sign_body_exited)
-	exit_prompt.visible = false
-	exit_prompt.text = exit_prompt_text
+	if fall_zone != null:
+		fall_zone.body_entered.connect(_on_fall_zone_body_entered)
+
+	if level_exit != null:
+		_configure_level_exit()
+	elif exit_sign != null:
+		exit_sign.body_entered.connect(_on_exit_sign_body_entered)
+		exit_sign.body_exited.connect(_on_exit_sign_body_exited)
+		if exit_prompt != null:
+			exit_prompt.visible = false
+			exit_prompt.text = exit_prompt_text
 
 	_create_pollux_connect_zone()
 	_create_connect_prompt()
 	_apply_connection_state(_is_tether_connected())
 	_show_area_title()
+
+func _configure_level_exit() -> void:
+	level_exit.set("prompt_text", exit_prompt_text)
+	level_exit.set("confirm_title", exit_confirm_title)
+	level_exit.set("confirm_detail", exit_confirm_detail)
+	level_exit.set("next_level_scene_path", next_level_scene_path)
+	level_exit.set("finish_walk_distance", finish_walk_distance)
+	level_exit.set("finish_walk_time", finish_walk_time)
+	level_exit.set("cancel_walk_distance", exit_cancel_walk_distance)
+	level_exit.set("cancel_walk_time", exit_cancel_walk_time)
+	if level_exit.has_method("apply_text"):
+		level_exit.call("apply_text")
 
 func _process(delta: float) -> void:
 	if level_failed or level_completed:
@@ -164,7 +183,7 @@ func _on_exit_sign_body_entered(body: Node2D) -> void:
 func _on_exit_sign_body_exited(body: Node2D) -> void:
 	if body == castor:
 		castor_in_exit_range = false
-		if not exit_confirm_open:
+		if not exit_confirm_open and exit_prompt != null:
 			exit_prompt.visible = false
 
 func _trigger_failure(death_type: String) -> void:
@@ -189,7 +208,8 @@ func _begin_finish_sequence() -> void:
 
 	level_completed = true
 	set_process_input(false)
-	exit_prompt.visible = false
+	if exit_prompt != null:
+		exit_prompt.visible = false
 	_close_exit_confirm()
 
 	if rope_manager != null:
@@ -219,7 +239,8 @@ func _open_exit_confirm() -> void:
 		return
 
 	exit_confirm_open = true
-	exit_prompt.visible = false
+	if exit_prompt != null:
+		exit_prompt.visible = false
 	castor.set_physics_process(false)
 	pollux.freeze = true
 	pollux.sleeping = true
@@ -243,7 +264,8 @@ func _cancel_exit() -> void:
 	pollux.freeze = true
 	pollux.sleeping = true
 	castor_in_exit_range = false
-	exit_prompt.visible = false
+	if exit_prompt != null:
+		exit_prompt.visible = false
 
 	if rope_manager != null:
 		rope_manager.set_physics_process(false)
