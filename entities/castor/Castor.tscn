@@ -1,10 +1,172 @@
 [gd_scene format=3 uid="uid://cmn0gfamy7yaj"]
 
 [ext_resource type="Script" uid="uid://bqv35qm5018jn" path="res://entities/castor/castor.gd" id="1_n7yow"]
-[ext_resource type="Texture2D" uid="uid://cluvx4g86muyo" path="res://asset/Castor and Pollux/CastorV2.png" id="2_i4lj7"]
+[ext_resource type="Texture2D" path="res://asset/AstroKnot_Chars/Castor/FullBattery/CastorV2.png" id="castor_full_idle"]
+[ext_resource type="Texture2D" path="res://asset/AstroKnot_Chars/Castor/FullBattery/CastorPreTurnLeft.png" id="castor_full_pl"]
+[ext_resource type="Texture2D" path="res://asset/AstroKnot_Chars/Castor/FullBattery/CastorPreTurnRight.png" id="castor_full_pr"]
+[ext_resource type="Texture2D" path="res://asset/AstroKnot_Chars/Castor/FullBattery/CastorTurnLeft1.png" id="castor_full_l1"]
+[ext_resource type="Texture2D" path="res://asset/AstroKnot_Chars/Castor/FullBattery/CastorTurnLeft2.png" id="castor_full_l2"]
+[ext_resource type="Texture2D" path="res://asset/AstroKnot_Chars/Castor/FullBattery/CastorTurnRight1.png" id="castor_full_r1"]
+[ext_resource type="Texture2D" path="res://asset/AstroKnot_Chars/Castor/FullBattery/CastorTurnRight2.png" id="castor_full_r2"]
+[ext_resource type="Texture2D" path="res://asset/AstroKnot_Chars/Castor/ThirdBattery/CastorV2Third.png" id="castor_third_idle"]
+[ext_resource type="Texture2D" path="res://asset/AstroKnot_Chars/Castor/ThirdBattery/CastorPreTurnLeftThird.png" id="castor_third_pl"]
+[ext_resource type="Texture2D" path="res://asset/AstroKnot_Chars/Castor/ThirdBattery/CastorPreTurnRightThird.png" id="castor_third_pr"]
+[ext_resource type="Texture2D" path="res://asset/AstroKnot_Chars/Castor/ThirdBattery/CastorTurnLeft1Third.png" id="castor_third_l1"]
+[ext_resource type="Texture2D" path="res://asset/AstroKnot_Chars/Castor/ThirdBattery/CastorTurnLeft2Third.png" id="castor_third_l2"]
+[ext_resource type="Texture2D" path="res://asset/AstroKnot_Chars/Castor/ThirdBattery/CastorTurnRight1.png" id="castor_third_r1"]
+[ext_resource type="Texture2D" path="res://asset/AstroKnot_Chars/Castor/ThirdBattery/CastorTurnRight2.png" id="castor_third_r2"]
+[ext_resource type="Texture2D" path="res://asset/AstroKnot_Chars/Castor/SecondBattery/CastorV2Second.png" id="castor_second_idle"]
+[ext_resource type="Texture2D" path="res://asset/AstroKnot_Chars/Castor/SecondBattery/CastorPreTurnLeftSecond.png" id="castor_second_pl"]
+[ext_resource type="Texture2D" path="res://asset/AstroKnot_Chars/Castor/SecondBattery/CastorPreTurnRightSecond.png" id="castor_second_pr"]
+[ext_resource type="Texture2D" path="res://asset/AstroKnot_Chars/Castor/SecondBattery/CastorTurnLeft1Second.png" id="castor_second_l1"]
+[ext_resource type="Texture2D" path="res://asset/AstroKnot_Chars/Castor/SecondBattery/CastorTurnLeft2Second.png" id="castor_second_l2"]
+[ext_resource type="Texture2D" path="res://asset/AstroKnot_Chars/Castor/SecondBattery/CastorTurnRight1.png" id="castor_second_r1"]
+[ext_resource type="Texture2D" path="res://asset/AstroKnot_Chars/Castor/SecondBattery/CastorTurnRight2.png" id="castor_second_r2"]
+[ext_resource type="Texture2D" path="res://asset/AstroKnot_Chars/Castor/FirstBattery/CastorV2First.png" id="castor_first_idle"]
+[ext_resource type="Texture2D" path="res://asset/AstroKnot_Chars/Castor/FirstBattery/CastorPreTurnLeftFirst.png" id="castor_first_pl"]
+[ext_resource type="Texture2D" path="res://asset/AstroKnot_Chars/Castor/FirstBattery/CastorPreTurnRightFirst.png" id="castor_first_pr"]
+[ext_resource type="Texture2D" path="res://asset/AstroKnot_Chars/Castor/FirstBattery/CastorTurnLeft1First.png" id="castor_first_l1"]
+[ext_resource type="Texture2D" path="res://asset/AstroKnot_Chars/Castor/FirstBattery/CastorTurnLeft2First.png" id="castor_first_l2"]
+[ext_resource type="Texture2D" path="res://asset/AstroKnot_Chars/Castor/FirstBattery/CastorTurnRight1.png" id="castor_first_r1"]
+[ext_resource type="Texture2D" path="res://asset/AstroKnot_Chars/Castor/FirstBattery/CastorTurnRight2.png" id="castor_first_r2"]
+[ext_resource type="Texture2D" path="res://asset/AstroKnot_Chars/Castor/NoneBattery/CastorV2None.png" id="castor_none_idle"]
+[ext_resource type="Texture2D" path="res://asset/AstroKnot_Chars/Castor/NoneBattery/CastorPreTurnLeftNone.png" id="castor_none_pl"]
+[ext_resource type="Texture2D" path="res://asset/AstroKnot_Chars/Castor/NoneBattery/CastorPreTurnRightNone.png" id="castor_none_pr"]
+[ext_resource type="Texture2D" path="res://asset/AstroKnot_Chars/Castor/NoneBattery/CastorTurnLeft1None.png" id="castor_none_l1"]
+[ext_resource type="Texture2D" path="res://asset/AstroKnot_Chars/Castor/NoneBattery/CastorTurnLeft2None.png" id="castor_none_l2"]
+[ext_resource type="Texture2D" path="res://asset/AstroKnot_Chars/Castor/NoneBattery/CastorTurnRight1.png" id="castor_none_r1"]
+[ext_resource type="Texture2D" path="res://asset/AstroKnot_Chars/Castor/NoneBattery/CastorTurnRight2.png" id="castor_none_r2"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_453m4"]
 size = Vector2(40, 39)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_castor"]
+animations = [{
+"frames": [{"duration": 1.0, "texture": ExtResource("castor_full_idle")}],
+"loop": true,
+"name": &"idle_full",
+"speed": 5.0
+}, {
+"frames": [{"duration": 1.0, "texture": ExtResource("castor_full_pr")}],
+"loop": false,
+"name": &"preturn_left_full",
+"speed": 8.0
+}, {
+"frames": [{"duration": 1.0, "texture": ExtResource("castor_full_r1")}, {"duration": 1.0, "texture": ExtResource("castor_full_r2")}],
+"loop": true,
+"name": &"walk_left_full",
+"speed": 6.0
+}, {
+"frames": [{"duration": 1.0, "texture": ExtResource("castor_full_pl")}],
+"loop": false,
+"name": &"preturn_right_full",
+"speed": 8.0
+}, {
+"frames": [{"duration": 1.0, "texture": ExtResource("castor_full_l1")}, {"duration": 1.0, "texture": ExtResource("castor_full_l2")}],
+"loop": true,
+"name": &"walk_right_full",
+"speed": 6.0
+}, {
+"frames": [{"duration": 1.0, "texture": ExtResource("castor_third_idle")}],
+"loop": true,
+"name": &"idle_third",
+"speed": 5.0
+}, {
+"frames": [{"duration": 1.0, "texture": ExtResource("castor_third_pr")}],
+"loop": false,
+"name": &"preturn_left_third",
+"speed": 8.0
+}, {
+"frames": [{"duration": 1.0, "texture": ExtResource("castor_third_r1")}, {"duration": 1.0, "texture": ExtResource("castor_third_r2")}],
+"loop": true,
+"name": &"walk_left_third",
+"speed": 6.0
+}, {
+"frames": [{"duration": 1.0, "texture": ExtResource("castor_third_pl")}],
+"loop": false,
+"name": &"preturn_right_third",
+"speed": 8.0
+}, {
+"frames": [{"duration": 1.0, "texture": ExtResource("castor_third_l1")}, {"duration": 1.0, "texture": ExtResource("castor_third_l2")}],
+"loop": true,
+"name": &"walk_right_third",
+"speed": 6.0
+}, {
+"frames": [{"duration": 1.0, "texture": ExtResource("castor_second_idle")}],
+"loop": true,
+"name": &"idle_second",
+"speed": 5.0
+}, {
+"frames": [{"duration": 1.0, "texture": ExtResource("castor_second_pr")}],
+"loop": false,
+"name": &"preturn_left_second",
+"speed": 8.0
+}, {
+"frames": [{"duration": 1.0, "texture": ExtResource("castor_second_r1")}, {"duration": 1.0, "texture": ExtResource("castor_second_r2")}],
+"loop": true,
+"name": &"walk_left_second",
+"speed": 6.0
+}, {
+"frames": [{"duration": 1.0, "texture": ExtResource("castor_second_pl")}],
+"loop": false,
+"name": &"preturn_right_second",
+"speed": 8.0
+}, {
+"frames": [{"duration": 1.0, "texture": ExtResource("castor_second_l1")}, {"duration": 1.0, "texture": ExtResource("castor_second_l2")}],
+"loop": true,
+"name": &"walk_right_second",
+"speed": 6.0
+}, {
+"frames": [{"duration": 1.0, "texture": ExtResource("castor_first_idle")}],
+"loop": true,
+"name": &"idle_first",
+"speed": 5.0
+}, {
+"frames": [{"duration": 1.0, "texture": ExtResource("castor_first_pr")}],
+"loop": false,
+"name": &"preturn_left_first",
+"speed": 8.0
+}, {
+"frames": [{"duration": 1.0, "texture": ExtResource("castor_first_r1")}, {"duration": 1.0, "texture": ExtResource("castor_first_r2")}],
+"loop": true,
+"name": &"walk_left_first",
+"speed": 6.0
+}, {
+"frames": [{"duration": 1.0, "texture": ExtResource("castor_first_pl")}],
+"loop": false,
+"name": &"preturn_right_first",
+"speed": 8.0
+}, {
+"frames": [{"duration": 1.0, "texture": ExtResource("castor_first_l1")}, {"duration": 1.0, "texture": ExtResource("castor_first_l2")}],
+"loop": true,
+"name": &"walk_right_first",
+"speed": 6.0
+}, {
+"frames": [{"duration": 1.0, "texture": ExtResource("castor_none_idle")}],
+"loop": true,
+"name": &"idle_none",
+"speed": 5.0
+}, {
+"frames": [{"duration": 1.0, "texture": ExtResource("castor_none_pr")}],
+"loop": false,
+"name": &"preturn_left_none",
+"speed": 8.0
+}, {
+"frames": [{"duration": 1.0, "texture": ExtResource("castor_none_r1")}, {"duration": 1.0, "texture": ExtResource("castor_none_r2")}],
+"loop": true,
+"name": &"walk_left_none",
+"speed": 6.0
+}, {
+"frames": [{"duration": 1.0, "texture": ExtResource("castor_none_pl")}],
+"loop": false,
+"name": &"preturn_right_none",
+"speed": 8.0
+}, {
+"frames": [{"duration": 1.0, "texture": ExtResource("castor_none_l1")}, {"duration": 1.0, "texture": ExtResource("castor_none_l2")}],
+"loop": true,
+"name": &"walk_right_none",
+"speed": 6.0
+}]
 
 [node name="Castor" type="CharacterBody2D" unique_id=975424275]
 collision_layer = 3
@@ -28,7 +190,9 @@ target_position = Vector2(0, 21)
 position = Vector2(40, 20)
 target_position = Vector2(0, 21)
 
-[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1633532307]
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1633532307]
 position = Vector2(21, 20)
 scale = Vector2(0.6875, 0.6875)
-texture = ExtResource("2_i4lj7")
+sprite_frames = SubResource("SpriteFrames_castor")
+animation = &"idle_full"
+autoplay = "idle_full"
