@@ -1,11 +1,13 @@
-[gd_scene format=3 uid="uid://l7gnalq5r6h2"]
+[gd_scene load_steps=4 format=3 uid="uid://l7gnalq5r6h2"]
 
 [ext_resource type="Script" uid="uid://b8lmjensipg6i" path="res://hazards/spike_hazard/spike_hazard.gd" id="1_5xq3f"]
 [ext_resource type="Texture2D" uid="uid://upjbh2vncb58" path="res://asset/Interactables and Hazards/16-bit-spike-Sheet.png" id="2_dhyyo"]
+[ext_resource type="PackedScene" path="res://ui/game_over/GameOverOverlay.tscn" id="3_game_over"]
 
 [node name="SpikeHazard" type="Area2D" unique_id=1397185794]
 collision_mask = 7
 script = ExtResource("1_5xq3f")
+game_over_scene = ExtResource("3_game_over")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=162788148]
 position = Vector2(0, -8)
