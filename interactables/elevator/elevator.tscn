@@ -1,0 +1,32 @@
+[gd_scene load_steps=5 format=3 uid="uid://y6ltk0ijw7et"]
+
+[ext_resource type="Script" uid="uid://vb1vd40wrafv" path="res://interactables/elevator/elevator.gd" id="1_db2kk"]
+[ext_resource type="Texture2D" uid="uid://di7sc0yonwnwb" path="res://asset/Platfromer/lv2/3 Objects/elevator.png" id="1_k1xdl"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_k1xdl"]
+size = Vector2(95, 6)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_interaction"]
+size = Vector2(128, 96)
+
+[node name="Elevator" type="AnimatableBody2D" unique_id=1460354008]
+script = ExtResource("1_db2kk")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1098043900]
+scale = Vector2(1.5, 1.2)
+texture = ExtResource("1_k1xdl")
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="." unique_id=632281417]
+polygon = PackedVector2Array(-53, 36, 52, 36, 42, 26, 0, 26, -42, 26)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1711576538]
+position = Vector2(0.5, -29)
+shape = SubResource("RectangleShape2D_k1xdl")
+
+[node name="InteractionArea" type="Area2D" parent="." unique_id=743874121]
+collision_layer = 0
+collision_mask = 7
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="InteractionArea" unique_id=1105285681]
+position = Vector2(0, -8)
+shape = SubResource("RectangleShape2D_interaction")

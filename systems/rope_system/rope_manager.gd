@@ -9,7 +9,19 @@ signal tether_broken(death_type: String)
 @export_group("Connection")
 @export var start_connected: bool = true
 
+@export_group("Hardlight Visual")
+@export_range(0.0, 1.0) var rope_glow_alpha: float = 0.22
+@export_range(0.0, 1.0) var rope_core_brightness: float = 0.45
+@export var rope_pulse_enabled: bool = true
+@export_range(0, 8) var rope_pulse_count: int = 3
+@export var rope_pulse_length: float = 32.0
+@export var rope_pulse_speed: float = 0.9
+@export var rope_pulse_width: float = 5.0
+@export_range(0.0, 1.0) var rope_pulse_alpha: float = 0.72
+
+@onready var rope_glow_visual: Line2D = get_node_or_null("HardlightGlow") as Line2D
 @onready var rope_visual: Line2D = $HardlightVisual
+@onready var rope_pulse_container: Node2D = get_node_or_null("HardlightPulses") as Node2D
 @onready var aim_indicator: Line2D = $AimIndicator
 @onready var power_meter_bg: Line2D = $PowerMeterBg
 @onready var power_meter_fill: Line2D = $PowerMeterFill
@@ -58,6 +70,9 @@ signal tether_broken(death_type: String)
 @export var castor_swing_pump_accel: float = 520.0
 @export var castor_swing_max_speed: float = 360.0
 
+@export_group("Robot Unstack")
+@export var stacked_robot_push_speed: float = 420.0
+
 @export_group("Debug")
 @export var debug_enabled: bool = true
 
@@ -68,7 +83,7 @@ signal tether_broken(death_type: String)
 @export_group("Pollux Throw")
 @export var throw_pickup_radius: float = 72.0
 @export var throw_requires_line_of_sight: bool = true
-@export var throw_ready_offset: Vector2 = Vector2(64.0, 8.0)
+@export var throw_ready_offset: Vector2 = Vector2(0.0, -34.0)
 @export var throw_charge_time: float = 0.7
 @export var min_throw_power: float = 320.0
 @export var max_throw_power: float = 700.0
@@ -85,6 +100,7 @@ signal tether_broken(death_type: String)
 @export var throw_max_bonus_slack: float = 120.0
 @export var throw_auto_extend_limit: float = 220.0
 @export var throw_aim_preview_length: float = 68.0
+@export var throw_aim_arrow_head_size: float = 14.0
 @export var throw_power_meter_width: float = 38.0
 @export var throw_ready_color: Color = Color(1.0, 0.85, 0.26, 1.0)
 @export var throw_flight_color: Color = Color(1.0, 0.48, 0.2, 1.0)
@@ -109,6 +125,7 @@ var throw_charge_ratio: float = 0.0
 var throw_aim_dir: Vector2 = Vector2.RIGHT
 var throw_aim_side: int = 1
 var throw_aim_angle_deg: float = 0.0
+var throw_last_horizontal_dir: int = 1
 var throw_ready_wait_for_release: bool = false
 var throw_collision_exception_active: bool = false
 var throw_cached_pollux_position: Vector2 = Vector2.ZERO
@@ -129,6 +146,13 @@ var debug_constraint_state: String = "idle"
 var power_limit_over_time: float = 0.0
 var tether_is_broken: bool = false
 var tether_connected: bool = true
+var rope_pulse_lines: Array[Line2D] = []
+var rope_pulse_phase: float = 0.0
+var rope_segment_start: Vector2 = Vector2.ZERO
+var rope_segment_end: Vector2 = Vector2.ZERO
+var has_rope_segment: bool = false
+var aim_arrow_head: Line2D
+var aim_arrow_fill: Polygon2D
 
 func is_body_grounded(body: Node) -> bool:
 	if not body:
@@ -155,17 +179,20 @@ func _ready() -> void:
 	rope_default_color = rope_visual.default_color
 	pollux_default_gravity_scale = pollux.gravity_scale
 	pollux_default_linear_damp = pollux.linear_damp
+	create_rope_pulse_lines()
+	create_throw_arrow_head()
 	initialize_throw_aim_from_current()
 	apply_throw_visual_colors()
 	set_throw_state(ThrowState.NORMAL)
 	set_tether_connected(start_connected)
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if not tether_connected:
 		update_rope_visual()
 		update_debug_readout()
 		return
 
+	update_rope_pulse_phase(delta)
 	update_rope_visual()
 	update_throw_visuals()
 	update_power_rope_visual()
@@ -191,6 +218,7 @@ func _physics_process(delta: float) -> void:
 
 	if throw_state == ThrowState.NORMAL:
 		handle_reel_input(delta)
+		unstick_stacked_robots(delta)
 
 	apply_solid_constraint(delta)
 	update_rope_debug_snapshot()
@@ -203,10 +231,17 @@ func set_tether_connected(value: bool) -> void:
 	if rope_visual != null:
 		rope_visual.visible = value
 		if not value:
-			rope_visual.clear_points()
+			clear_rope_visual_points()
+	if rope_glow_visual != null:
+		rope_glow_visual.visible = value
+	set_rope_pulses_visible(value and rope_pulse_enabled)
 
 	if aim_indicator != null:
 		aim_indicator.visible = false
+	if aim_arrow_head != null:
+		aim_arrow_head.visible = false
+	if aim_arrow_fill != null:
+		aim_arrow_fill.visible = false
 	if power_meter_bg != null:
 		power_meter_bg.visible = false
 	if power_meter_fill != null:
@@ -252,6 +287,87 @@ func apply_pollux_ledge_pull(delta: float, error: float, is_p_grounded: bool) ->
 	pollux.linear_velocity.y = min(pollux.linear_velocity.y, -ledge_pull_up_velocity)
 	pollux.global_position.y -= ledge_pull_position_speed * delta
 	return true
+
+func unstick_stacked_robots(delta: float) -> void:
+	if not castor or not pollux:
+		return
+
+	if not is_pollux_blocking_castor_head():
+		return
+
+	var input_dir := Input.get_axis("move_left", "move_right")
+	if absf(input_dir) <= 0.001:
+		return
+
+	var castor_collision := get_body_collision_shape(castor)
+	var pollux_collision := get_body_collision_shape(pollux)
+	if castor_collision == null or pollux_collision == null:
+		return
+
+	var castor_half := get_collision_half_extents(castor_collision)
+	var pollux_half := get_collision_half_extents(pollux_collision)
+	var desired_gap := castor_half.x + pollux_half.x + 4.0
+	var current_gap := absf(pollux_collision.global_position.x - castor_collision.global_position.x)
+	var missing_gap = maxf(desired_gap - current_gap, 0.0)
+	if missing_gap <= 0.0:
+		return
+
+	var push_dir := -signf(input_dir)
+	var push_amount = minf(maxf(stacked_robot_push_speed * delta, missing_gap * 0.35), missing_gap)
+	pollux.global_position.x += push_dir * push_amount
+	pollux.linear_velocity.x = stacked_robot_push_speed * 0.45 * push_dir
+
+func is_pollux_blocking_castor_head() -> bool:
+	var castor_collision := get_body_collision_shape(castor)
+	var pollux_collision := get_body_collision_shape(pollux)
+	if castor_collision == null or pollux_collision == null:
+		return false
+
+	if castor_collision.global_position.y <= pollux_collision.global_position.y:
+		return false
+
+	var castor_half := get_collision_half_extents(castor_collision)
+	var pollux_half := get_collision_half_extents(pollux_collision)
+	var ray_length := castor_half.y + pollux_half.y + 4.0
+	var sample_width := maxf(castor_half.x * 0.7, 1.0)
+	var space_state := get_world_2d().direct_space_state
+
+	for side in [-1.0, 0.0, 1.0]:
+		var from := Vector2(
+			castor_collision.global_position.x + sample_width * side,
+			castor_collision.global_position.y - castor_half.y + 1.0
+		)
+		var to := from + Vector2.UP * ray_length
+		var query := PhysicsRayQueryParameters2D.create(from, to)
+		query.exclude = [castor.get_rid()]
+		var result := space_state.intersect_ray(query)
+		if not result.is_empty() and result.get("collider") == pollux:
+			return true
+
+	return false
+
+func get_body_collision_shape(body: Node) -> CollisionShape2D:
+	if body == null:
+		return null
+	return body.get_node_or_null("CollisionShape2D") as CollisionShape2D
+
+func get_collision_half_extents(collision: CollisionShape2D) -> Vector2:
+	if collision == null or collision.shape == null:
+		return Vector2(20.0, 20.0)
+
+	var rectangle := collision.shape as RectangleShape2D
+	if rectangle != null:
+		return rectangle.size * 0.5
+
+	var circle := collision.shape as CircleShape2D
+	if circle != null:
+		return Vector2.ONE * circle.radius
+
+	var capsule := collision.shape as CapsuleShape2D
+	if capsule != null:
+		return Vector2(capsule.radius, capsule.height * 0.5)
+
+	return Vector2(20.0, 20.0)
 
 func get_anchor_flags(
 	c_pos: Vector2,
@@ -472,16 +588,15 @@ func apply_solid_constraint(delta: float) -> void:
 
 func update_rope_visual() -> void:
 	if not tether_connected:
-		if rope_visual:
-			rope_visual.clear_points()
+		clear_rope_visual_points()
 		return
 
 	if castor and pollux and rope_visual:
 		var c_anchor = castor.get_node_or_null("RopeAnchor")
 		var p_anchor = pollux.get_node_or_null("RopeAnchor")
-		rope_visual.clear_points()
-		rope_visual.add_point(c_anchor.global_position if c_anchor else castor.global_position)
-		rope_visual.add_point(p_anchor.global_position if p_anchor else pollux.global_position)
+		var start_pos: Vector2 = c_anchor.global_position if c_anchor else castor.global_position
+		var end_pos: Vector2 = p_anchor.global_position if p_anchor else pollux.global_position
+		set_rope_visual_points(start_pos, end_pos)
 
 func update_rope_debug_snapshot() -> void:
 	if not castor or not pollux:
@@ -521,7 +636,7 @@ func update_power_rope_visual() -> void:
 	var base_color: Color = get_throw_rope_color()
 	var warning_start_length: float = power_limit_length * power_warning_ratio
 	if power_limit_length <= 0.0 or debug_rope_distance <= warning_start_length:
-		rope_visual.default_color = base_color
+		set_rope_visual_color(base_color)
 		return
 
 	var warning_span: float = maxf(power_limit_length - warning_start_length, 0.001)
@@ -530,10 +645,10 @@ func update_power_rope_visual() -> void:
 		0.0,
 		1.0
 	)
-	rope_visual.default_color = base_color.lerp(power_warning_color, warning_amount)
+	set_rope_visual_color(base_color.lerp(power_warning_color, warning_amount))
 
 	if debug_rope_distance > power_limit_length:
-		rope_visual.default_color = power_break_color
+		set_rope_visual_color(power_break_color)
 
 func trigger_game_over(death_type: String) -> void:
 	if tether_is_broken:
@@ -541,7 +656,7 @@ func trigger_game_over(death_type: String) -> void:
 
 	tether_is_broken = true
 	debug_constraint_state = "tether_broken"
-	rope_visual.default_color = power_break_color
+	set_rope_visual_color(power_break_color)
 	tether_broken.emit(death_type)
 
 	if not game_over_scene:
@@ -704,30 +819,22 @@ func sync_pollux_to_throw_anchor() -> void:
 	pollux.linear_velocity = Vector2.ZERO
 	pollux.global_position = ready_pos
 
-func get_throw_ready_position() -> Vector2:
-	var throw_anchor = castor.get_node_or_null("ThrowAnchor") as Marker2D
+func get_throw_ready_anchor_position() -> Vector2:
 	var castor_rope_anchor = castor.get_node_or_null("RopeAnchor") as Marker2D
-	var base_anchor_local = castor_rope_anchor.position if castor_rope_anchor else Vector2.ZERO
-	var target_anchor_local = throw_anchor.position if throw_anchor else throw_ready_offset
-	var anchor_delta = target_anchor_local - base_anchor_local
-	anchor_delta.x = abs(anchor_delta.x) * float(get_throw_ready_facing())
-	var ready_anchor_global = castor.to_global(base_anchor_local + anchor_delta)
+	var base_anchor_global = castor_rope_anchor.global_position if castor_rope_anchor else castor.global_position
+	return base_anchor_global + throw_ready_offset
+
+func get_throw_ready_position() -> Vector2:
 	var pollux_anchor = pollux.get_node_or_null("RopeAnchor") as Marker2D
 	var pollux_anchor_offset = pollux_anchor.position if pollux_anchor else Vector2.ZERO
-	return ready_anchor_global - pollux_anchor_offset
+	return get_throw_ready_anchor_position() - pollux_anchor_offset
 
-func update_throw_aim_direction(delta: float) -> void:
+func update_throw_aim_direction(_delta: float) -> void:
 	var horizontal_input = Input.get_action_strength("move_right") - Input.get_action_strength("move_left")
-	var vertical_input = Input.get_action_strength("aim_down") - Input.get_action_strength("aim_up")
 
-	if horizontal_input > 0.001:
-		throw_aim_side = 1
-	elif horizontal_input < -0.001:
-		throw_aim_side = -1
-
-	if abs(vertical_input) > 0.001:
-		throw_aim_angle_deg += vertical_input * throw_aim_rotate_speed_deg * delta
-		throw_aim_angle_deg = clamp(throw_aim_angle_deg, -throw_max_up_angle_deg, throw_max_down_angle_deg)
+	if abs(horizontal_input) > 0.001:
+		throw_aim_angle_deg += horizontal_input * throw_aim_rotate_speed_deg * _delta
+		throw_aim_angle_deg = clamp(throw_aim_angle_deg, -180.0, 0.0)
 
 	rebuild_throw_aim_dir()
 
@@ -823,16 +930,14 @@ func initialize_throw_aim_from_current() -> void:
 	if base_dir.length() <= 0.001:
 		base_dir = Vector2(float(get_castor_facing()), 0.0)
 
-	throw_aim_side = 1 if base_dir.x >= 0.0 else -1
-	throw_aim_angle_deg = rad_to_deg(atan2(base_dir.y, abs(base_dir.x)))
-	throw_aim_angle_deg = clamp(throw_aim_angle_deg, -throw_max_up_angle_deg, throw_max_down_angle_deg)
+	throw_aim_angle_deg = -90.0
 	rebuild_throw_aim_dir()
 
 func rebuild_throw_aim_dir() -> void:
 	var angle_radians = deg_to_rad(throw_aim_angle_deg)
-	throw_aim_dir = Vector2(cos(angle_radians) * float(throw_aim_side), sin(angle_radians))
+	throw_aim_dir = Vector2(cos(angle_radians), sin(angle_radians))
 	if throw_aim_dir.length() <= 0.001:
-		throw_aim_dir = Vector2(float(get_throw_ready_facing()), 0.0)
+		throw_aim_dir = Vector2.RIGHT
 	else:
 		throw_aim_dir = throw_aim_dir.normalized()
 
@@ -883,7 +988,7 @@ func set_throw_state(new_state: int) -> void:
 			throw_charge_ratio = 0.0
 			throw_ready_wait_for_release = false
 
-	rope_visual.default_color = get_throw_rope_color()
+	set_rope_visual_color(get_throw_rope_color())
 
 func get_throw_state_name() -> String:
 	match throw_state:
@@ -909,26 +1014,145 @@ func get_throw_rope_color() -> Color:
 		_:
 			return rope_default_color
 
+func set_rope_visual_points(start_pos: Vector2, end_pos: Vector2) -> void:
+	rope_segment_start = start_pos
+	rope_segment_end = end_pos
+	has_rope_segment = true
+
+	if rope_visual != null:
+		rope_visual.clear_points()
+		rope_visual.add_point(start_pos)
+		rope_visual.add_point(end_pos)
+
+	if rope_glow_visual != null:
+		rope_glow_visual.clear_points()
+		rope_glow_visual.add_point(start_pos)
+		rope_glow_visual.add_point(end_pos)
+
+	update_rope_pulse_points()
+
+func clear_rope_visual_points() -> void:
+	has_rope_segment = false
+	if rope_visual != null:
+		rope_visual.clear_points()
+	if rope_glow_visual != null:
+		rope_glow_visual.clear_points()
+	for pulse_line in rope_pulse_lines:
+		pulse_line.clear_points()
+
+func set_rope_visual_color(core_color: Color) -> void:
+	if rope_visual != null:
+		rope_visual.default_color = core_color.lerp(Color.WHITE, rope_core_brightness)
+
+	if rope_glow_visual != null:
+		var glow_color := core_color
+		glow_color.a = rope_glow_alpha
+		rope_glow_visual.default_color = glow_color
+
+	for pulse_line in rope_pulse_lines:
+		var pulse_color := core_color.lerp(Color.WHITE, 0.65)
+		pulse_color.a = rope_pulse_alpha
+		pulse_line.default_color = pulse_color
+
+func create_rope_pulse_lines() -> void:
+	rope_pulse_lines.clear()
+	if rope_pulse_container == null:
+		return
+
+	for child in rope_pulse_container.get_children():
+		child.queue_free()
+
+	for index in range(rope_pulse_count):
+		var pulse_line := Line2D.new()
+		pulse_line.name = "Pulse%s" % index
+		pulse_line.width = rope_pulse_width
+		pulse_line.begin_cap_mode = Line2D.LINE_CAP_ROUND
+		pulse_line.end_cap_mode = Line2D.LINE_CAP_ROUND
+		pulse_line.joint_mode = Line2D.LINE_JOINT_ROUND
+		rope_pulse_container.add_child(pulse_line)
+		rope_pulse_lines.append(pulse_line)
+
+func update_rope_pulse_phase(delta: float) -> void:
+	if not rope_pulse_enabled:
+		return
+
+	rope_pulse_phase = fmod(rope_pulse_phase + delta * rope_pulse_speed, 1.0)
+
+func update_rope_pulse_points() -> void:
+	if not rope_pulse_enabled or not has_rope_segment:
+		set_rope_pulses_visible(false)
+		return
+
+	set_rope_pulses_visible(tether_connected)
+
+	var rope_vector := rope_segment_end - rope_segment_start
+	var rope_length := rope_vector.length()
+	if rope_length <= 0.001:
+		for pulse_line in rope_pulse_lines:
+			pulse_line.clear_points()
+		return
+
+	var direction := rope_vector / rope_length
+	var segment_ratio := clampf(rope_pulse_length / rope_length, 0.02, 0.24)
+
+	for index in range(rope_pulse_lines.size()):
+		var pulse_line := rope_pulse_lines[index]
+		var center_t := fmod(rope_pulse_phase + float(index) / max(rope_pulse_lines.size(), 1), 1.0)
+		var start_t := clampf(center_t - segment_ratio * 0.5, 0.0, 1.0)
+		var end_t := clampf(center_t + segment_ratio * 0.5, 0.0, 1.0)
+		pulse_line.clear_points()
+		pulse_line.add_point(rope_segment_start + direction * rope_length * start_t)
+		pulse_line.add_point(rope_segment_start + direction * rope_length * end_t)
+
+func set_rope_pulses_visible(value: bool) -> void:
+	if rope_pulse_container != null:
+		rope_pulse_container.visible = value
+	for pulse_line in rope_pulse_lines:
+		pulse_line.visible = value
+
 func apply_throw_visual_colors() -> void:
 	aim_indicator.default_color = throw_aim_color
+	if aim_arrow_head != null:
+		aim_arrow_head.default_color = throw_aim_color
+	if aim_arrow_fill != null:
+		aim_arrow_fill.color = throw_aim_color
 	power_meter_bg.default_color = throw_power_meter_bg_color
 	power_meter_fill.default_color = throw_power_meter_fill_color
+
+func create_throw_arrow_head() -> void:
+	aim_arrow_head = Line2D.new()
+	aim_arrow_head.name = "AimArrowHead"
+	aim_arrow_head.visible = false
+	aim_arrow_head.z_index = aim_indicator.z_index
+	aim_arrow_head.width = aim_indicator.width
+	add_child(aim_arrow_head)
+
+	aim_arrow_fill = Polygon2D.new()
+	aim_arrow_fill.name = "AimArrowFill"
+	aim_arrow_fill.visible = false
+	aim_arrow_fill.z_index = aim_indicator.z_index + 1
+	add_child(aim_arrow_fill)
 
 func update_throw_visuals() -> void:
 	apply_throw_visual_colors()
 	var show_throw_visuals = throw_state in [ThrowState.THROW_READY, ThrowState.THROW_CHARGING]
 	aim_indicator.visible = show_throw_visuals
+	if aim_arrow_head != null:
+		aim_arrow_head.visible = show_throw_visuals
+	if aim_arrow_fill != null:
+		aim_arrow_fill.visible = show_throw_visuals
 	power_meter_bg.visible = show_throw_visuals
 	power_meter_fill.visible = show_throw_visuals
 
 	if not show_throw_visuals:
 		return
 
-	var start = get_throw_ready_position()
+	var start = get_throw_ready_anchor_position()
 	var end = start + throw_aim_dir * throw_aim_preview_length
 	aim_indicator.clear_points()
 	aim_indicator.add_point(start)
 	aim_indicator.add_point(end)
+	update_throw_arrow_head(end)
 
 	var bar_start = start + Vector2(-throw_power_meter_width * 0.5, -16.0)
 	var bar_end = bar_start + Vector2(throw_power_meter_width, 0.0)
@@ -939,3 +1163,22 @@ func update_throw_visuals() -> void:
 	power_meter_fill.clear_points()
 	power_meter_fill.add_point(bar_start)
 	power_meter_fill.add_point(bar_start + Vector2(throw_power_meter_width * get_throw_charge_ratio(), 0.0))
+
+func update_throw_arrow_head(tip: Vector2) -> void:
+	if aim_arrow_head == null:
+		return
+
+	var back_dir := -throw_aim_dir
+	var side_dir := throw_aim_dir.orthogonal()
+	var base := tip + back_dir * throw_aim_arrow_head_size
+	var left := base + side_dir * (throw_aim_arrow_head_size * 0.55)
+	var right := base - side_dir * (throw_aim_arrow_head_size * 0.55)
+	var inset := tip + back_dir * (throw_aim_arrow_head_size * 0.36)
+
+	if aim_arrow_fill != null:
+		aim_arrow_fill.polygon = PackedVector2Array([tip, left, inset, right])
+
+	aim_arrow_head.clear_points()
+	aim_arrow_head.add_point(left)
+	aim_arrow_head.add_point(tip)
+	aim_arrow_head.add_point(right)
