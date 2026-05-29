@@ -73,6 +73,21 @@ func _physics_process(delta: float) -> void:
 	# 4. EKSEKUSI
 	# move_and_slide bakal pake velocity yang udah kita modif di RopeManager
 	move_and_slide()
+	var sprite = $AnimatedSprite2D 
+	
+	if is_on_floor():
+		# Ambil arah kemiringan lantai tempat karakter berdiri
+		var floor_normal = get_floor_normal()
+		
+		# Hitung target sudutnya (tambahin PI/2 alias 90 derajat biar posisinya tegak lurus sama lantai)
+		var target_rotation = floor_normal.angle() + (PI / 2.0)
+		
+		# Putar gambarnya secara mulus (smooth) pake lerp_angle
+		sprite.rotation = lerp_angle(sprite.rotation, target_rotation, 15.0 * delta)
+	else:
+		# Kalau karakter lagi loncat / di udara, balikin badannya lurus ke 0 derajat
+		sprite.rotation = lerp_angle(sprite.rotation, 0.0, 15.0 * delta)
+	
 	update_sprite_animation(delta, direction)
 
 func set_throw_mode_locked(locked: bool) -> void:

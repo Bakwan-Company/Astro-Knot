@@ -162,6 +162,10 @@ func is_body_grounded(body: Node) -> bool:
 	if character_body and character_body.is_on_floor():
 		return true
 
+	# Kalau body (Pollux) punya variabel is_grounded, baca nilainya!
+	if "is_grounded" in body:
+		return body.is_grounded
+
 	var ground_left: RayCast2D = body.get_node_or_null("GroundCheckL") as RayCast2D
 	var ground_right: RayCast2D = body.get_node_or_null("GroundCheckR") as RayCast2D
 	return (ground_left and ground_left.is_colliding()) or (ground_right and ground_right.is_colliding())

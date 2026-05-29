@@ -1,40 +1,61 @@
 [gd_scene format=3 uid="uid://d3rhk612sc0pl"]
 
-[ext_resource type="Script" path="res://entities/pollux/pollux.gd" id="1_pollux_script"]
-[ext_resource type="Texture2D" path="res://asset/AstroKnot_Chars/Pollux/PolluxV2.png" id="pollux_idle"]
-[ext_resource type="Texture2D" path="res://asset/AstroKnot_Chars/Pollux/PolluxPreTurnLeft.png" id="pollux_preturn_left"]
-[ext_resource type="Texture2D" path="res://asset/AstroKnot_Chars/Pollux/PolluxTurnLeft1.png" id="pollux_left_1"]
-[ext_resource type="Texture2D" path="res://asset/AstroKnot_Chars/Pollux/PolluxTurnLeft2.png" id="pollux_left_2"]
-[ext_resource type="Texture2D" path="res://asset/AstroKnot_Chars/Pollux/PolluxPreTurnRight.png" id="pollux_preturn_right"]
-[ext_resource type="Texture2D" path="res://asset/AstroKnot_Chars/Pollux/PolluxTurnRight1.png" id="pollux_right_1"]
-[ext_resource type="Texture2D" path="res://asset/AstroKnot_Chars/Pollux/PolluxTurnRight2.png" id="pollux_right_2"]
+[ext_resource type="Script" uid="uid://bjfmsgkd85dle" path="res://entities/pollux/pollux.gd" id="1_pollux_script"]
+[ext_resource type="Texture2D" uid="uid://bq246n4e2u4wx" path="res://asset/AstroKnot_Chars/Pollux/PolluxV2.png" id="pollux_idle"]
+[ext_resource type="Texture2D" uid="uid://ceb1vbfbgoi41" path="res://asset/AstroKnot_Chars/Pollux/PolluxTurnLeft1.png" id="pollux_left_1"]
+[ext_resource type="Texture2D" uid="uid://cl40s8ea18502" path="res://asset/AstroKnot_Chars/Pollux/PolluxTurnLeft2.png" id="pollux_left_2"]
+[ext_resource type="Texture2D" uid="uid://cya0nrl2kkr5y" path="res://asset/AstroKnot_Chars/Pollux/PolluxPreTurnLeft.png" id="pollux_preturn_left"]
+[ext_resource type="Texture2D" uid="uid://cogcejubh8yi8" path="res://asset/AstroKnot_Chars/Pollux/PolluxPreTurnRight.png" id="pollux_preturn_right"]
+[ext_resource type="Texture2D" uid="uid://8qn4ftixo7tv" path="res://asset/AstroKnot_Chars/Pollux/PolluxTurnRight1.png" id="pollux_right_1"]
+[ext_resource type="Texture2D" uid="uid://b3judfpvs2qbg" path="res://asset/AstroKnot_Chars/Pollux/PolluxTurnRight2.png" id="pollux_right_2"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_sj5q8"]
-size = Vector2(40, 40)
+[sub_resource type="CircleShape2D" id="CircleShape2D_12kl7"]
+radius = 22.090721
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_pollux"]
 animations = [{
-"frames": [{"duration": 1.0, "texture": ExtResource("pollux_idle")}],
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("pollux_idle")
+}],
 "loop": true,
 "name": &"idle",
 "speed": 5.0
 }, {
-"frames": [{"duration": 1.0, "texture": ExtResource("pollux_preturn_right")}],
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("pollux_preturn_right")
+}],
 "loop": false,
 "name": &"preturn_left",
 "speed": 8.0
 }, {
-"frames": [{"duration": 1.0, "texture": ExtResource("pollux_right_1")}, {"duration": 1.0, "texture": ExtResource("pollux_right_2")}],
-"loop": true,
-"name": &"walk_left",
-"speed": 6.0
-}, {
-"frames": [{"duration": 1.0, "texture": ExtResource("pollux_preturn_left")}],
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("pollux_preturn_left")
+}],
 "loop": false,
 "name": &"preturn_right",
 "speed": 8.0
 }, {
-"frames": [{"duration": 1.0, "texture": ExtResource("pollux_left_1")}, {"duration": 1.0, "texture": ExtResource("pollux_left_2")}],
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("pollux_right_1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("pollux_right_2")
+}],
+"loop": true,
+"name": &"walk_left",
+"speed": 6.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("pollux_left_1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("pollux_left_2")
+}],
 "loop": true,
 "name": &"walk_right",
 "speed": 6.0
@@ -44,12 +65,14 @@ animations = [{
 collision_layer = 5
 gravity_scale = 2.0
 lock_rotation = true
+contact_monitor = true
+max_contacts_reported = 2
 linear_damp = 0.5
 script = ExtResource("1_pollux_script")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1990002864]
 position = Vector2(20, 20)
-shape = SubResource("RectangleShape2D_sj5q8")
+shape = SubResource("CircleShape2D_12kl7")
 
 [node name="RopeAnchor" type="Marker2D" parent="." unique_id=1489040497]
 position = Vector2(20, 20)
