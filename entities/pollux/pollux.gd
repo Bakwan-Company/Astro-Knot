@@ -1,11 +1,18 @@
 extends RigidBody2D
 
 @export var movement_threshold: float = 8.0
+@export_group("Disabled Pose")
+@export var disabled_pose_rotation_degrees: float = -35.0
+@export var disabled_pose_offset: Vector2 = Vector2(3.0, -5.0)
+@export var disabled_pose_modulate: Color = Color(0.45, 0.48, 0.5, 1.0)
 
 var current_motion_direction: int = 0
 var pending_animation: StringName = &""
 var is_preturning: bool = false
 var last_position_x: float = 0.0
+var disabled_pose_active: bool = false
+var sprite_default_position: Vector2 = Vector2.ZERO
+var sprite_default_modulate: Color = Color.WHITE
 
 # 1. TAMBAHIN VARIABEL INI BIAR BISA DIBACA ROPE MANAGER
 var is_grounded: bool = false 
@@ -15,10 +22,18 @@ var is_grounded: bool = false
 func _ready() -> void:
 	last_position_x = global_position.x
 	if animated_sprite:
+		sprite_default_position = animated_sprite.position
+		sprite_default_modulate = animated_sprite.modulate
 		animated_sprite.animation_finished.connect(_on_animation_finished)
 		update_sprite_animation(0.0)
 
 func _integrate_forces(state: PhysicsDirectBodyState2D) -> void:
+	if disabled_pose_active:
+		is_grounded = false
+		last_position_x = global_position.x
+		_apply_disabled_pose_visual()
+		return
+
 	var floor_normal = Vector2.ZERO
 	
 	# 2. RESET STATUS TIAP FRAME
@@ -41,10 +56,43 @@ func _integrate_forces(state: PhysicsDirectBodyState2D) -> void:
 	last_position_x = global_position.x
 	update_sprite_animation(effective_vel_x)
 
+func set_disabled_pose_active(active: bool) -> void:
+	disabled_pose_active = active
+	if active:
+		linear_velocity = Vector2.ZERO
+		angular_velocity = 0.0
+		current_motion_direction = 0
+		pending_animation = &""
+		is_preturning = false
+		_apply_disabled_pose_visual()
+	else:
+		_restore_normal_visual()
+
+func _apply_disabled_pose_visual() -> void:
+	if not animated_sprite:
+		return
+
+	if animated_sprite.sprite_frames.has_animation(&"idle"):
+		animated_sprite.play(&"idle")
+	animated_sprite.position = sprite_default_position + disabled_pose_offset
+	animated_sprite.rotation = deg_to_rad(disabled_pose_rotation_degrees)
+	animated_sprite.modulate = disabled_pose_modulate
+
+func _restore_normal_visual() -> void:
+	if not animated_sprite:
+		return
+
+	animated_sprite.position = sprite_default_position
+	animated_sprite.rotation = 0.0
+	animated_sprite.modulate = sprite_default_modulate
+	update_sprite_animation(0.0)
 
 # Fungsi ini sekarang nerima "eff_vel_x" (Kecepatan Aktual)
 func update_sprite_animation(eff_vel_x: float) -> void:
 	if not animated_sprite:
+		return
+	if disabled_pose_active:
+		_apply_disabled_pose_visual()
 		return
 
 	var motion_direction := 0

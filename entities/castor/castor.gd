@@ -16,6 +16,11 @@ enum BatteryState {
 @export var battery_state: BatteryState = BatteryState.FULL
 @export var low_battery_blink: bool = false
 @export var low_battery_blink_interval: float = 0.18
+@export_group("Movement Audio")
+@export var move_loop_fade_time: float = 0.15
+@export var move_loop_playing_volume_db: float = -18.0
+@export var move_loop_silent_volume_db: float = -45.0
+@export var move_loop_min_speed: float = 8.0
 
 var gravity: float = ProjectSettings.get_setting("physics/2d/default_gravity")
 var facing_direction: int = 1
@@ -25,10 +30,14 @@ var pending_animation: StringName = &""
 var is_preturning: bool = false
 var blink_timer: float = 0.0
 var blink_show_empty: bool = false
+var move_loop_tween: Tween
+var move_loop_active: bool = false
 
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
+@onready var move_loop_player: AudioStreamPlayer2D = get_node_or_null("MoveLoopPlayer") as AudioStreamPlayer2D
 
 func _ready() -> void:
+	configure_looping_audio(move_loop_player)
 	if animated_sprite:
 		animated_sprite.animation_finished.connect(_on_animation_finished)
 		update_sprite_animation(0.0, 0.0)
@@ -46,6 +55,7 @@ func _physics_process(delta: float) -> void:
 		velocity.x = 0.0
 		move_and_slide()
 		update_sprite_animation(delta, 0.0)
+		update_move_loop_audio()
 		return
 
 	# 2. LOMPAT
@@ -89,6 +99,50 @@ func _physics_process(delta: float) -> void:
 		sprite.rotation = lerp_angle(sprite.rotation, 0.0, 15.0 * delta)
 	
 	update_sprite_animation(delta, direction)
+	update_move_loop_audio()
+
+func configure_looping_audio(player: AudioStreamPlayer2D) -> void:
+	if player == null or player.stream == null:
+		return
+
+	var wav_stream := player.stream as AudioStreamWAV
+	if wav_stream != null:
+		wav_stream.loop_mode = 2
+
+func update_move_loop_audio() -> void:
+	if move_loop_player == null:
+		return
+
+	var should_play := is_on_floor() and absf(velocity.x) > move_loop_min_speed
+	if should_play == move_loop_active:
+		return
+
+	move_loop_active = should_play
+	if move_loop_tween != null:
+		move_loop_tween.kill()
+
+	move_loop_tween = create_tween()
+	if should_play:
+		if not move_loop_player.playing:
+			move_loop_player.volume_db = move_loop_silent_volume_db
+			move_loop_player.play()
+		move_loop_tween.tween_property(
+			move_loop_player,
+			"volume_db",
+			move_loop_playing_volume_db,
+			move_loop_fade_time
+		)
+	else:
+		move_loop_tween.tween_property(
+			move_loop_player,
+			"volume_db",
+			move_loop_silent_volume_db,
+			move_loop_fade_time
+		)
+		move_loop_tween.finished.connect(func() -> void:
+			if not move_loop_active and move_loop_player != null:
+				move_loop_player.stop()
+		)
 
 func set_throw_mode_locked(locked: bool) -> void:
 	is_throw_mode_locked = locked

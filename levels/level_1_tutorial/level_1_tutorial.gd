@@ -97,6 +97,9 @@ func set_tether_connected(value: bool) -> void:
 func _apply_connection_state(value: bool) -> void:
 	tether_connected = value
 
+	if pollux != null and pollux.has_method("set_disabled_pose_active"):
+		pollux.call("set_disabled_pose_active", not value)
+
 	if camera != null:
 		camera.set("include_pollux", value)
 
