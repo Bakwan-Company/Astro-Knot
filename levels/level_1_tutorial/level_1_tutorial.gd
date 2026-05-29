@@ -1,5 +1,7 @@
 extends Node2D
 
+const TETHER_CONNECT_COMIC_SCENE := preload("res://comics/level1/ConnectCastor.tscn")
+
 @export_group("Level Flow")
 @export var area_title: String = "Crash Site"
 @export var area_subtitle: String = "Ulbul Surface"
@@ -45,6 +47,7 @@ var title_layer: CanvasLayer
 var title_group: Control
 var exit_confirm_layer: CanvasLayer
 var exit_confirm_open: bool = false
+var tether_connect_comic_active: bool = false
 
 func _ready() -> void:
 	if fall_zone != null:
@@ -88,7 +91,7 @@ func _process(delta: float) -> void:
 		return
 
 	if not tether_connected and castor_in_connect_range and Input.is_action_just_pressed("interact"):
-		set_tether_connected(true)
+		_play_tether_connect_comic()
 
 	if tether_connected and connected_message_timer > 0.0:
 		connected_message_timer = maxf(connected_message_timer - delta, 0.0)
@@ -129,6 +132,22 @@ func _is_tether_connected() -> bool:
 	if rope_manager != null and rope_manager.has_method("is_tether_connected"):
 		return rope_manager.is_tether_connected()
 	return true
+
+func _play_tether_connect_comic() -> void:
+	if tether_connect_comic_active:
+		return
+
+	tether_connect_comic_active = true
+	connect_prompt.visible = false
+
+	var comic := TETHER_CONNECT_COMIC_SCENE.instantiate() as CanvasLayer
+	if comic.has_signal("finished"):
+		comic.connect("finished", _on_tether_connect_comic_finished)
+	add_child(comic)
+
+func _on_tether_connect_comic_finished() -> void:
+	tether_connect_comic_active = false
+	set_tether_connected(true)
 
 func _create_pollux_connect_zone() -> void:
 	connect_zone = Area2D.new()

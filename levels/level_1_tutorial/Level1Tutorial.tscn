@@ -3,8 +3,10 @@
 [ext_resource type="PackedScene" uid="uid://cmn0gfamy7yaj" path="res://entities/castor/Castor.tscn" id="1_castor"]
 [ext_resource type="Texture2D" uid="uid://dlwsow46nds6u" path="res://asset/Platfromer/lv1/trak2_trim2f.tga" id="1_ma6cf"]
 [ext_resource type="PackedScene" uid="uid://d3rhk612sc0pl" path="res://entities/pollux/Pollux.tscn" id="2_pollux"]
+[ext_resource type="PackedScene" path="res://ui/comic_cutscene/ComicCutsceneTrigger.tscn" id="3_cjrmr"]
 [ext_resource type="PackedScene" uid="uid://byqxydxhxv7q5" path="res://systems/rope_system/RopeManager.tscn" id="3_rope"]
 [ext_resource type="Texture2D" uid="uid://v0f7qrm7a0l2" path="res://asset/Platfromer/lv1/Desert_Apocalypse/Desert Apocalypse - Brick 01.png" id="4_edq6o"]
+[ext_resource type="PackedScene" uid="uid://bbrhlr1jhw2md" path="res://comics/level1/MeetingCastor.tscn" id="4_n4pll"]
 [ext_resource type="Texture2D" uid="uid://d1efp4r6ch2y7" path="res://asset/Platfromer/lv1/Desert_Apocalypse/Desert Apocalypse - Brick 02.png" id="5_ma6cf"]
 [ext_resource type="Texture2D" uid="uid://bk6y2axisyq13" path="res://asset/Platfromer/lv1/Desert_Apocalypse/Desert Apocalypse - Ground 01.png" id="6_c8kdw"]
 [ext_resource type="Texture2D" uid="uid://d21lwqrbqttsu" path="res://asset/Platfromer/lv1/Desert_Apocalypse/Desert Apocalypse - Ground 02.png" id="7_xev5j"]
@@ -151,6 +153,12 @@ area_title_fade_time = 1.0
 
 [node name="ComicCutscene" parent="." unique_id=447837178 instance=ExtResource("28_ylfrx")]
 
+[node name="ComicCutsceneTrigger" parent="." unique_id=2003422810 instance=ExtResource("3_cjrmr")]
+position = Vector2(1933, 177)
+scale = Vector2(1, 4.415)
+cutscene_scene = ExtResource("4_n4pll")
+prompt_text = ""
+
 [node name="Background" type="Node" parent="." unique_id=723496869]
 
 [node name="BG_1_Sky" type="Parallax2D" parent="Background" unique_id=1436426537]
@@ -240,7 +248,7 @@ texture = ExtResource("1_ma6cf")
 position = Vector2(94, 186)
 
 [node name="Pollux" parent="." unique_id=990800502 instance=ExtResource("2_pollux")]
-position = Vector2(2136, 184)
+position = Vector2(2064, 183)
 
 [node name="RopeManager" parent="." unique_id=870553256 node_paths=PackedStringArray("castor", "pollux") instance=ExtResource("3_rope")]
 castor = NodePath("../Castor")
@@ -285,10 +293,10 @@ Q to reel in Pollux
 Try It!"
 
 [node name="PolluxDiscoveryLabel" type="Label" parent="Labels" unique_id=1957125159]
-offset_left = 2069.0
-offset_top = 126.0
-offset_right = 2249.0
-offset_bottom = 149.0
+offset_left = 2007.0
+offset_top = 113.0
+offset_right = 2187.0
+offset_bottom = 136.0
 theme_override_colors/font_color = Color(0, 0, 0, 1)
 text = "Pollux signal detected"
 
@@ -350,7 +358,6 @@ shape = SubResource("RectangleShape2D_fall_zone")
 [node name="LevelExit" parent="." unique_id=1578466031 instance=ExtResource("28_382gh")]
 position = Vector2(7824, 52)
 open_confirm_on_body_entered = true
-play_comic_before_exit = null
 cancel_walk_distance = 90.0
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=1929636986 node_paths=PackedStringArray("castor", "pollux")]
