@@ -53,9 +53,7 @@ func _ready() -> void:
 	if fall_zone != null:
 		fall_zone.body_entered.connect(_on_fall_zone_body_entered)
 
-	if level_exit != null:
-		_configure_level_exit()
-	elif exit_sign != null:
+	if level_exit == null and exit_sign != null:
 		exit_sign.body_entered.connect(_on_exit_sign_body_entered)
 		exit_sign.body_exited.connect(_on_exit_sign_body_exited)
 		if exit_prompt != null:
@@ -66,18 +64,6 @@ func _ready() -> void:
 	_create_connect_prompt()
 	_apply_connection_state(_is_tether_connected())
 	_show_area_title()
-
-func _configure_level_exit() -> void:
-	level_exit.set("prompt_text", exit_prompt_text)
-	level_exit.set("confirm_title", exit_confirm_title)
-	level_exit.set("confirm_detail", exit_confirm_detail)
-	level_exit.set("next_level_scene_path", next_level_scene_path)
-	level_exit.set("finish_walk_distance", finish_walk_distance)
-	level_exit.set("finish_walk_time", finish_walk_time)
-	level_exit.set("cancel_walk_distance", exit_cancel_walk_distance)
-	level_exit.set("cancel_walk_time", exit_cancel_walk_time)
-	if level_exit.has_method("apply_text"):
-		level_exit.call("apply_text")
 
 func _process(delta: float) -> void:
 	if level_failed or level_completed:

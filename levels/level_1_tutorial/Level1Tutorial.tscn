@@ -328,16 +328,16 @@ theme_override_colors/font_color = Color(0, 0, 0, 1)
 text = "Hint: While hanging, move left and right to swing"
 
 [node name="ThrowLabel" type="Label" parent="Labels" unique_id=754409880]
-offset_left = 4333.0
-offset_top = 18.0
-offset_right = 4668.0
-offset_bottom = 145.0
+offset_left = 4304.0
+offset_top = 9.0
+offset_right = 4639.0
+offset_bottom = 136.0
 theme_override_colors/font_color = Color(0, 0, 0, 1)
 text = "Reel Pollux Closer
-R to enter Throw Mode
-A / D to Switch Direction
-W / S to aim
-Hold R again to throw"
+Press R to enter Throw Mode
+A / D to aim
+Hold Space to charge
+Release Space to throw"
 
 [node name="ThrowHintLabel" type="Label" parent="Labels" unique_id=1092806120]
 offset_left = 5577.0
@@ -359,6 +359,7 @@ shape = SubResource("RectangleShape2D_fall_zone")
 [node name="LevelExit" parent="." unique_id=1578466031 instance=ExtResource("28_382gh")]
 position = Vector2(7825, 14)
 open_confirm_on_body_entered = true
+next_level_scene_path = "res://levels/level_2/Level2.tscn"
 play_comic_before_exit = true
 comic_cutscene_scene = ExtResource("30_n4pll")
 cancel_walk_distance = 90.0
