@@ -30,7 +30,9 @@
 [ext_resource type="Script" uid="uid://vsw6m6isf1qt" path="res://levels/level_1_tutorial/level_1_tutorial.gd" id="26_tutorial"]
 [ext_resource type="PackedScene" path="res://interactables/level_exit/LevelExit.tscn" id="28_382gh"]
 [ext_resource type="PackedScene" uid="uid://4tgu081leipe" path="res://comics/level1/CrashLanding.tscn" id="28_ylfrx"]
+[ext_resource type="PackedScene" path="res://hazards/death_zone/DeathZone.tscn" id="29_itto2"]
 [ext_resource type="PackedScene" uid="uid://dlepfljhjqbnx" path="res://comics/level1/OldSignalRelay.tscn" id="30_n4pll"]
+[ext_resource type="PackedScene" path="res://systems/checkpoint/Checkpoint.tscn" id="32_uy4n7"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_itto2"]
 texture = ExtResource("4_edq6o")
@@ -143,9 +145,6 @@ sources/44 = SubResource("TileSetAtlasSource_le7fk")
 
 [sub_resource type="RectangleShape2D" id="Rect_hull_ramp"]
 size = Vector2(415.51703, 64)
-
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_fall_zone"]
-size = Vector2(14000, 280)
 
 [node name="Level1Tutorial" type="Node2D" unique_id=1025983664]
 script = ExtResource("26_tutorial")
@@ -348,13 +347,8 @@ theme_override_colors/font_color = Color(0, 0, 0, 1)
 text = "Hint: If You're unsure,
 Send Pollux ahead to scout the path!"
 
-[node name="FallZone" type="Area2D" parent="." unique_id=2022798888]
+[node name="DeathZone" parent="." unique_id=1554442346 instance=ExtResource("29_itto2")]
 position = Vector2(5600, 780)
-collision_layer = 0
-collision_mask = 7
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="FallZone" unique_id=1316753628]
-shape = SubResource("RectangleShape2D_fall_zone")
 
 [node name="LevelExit" parent="." unique_id=1578466031 instance=ExtResource("28_382gh")]
 position = Vector2(7825, 14)
@@ -372,3 +366,7 @@ position_smoothing_enabled = true
 script = ExtResource("20_c8kdw")
 castor = NodePath("../Castor")
 pollux = NodePath("../Pollux")
+
+[node name="Checkpoint1" parent="." unique_id=795694010 instance=ExtResource("32_uy4n7")]
+position = Vector2(3289, 3.999998)
+scale = Vector2(1.05, 1.715)

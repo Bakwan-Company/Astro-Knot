@@ -3,6 +3,7 @@ extends Area2D
 signal triggered(body: Node2D)
 
 @export var valid_body_names: PackedStringArray = ["Castor", "Pollux"]
+@export var death_type: String = "environment"
 
 var _is_reloading: bool = false
 
@@ -21,4 +22,11 @@ func _on_body_entered(body: Node2D) -> void:
 
 	triggered.emit(body)
 	_is_reloading = true
-	get_tree().call_deferred("reload_current_scene")
+	var checkpoint_manager := get_node_or_null("/root/CheckpointManager")
+	if checkpoint_manager != null and checkpoint_manager.has_method("kill"):
+		checkpoint_manager.call("kill", death_type)
+	else:
+		get_tree().call_deferred("reload_current_scene")
+
+func reset() -> void:
+	_is_reloading = false

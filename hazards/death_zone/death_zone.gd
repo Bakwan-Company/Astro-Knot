@@ -28,6 +28,11 @@ func _on_body_entered(body: Node2D) -> void:
 	if has_external_handler:
 		return
 
+	var checkpoint_manager := get_node_or_null("/root/CheckpointManager")
+	if checkpoint_manager != null and checkpoint_manager.has_method("kill_with_overlay"):
+		checkpoint_manager.call("kill_with_overlay", death_type, game_over_scene)
+		return
+
 	if game_over_scene == null:
 		get_tree().call_deferred("reload_current_scene")
 		return

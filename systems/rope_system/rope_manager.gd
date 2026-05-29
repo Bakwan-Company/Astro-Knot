@@ -659,6 +659,11 @@ func trigger_game_over(death_type: String) -> void:
 	set_rope_visual_color(power_break_color)
 	tether_broken.emit(death_type)
 
+	var checkpoint_manager := get_node_or_null("/root/CheckpointManager")
+	if checkpoint_manager != null and checkpoint_manager.has_method("kill_with_overlay"):
+		checkpoint_manager.call("kill_with_overlay", death_type, game_over_scene)
+		return
+
 	if not game_over_scene:
 		get_tree().call_deferred("reload_current_scene")
 		return
@@ -714,7 +719,14 @@ func update_debug_readout() -> void:
 			debug_pollux_side_blocked,
 			debug_grounded_pollux_y_lock,
 		],
+		get_checkpoint_debug_text(),
 	])
+
+func get_checkpoint_debug_text() -> String:
+	var checkpoint_manager := get_node_or_null("/root/CheckpointManager")
+	if checkpoint_manager == null or not checkpoint_manager.has_method("get_debug_summary"):
+		return "cp manager missing"
+	return str(checkpoint_manager.call("get_debug_summary"))
 
 func handle_throw_state(delta: float) -> void:
 	match throw_state:
