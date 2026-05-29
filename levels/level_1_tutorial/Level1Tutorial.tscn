@@ -22,7 +22,7 @@
 [ext_resource type="Texture2D" uid="uid://gd2bph44n37x" path="res://asset/Platfromer/lv1/Desert_Apocalypse/Desert Apocalypse - Ground 11.png" id="16_cjrmr"]
 [ext_resource type="Texture2D" uid="uid://njs4uf4gm0dp" path="res://asset/Platfromer/lv1/Desert_Apocalypse/Desert Apocalypse - Ground 12.png" id="17_n4pll"]
 [ext_resource type="Texture2D" uid="uid://b0j212p24mddx" path="res://asset/Platfromer/lv1/Desert_Apocalypse/Desert Apocalypse - Ground 13.png" id="18_uy4n7"]
-[ext_resource type="Script" uid="uid://72twrujtftlm" path="res://levels/level_1_tutorial/camera_2d.gd" id="20_c8kdw"]
+[ext_resource type="Script" path="res://levels/level_1_tutorial/camera_2d.gd" id="20_c8kdw"]
 [ext_resource type="Texture2D" uid="uid://br6h7baliv6q5" path="res://asset/Platfromer/lv1/Background/1.png" id="21_i272c"]
 [ext_resource type="Texture2D" uid="uid://ivr5uxkis057" path="res://asset/Platfromer/lv1/Background/2.png" id="22_bo08e"]
 [ext_resource type="Texture2D" uid="uid://cukf4tlqghemo" path="res://asset/Platfromer/lv1/Background/3.png" id="23_o7sth"]
@@ -282,6 +282,7 @@ pollux = NodePath("../Pollux")
 start_connected = false
 current_rope_length = 100.0
 min_rope_length = 64.0
+debug_enabled = false
 min_throw_power = 200.0
 throw_auto_extend_limit = 300.0
 throw_ready_color = Color(0.22, 0.93, 1, 1)
@@ -384,14 +385,11 @@ position = Vector2(5600, 780)
 
 [node name="LevelExit" parent="." unique_id=1578466031 instance=ExtResource("28_382gh")]
 position = Vector2(7825, 14)
-allow_direct_interaction = null
 open_confirm_on_body_entered = true
 next_level_scene_path = "res://levels/level_2/Level2.tscn"
 play_comic_before_exit = true
 comic_cutscene_scene = ExtResource("30_n4pll")
 cancel_walk_distance = 90.0
-exit_animation_sprite_path = null
-exit_open_animation = null
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=1929636986 node_paths=PackedStringArray("castor", "pollux")]
 position = Vector2(130, 77)

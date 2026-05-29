@@ -7,7 +7,7 @@
 [ext_resource type="Texture2D" uid="uid://dfnku8848jbnl" path="res://asset/Platfromer/lv2/2 Background/Night/3.png" id="3_7brkt"]
 [ext_resource type="PackedScene" uid="uid://byqxydxhxv7q5" path="res://systems/rope_system/RopeManager.tscn" id="3_hclcj"]
 [ext_resource type="Texture2D" uid="uid://cm7h04uiqckli" path="res://asset/Platfromer/lv2/1 Tiles/Tileset.png" id="4_747xn"]
-[ext_resource type="Script" uid="uid://72twrujtftlm" path="res://levels/level_1_tutorial/camera_2d.gd" id="4_hclcj"]
+[ext_resource type="Script" path="res://levels/level_1_tutorial/camera_2d.gd" id="4_hclcj"]
 [ext_resource type="Texture2D" uid="uid://cervqu8o6pnqm" path="res://asset/Platfromer/lv2/2 Background/Night/4.png" id="4_iex2g"]
 [ext_resource type="Texture2D" uid="uid://c722xqppfbvni" path="res://asset/Platfromer/lv2/2 Background/Night/5.png" id="5_iex2g"]
 [ext_resource type="PackedScene" uid="uid://cq0phginw8lck" path="res://interactables/door/door.tscn" id="6_a8vd6"]
@@ -26,10 +26,10 @@
 [ext_resource type="Texture2D" uid="uid://cemy8tp2u6qa6" path="res://asset/Platfromer/lv3-v2/3 Objects/2 Decoration/12.png" id="15_xr1s2"]
 [ext_resource type="Texture2D" uid="uid://d0kp6n4c7mrbu" path="res://asset/Platfromer/lv3-v2/3 Objects/2 Decoration/16.png" id="16_jse5s"]
 [ext_resource type="Texture2D" uid="uid://bikfl0fl13sxl" path="res://asset/Platfromer/lv3-v2/3 Objects/3 Power lines/9.png" id="17_jse5s"]
-[ext_resource type="PackedScene" uid="uid://b3dj0mxtjsdsq" path="res://interactables/level_exit/LabDoorExit.tscn" id="27_ur1ma"]
+[ext_resource type="PackedScene" path="res://interactables/level_exit/LabDoorExit.tscn" id="27_ur1ma"]
 [ext_resource type="PackedScene" path="res://ui/area_title/AreaTitleOverlay.tscn" id="28_area_title"]
 [ext_resource type="PackedScene" path="res://systems/checkpoint/Checkpoint.tscn" id="29_l5nk2"]
-[ext_resource type="PackedScene" uid="uid://f288rwprueqb" path="res://interactables/terminal/LabTerminal.tscn" id="30_5xb65"]
+[ext_resource type="PackedScene" path="res://interactables/terminal/LabTerminal.tscn" id="30_5xb65"]
 [ext_resource type="PackedScene" uid="uid://b5ydk4d23bgk1" path="res://comics/level2/EnteringFacility.tscn" id="31_l7jqn"]
 [ext_resource type="PackedScene" path="res://interactables/level_enter/LevelEnter.tscn" id="32_v1ggv"]
 
@@ -425,6 +425,7 @@ position = Vector2(1386, 467)
 castor = NodePath("../Castor")
 pollux = NodePath("../Pollux")
 current_rope_length = 60.0
+debug_enabled = false
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=224688718 node_paths=PackedStringArray("castor", "pollux")]
 position = Vector2(204, -21)
