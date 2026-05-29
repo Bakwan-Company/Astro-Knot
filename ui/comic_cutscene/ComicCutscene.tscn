@@ -1,0 +1,77 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://ui/comic_cutscene/comic_cutscene.gd" id="1_comic"]
+
+[node name="ComicCutscene" type="CanvasLayer"]
+process_mode = 3
+layer = 120
+script = ExtResource("1_comic")
+
+[node name="Dimmer" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.0156863, 0.0156863, 0.0156863, 0.92)
+
+[node name="Root" type="VBoxContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 32.0
+offset_top = 24.0
+offset_right = -32.0
+offset_bottom = -22.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 10
+
+[node name="PageFrame" type="PanelContainer" parent="Root"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="PageTexture" type="TextureRect" parent="Root/PageFrame"]
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="CaptionPanel" type="PanelContainer" parent="Root"]
+visible = false
+layout_mode = 2
+
+[node name="Margin" type="MarginContainer" parent="Root/CaptionPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_bottom = 10
+
+[node name="CaptionLabel" type="Label" parent="Root/CaptionPanel/Margin"]
+layout_mode = 2
+text = "Caption"
+autowrap_mode = 3
+
+[node name="Footer" type="HBoxContainer" parent="Root"]
+layout_mode = 2
+theme_override_constants/separation = 10
+alignment = 2
+
+[node name="PreviousButton" type="Button" parent="Root/Footer"]
+layout_mode = 2
+text = "Back"
+
+[node name="PageCounter" type="Label" parent="Root/Footer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "1 / 1"
+vertical_alignment = 1
+
+[node name="SkipButton" type="Button" parent="Root/Footer"]
+visible = false
+layout_mode = 2
+text = "Skip"
+
+[node name="NextButton" type="Button" parent="Root/Footer"]
+layout_mode = 2
+text = "Next"
