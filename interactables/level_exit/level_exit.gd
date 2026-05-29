@@ -20,6 +20,9 @@ signal confirm_closed
 @export var confirm_window_scene: PackedScene = DEFAULT_CONFIRM_WINDOW
 @export var prompt_label_path: NodePath = NodePath("PromptLabel")
 @export var next_level_scene_path: String = ""
+@export_group("Comic Cutscene")
+@export var play_comic_before_exit: bool = false
+@export var comic_cutscene_scene: PackedScene
 @export_group("Actors")
 @export var handle_actor_sequence: bool = true
 @export var castor_path: NodePath
@@ -55,11 +58,13 @@ var confirm_open: bool = false
 var confirm_window: Node
 var prompt_label: Label
 var exit_sprite: Sprite2D
+var active_comic_cutscene: CanvasLayer
 var castor: CharacterBody2D
 var pollux: RigidBody2D
 var rope_manager: Node
 var camera: Camera2D
 var actor_sequence_active: bool = false
+var exit_flow_active: bool = false
 var actor_sequence_direction: int = 0
 var actor_sequence_speed: float = 0.0
 var was_rope_physics_processing: bool = false
@@ -104,6 +109,9 @@ func _process(_delta: float) -> void:
 
 	_update_actor_sequence_animation_state()
 
+	if exit_flow_active:
+		return
+
 	if not confirm_open:
 		if player_in_range and Input.is_action_just_pressed("interact"):
 			open_confirm()
@@ -131,6 +139,10 @@ func confirm() -> void:
 	var has_external_handler := not get_signal_connection_list(&"exit_confirmed").is_empty()
 	close_confirm()
 	exit_confirmed.emit()
+
+	if play_comic_before_exit and comic_cutscene_scene != null:
+		_play_exit_comic_cutscene()
+		return
 
 	if handle_actor_sequence:
 		_play_actor_sequence(1, finish_walk_distance, finish_walk_time, true)
@@ -197,6 +209,26 @@ func _create_confirm_window() -> void:
 	if confirm_window.has_signal("canceled"):
 		confirm_window.connect("canceled", Callable(self, "cancel"))
 	add_child(confirm_window)
+
+func _play_exit_comic_cutscene() -> void:
+	exit_flow_active = true
+	active_comic_cutscene = comic_cutscene_scene.instantiate() as CanvasLayer
+	if active_comic_cutscene == null:
+		_continue_exit_after_comic()
+		return
+
+	if active_comic_cutscene.has_signal("finished"):
+		active_comic_cutscene.connect("finished", _continue_exit_after_comic)
+	get_tree().current_scene.add_child(active_comic_cutscene)
+
+func _continue_exit_after_comic() -> void:
+	active_comic_cutscene = null
+	exit_flow_active = false
+
+	if handle_actor_sequence:
+		_play_actor_sequence(1, finish_walk_distance, finish_walk_time, true)
+	elif next_level_scene_path != "" and ResourceLoader.exists(next_level_scene_path):
+		get_tree().change_scene_to_file(next_level_scene_path)
 
 func _play_actor_sequence(direction: int, distance: float, duration: float, change_level_after: bool) -> void:
 	if castor == null or pollux == null:

@@ -27,6 +27,7 @@
 [ext_resource type="Texture2D" uid="uid://hcire8kksdo5" path="res://asset/Platfromer/lv1/Background/5.png" id="25_ylfrx"]
 [ext_resource type="Script" uid="uid://vsw6m6isf1qt" path="res://levels/level_1_tutorial/level_1_tutorial.gd" id="26_tutorial"]
 [ext_resource type="PackedScene" path="res://interactables/level_exit/LevelExit.tscn" id="28_382gh"]
+[ext_resource type="PackedScene" uid="uid://4tgu081leipe" path="res://comics/level1/CrashLanding.tscn" id="28_ylfrx"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_itto2"]
 texture = ExtResource("4_edq6o")
@@ -148,6 +149,8 @@ script = ExtResource("26_tutorial")
 area_title_hold_time = 2.0
 area_title_fade_time = 1.0
 
+[node name="ComicCutscene" parent="." unique_id=447837178 instance=ExtResource("28_ylfrx")]
+
 [node name="Background" type="Node" parent="." unique_id=723496869]
 
 [node name="BG_1_Sky" type="Parallax2D" parent="Background" unique_id=1436426537]
@@ -234,7 +237,7 @@ rotation = -0.41001695
 texture = ExtResource("1_ma6cf")
 
 [node name="Castor" parent="." unique_id=583974566 instance=ExtResource("1_castor")]
-position = Vector2(2195, 91)
+position = Vector2(94, 186)
 
 [node name="Pollux" parent="." unique_id=990800502 instance=ExtResource("2_pollux")]
 position = Vector2(2136, 184)
@@ -347,6 +350,7 @@ shape = SubResource("RectangleShape2D_fall_zone")
 [node name="LevelExit" parent="." unique_id=1578466031 instance=ExtResource("28_382gh")]
 position = Vector2(7824, 52)
 open_confirm_on_body_entered = true
+play_comic_before_exit = null
 cancel_walk_distance = 90.0
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=1929636986 node_paths=PackedStringArray("castor", "pollux")]
