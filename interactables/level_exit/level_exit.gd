@@ -52,6 +52,8 @@ signal confirm_closed
 		exit_sprite_path = value
 		exit_sprite = null
 		apply_visual()
+@export var exit_animation_sprite_path: NodePath
+@export var exit_open_animation: StringName = &"open"
 
 var player_in_range: bool = false
 var confirm_open: bool = false
@@ -63,6 +65,7 @@ var castor: CharacterBody2D
 var pollux: RigidBody2D
 var rope_manager: Node
 var camera: Camera2D
+var exit_animation_sprite: AnimatedSprite2D
 var actor_sequence_active: bool = false
 var exit_flow_active: bool = false
 var actor_sequence_direction: int = 0
@@ -84,6 +87,7 @@ func _ready() -> void:
 	pollux = get_node_or_null(pollux_path) as RigidBody2D
 	rope_manager = get_node_or_null(rope_manager_path)
 	camera = get_node_or_null(camera_path) as Camera2D
+	exit_animation_sprite = get_node_or_null(exit_animation_sprite_path) as AnimatedSprite2D
 	apply_text()
 	apply_visual()
 
@@ -145,8 +149,12 @@ func confirm() -> void:
 		return
 
 	if handle_actor_sequence:
+		_play_exit_open_animation()
+		await _wait_for_exit_open_animation()
 		_play_actor_sequence(1, finish_walk_distance, finish_walk_time, true)
 	elif not has_external_handler and next_level_scene_path != "" and ResourceLoader.exists(next_level_scene_path):
+		_play_exit_open_animation()
+		await _wait_for_exit_open_animation()
 		get_tree().change_scene_to_file(next_level_scene_path)
 
 func cancel() -> void:
@@ -226,9 +234,32 @@ func _continue_exit_after_comic() -> void:
 	exit_flow_active = false
 
 	if handle_actor_sequence:
+		_play_exit_open_animation()
+		await _wait_for_exit_open_animation()
 		_play_actor_sequence(1, finish_walk_distance, finish_walk_time, true)
 	elif next_level_scene_path != "" and ResourceLoader.exists(next_level_scene_path):
+		_play_exit_open_animation()
+		await _wait_for_exit_open_animation()
 		get_tree().change_scene_to_file(next_level_scene_path)
+
+func _play_exit_open_animation() -> void:
+	if exit_animation_sprite == null:
+		return
+
+	if not exit_animation_sprite.sprite_frames.has_animation(exit_open_animation):
+		return
+
+	exit_animation_sprite.play(exit_open_animation)
+
+func _wait_for_exit_open_animation() -> void:
+	if exit_animation_sprite == null:
+		return
+
+	if not exit_animation_sprite.sprite_frames.has_animation(exit_open_animation):
+		return
+
+	if exit_animation_sprite.is_playing():
+		await exit_animation_sprite.animation_finished
 
 func _play_actor_sequence(direction: int, distance: float, duration: float, change_level_after: bool) -> void:
 	if castor == null or pollux == null:

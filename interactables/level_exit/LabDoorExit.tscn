@@ -1,0 +1,84 @@
+[gd_scene format=3 uid="uid://b3dj0mxtjsdsq"]
+
+[ext_resource type="Script" uid="uid://csbq85n304ygn" path="res://interactables/level_exit/level_exit.gd" id="1_level_exit"]
+[ext_resource type="Texture2D" uid="uid://di4eew7xjvf2e" path="res://asset/Platfromer/lv2/3 Objects/lab_door_1.png" id="3_lab_door_1"]
+[ext_resource type="Texture2D" uid="uid://c22g6vlc5s2hf" path="res://asset/Platfromer/lv2/3 Objects/lab_door_2.png" id="4_lab_door_2"]
+[ext_resource type="Texture2D" uid="uid://dmqf6v8822phd" path="res://asset/Platfromer/lv2/3 Objects/lab_door_3.png" id="5_lab_door_3"]
+[ext_resource type="Texture2D" uid="uid://b6su0kxch2wcr" path="res://asset/Platfromer/lv2/3 Objects/lab_door_4.png" id="6_lab_door_4"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_exit_area"]
+size = Vector2(209, 66)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_lab_door"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("3_lab_door_1")
+}],
+"loop": true,
+"name": &"closed",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("3_lab_door_1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_lab_door_2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("5_lab_door_3")
+}, {
+"duration": 1.0,
+"texture": ExtResource("6_lab_door_4")
+}],
+"loop": false,
+"name": &"open",
+"speed": 8.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("6_lab_door_4")
+}],
+"loop": true,
+"name": &"opened",
+"speed": 5.0
+}]
+
+[node name="LabDoorExit" type="Area2D" unique_id=1584736348]
+collision_layer = 0
+collision_mask = 7
+script = ExtResource("1_level_exit")
+prompt_text = "Press F to enter the lab"
+confirm_heading = "ULBUL LAB ACCESS"
+confirm_title = "Enter the facility?"
+confirm_detail = "Proceed to the next area"
+castor_path = NodePath("../Castor")
+pollux_path = NodePath("../Pollux")
+rope_manager_path = NodePath("../RopeManager")
+camera_path = NodePath("../Camera2D")
+finish_walk_distance = 96.0
+finish_walk_time = 0.75
+exit_animation_sprite_path = NodePath("AnimatedSprite2D")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1273530891]
+position = Vector2(0.5, 3)
+shape = SubResource("RectangleShape2D_exit_area")
+
+[node name="PromptLabel" type="Label" parent="." unique_id=471156783]
+visible = false
+offset_left = -112.0
+offset_top = -74.0
+offset_right = 112.0
+offset_bottom = -51.0
+theme_override_colors/font_color = Color(0.68, 0.86, 0.78, 1)
+theme_override_colors/font_shadow_color = Color(0.02, 0.03, 0.03, 0.85)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+text = "Press F to enter the lab"
+horizontal_alignment = 1
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1210051422]
+scale = Vector2(2, 2)
+sprite_frames = SubResource("SpriteFrames_lab_door")
+animation = &"closed"
