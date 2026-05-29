@@ -5,47 +5,40 @@ extends RigidBody2D
 var current_motion_direction: int = 0
 var pending_animation: StringName = &""
 var is_preturning: bool = false
-
-# --- TAMBAHAN: Variabel buat nyatet posisi frame sebelumnya ---
 var last_position_x: float = 0.0
+
+# 1. TAMBAHIN VARIABEL INI BIAR BISA DIBACA ROPE MANAGER
+var is_grounded: bool = false 
 
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 
 func _ready() -> void:
-	# Catat posisi awal
 	last_position_x = global_position.x
 	if animated_sprite:
 		animated_sprite.animation_finished.connect(_on_animation_finished)
-		# update_sprite_animation sekarang minta parameter, kita kasih 0.0 dulu
 		update_sprite_animation(0.0)
 
 func _integrate_forces(state: PhysicsDirectBodyState2D) -> void:
 	var floor_normal = Vector2.ZERO
-	var is_on_floor = false
 	
-	# Loop ngecek semua benda yang lagi nempel sama badan Pollux saat ini
+	# 2. RESET STATUS TIAP FRAME
+	is_grounded = false 
+	
 	for i in state.get_contact_count():
 		var contact_normal = state.get_contact_local_normal(i)
 		if contact_normal.y < -0.5:
 			floor_normal = contact_normal
-			is_on_floor = true
+			is_grounded = true # 3. KENA LANTAI!
 			break 
 			
-	# Logika miringin badannya
-	if is_on_floor:
+	if is_grounded:
 		var target_rotation = floor_normal.angle() + (PI / 2.0)
 		animated_sprite.rotation = lerp_angle(animated_sprite.rotation, target_rotation, 15.0 * state.step)
 	else:
 		animated_sprite.rotation = lerp_angle(animated_sprite.rotation, 0.0, 15.0 * state.step)
 		
-	# === HITUNG KECEPATAN AKTUAL (SPEEDOMETER MANUAL) ===
-	# Kecepatan = (Posisi Sekarang - Posisi Sebelumnya) dibagi Waktu (delta/step)
 	var effective_vel_x = (global_position.x - last_position_x) / state.step
-	
-	# Update catatan posisi buat frame berikutnya
 	last_position_x = global_position.x
-	
-	# Lempar kecepatan gabungan ini ke fungsi animasi
 	update_sprite_animation(effective_vel_x)
 
 
