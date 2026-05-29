@@ -10,7 +10,7 @@
 [ext_resource type="Texture2D" uid="uid://b3judfpvs2qbg" path="res://asset/AstroKnot_Chars/Pollux/PolluxTurnRight2.png" id="pollux_right_2"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_12kl7"]
-radius = 22.090721
+radius = 20.0
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_pollux"]
 animations = [{
