@@ -529,6 +529,13 @@ comic_cutscene_scene = ExtResource("31_l7jqn")
 position = Vector2(-54, 2)
 valid_body_names = PackedStringArray("Castor")
 
+[node name="InteractLabel" type="Label" parent="." unique_id=46219883]
+offset_left = 690.0
+offset_top = -49.0
+offset_right = 1014.0
+offset_bottom = 17.0
+text = "Press F to let Pollux interact"
+
 [connection signal="terminal_activated" from="Terminal1" to="Door1" method="set_terminal_status"]
 [connection signal="terminal_activated" from="Terminal2" to="Door2" method="set_terminal_status"]
 [connection signal="terminal_activated" from="TerminalBigBuilding" to="DoorBigBulding" method="set_terminal_status"]
