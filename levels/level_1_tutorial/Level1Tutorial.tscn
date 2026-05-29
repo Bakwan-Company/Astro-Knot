@@ -367,6 +367,16 @@ script = ExtResource("20_c8kdw")
 castor = NodePath("../Castor")
 pollux = NodePath("../Pollux")
 
-[node name="Checkpoint1" parent="." unique_id=795694010 instance=ExtResource("32_uy4n7")]
-position = Vector2(3289, 3.999998)
-scale = Vector2(1.05, 1.715)
+[node name="Checkpoints" type="Node" parent="." unique_id=747868302]
+
+[node name="Checkpoint1" parent="Checkpoints" unique_id=795694010 instance=ExtResource("32_uy4n7")]
+position = Vector2(3300.0002, -60)
+scale = Vector2(1.05, 3.425)
+
+[node name="Checkpoint2" parent="Checkpoints" unique_id=1792668054 instance=ExtResource("32_uy4n7")]
+position = Vector2(4192, 114.99999)
+scale = Vector2(1.05, 3.12)
+
+[node name="Checkpoint3" parent="Checkpoints" unique_id=1166102686 instance=ExtResource("32_uy4n7")]
+position = Vector2(5458.0005, 100)
+scale = Vector2(1.05, 3.52)
