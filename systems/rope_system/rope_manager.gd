@@ -9,7 +9,19 @@ signal tether_broken(death_type: String)
 @export_group("Connection")
 @export var start_connected: bool = true
 
+@export_group("Hardlight Visual")
+@export_range(0.0, 1.0) var rope_glow_alpha: float = 0.22
+@export_range(0.0, 1.0) var rope_core_brightness: float = 0.45
+@export var rope_pulse_enabled: bool = true
+@export_range(0, 8) var rope_pulse_count: int = 3
+@export var rope_pulse_length: float = 32.0
+@export var rope_pulse_speed: float = 0.9
+@export var rope_pulse_width: float = 5.0
+@export_range(0.0, 1.0) var rope_pulse_alpha: float = 0.72
+
+@onready var rope_glow_visual: Line2D = get_node_or_null("HardlightGlow") as Line2D
 @onready var rope_visual: Line2D = $HardlightVisual
+@onready var rope_pulse_container: Node2D = get_node_or_null("HardlightPulses") as Node2D
 @onready var aim_indicator: Line2D = $AimIndicator
 @onready var power_meter_bg: Line2D = $PowerMeterBg
 @onready var power_meter_fill: Line2D = $PowerMeterFill
@@ -134,6 +146,11 @@ var debug_constraint_state: String = "idle"
 var power_limit_over_time: float = 0.0
 var tether_is_broken: bool = false
 var tether_connected: bool = true
+var rope_pulse_lines: Array[Line2D] = []
+var rope_pulse_phase: float = 0.0
+var rope_segment_start: Vector2 = Vector2.ZERO
+var rope_segment_end: Vector2 = Vector2.ZERO
+var has_rope_segment: bool = false
 var aim_arrow_head: Line2D
 var aim_arrow_fill: Polygon2D
 
@@ -158,18 +175,20 @@ func _ready() -> void:
 	rope_default_color = rope_visual.default_color
 	pollux_default_gravity_scale = pollux.gravity_scale
 	pollux_default_linear_damp = pollux.linear_damp
+	create_rope_pulse_lines()
 	create_throw_arrow_head()
 	initialize_throw_aim_from_current()
 	apply_throw_visual_colors()
 	set_throw_state(ThrowState.NORMAL)
 	set_tether_connected(start_connected)
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if not tether_connected:
 		update_rope_visual()
 		update_debug_readout()
 		return
 
+	update_rope_pulse_phase(delta)
 	update_rope_visual()
 	update_throw_visuals()
 	update_power_rope_visual()
@@ -208,7 +227,10 @@ func set_tether_connected(value: bool) -> void:
 	if rope_visual != null:
 		rope_visual.visible = value
 		if not value:
-			rope_visual.clear_points()
+			clear_rope_visual_points()
+	if rope_glow_visual != null:
+		rope_glow_visual.visible = value
+	set_rope_pulses_visible(value and rope_pulse_enabled)
 
 	if aim_indicator != null:
 		aim_indicator.visible = false
@@ -562,16 +584,15 @@ func apply_solid_constraint(delta: float) -> void:
 
 func update_rope_visual() -> void:
 	if not tether_connected:
-		if rope_visual:
-			rope_visual.clear_points()
+		clear_rope_visual_points()
 		return
 
 	if castor and pollux and rope_visual:
 		var c_anchor = castor.get_node_or_null("RopeAnchor")
 		var p_anchor = pollux.get_node_or_null("RopeAnchor")
-		rope_visual.clear_points()
-		rope_visual.add_point(c_anchor.global_position if c_anchor else castor.global_position)
-		rope_visual.add_point(p_anchor.global_position if p_anchor else pollux.global_position)
+		var start_pos: Vector2 = c_anchor.global_position if c_anchor else castor.global_position
+		var end_pos: Vector2 = p_anchor.global_position if p_anchor else pollux.global_position
+		set_rope_visual_points(start_pos, end_pos)
 
 func update_rope_debug_snapshot() -> void:
 	if not castor or not pollux:
@@ -611,7 +632,7 @@ func update_power_rope_visual() -> void:
 	var base_color: Color = get_throw_rope_color()
 	var warning_start_length: float = power_limit_length * power_warning_ratio
 	if power_limit_length <= 0.0 or debug_rope_distance <= warning_start_length:
-		rope_visual.default_color = base_color
+		set_rope_visual_color(base_color)
 		return
 
 	var warning_span: float = maxf(power_limit_length - warning_start_length, 0.001)
@@ -620,10 +641,10 @@ func update_power_rope_visual() -> void:
 		0.0,
 		1.0
 	)
-	rope_visual.default_color = base_color.lerp(power_warning_color, warning_amount)
+	set_rope_visual_color(base_color.lerp(power_warning_color, warning_amount))
 
 	if debug_rope_distance > power_limit_length:
-		rope_visual.default_color = power_break_color
+		set_rope_visual_color(power_break_color)
 
 func trigger_game_over(death_type: String) -> void:
 	if tether_is_broken:
@@ -631,7 +652,7 @@ func trigger_game_over(death_type: String) -> void:
 
 	tether_is_broken = true
 	debug_constraint_state = "tether_broken"
-	rope_visual.default_color = power_break_color
+	set_rope_visual_color(power_break_color)
 	tether_broken.emit(death_type)
 
 	if not game_over_scene:
@@ -963,7 +984,7 @@ func set_throw_state(new_state: int) -> void:
 			throw_charge_ratio = 0.0
 			throw_ready_wait_for_release = false
 
-	rope_visual.default_color = get_throw_rope_color()
+	set_rope_visual_color(get_throw_rope_color())
 
 func get_throw_state_name() -> String:
 	match throw_state:
@@ -988,6 +1009,102 @@ func get_throw_rope_color() -> Color:
 			return throw_recovery_color
 		_:
 			return rope_default_color
+
+func set_rope_visual_points(start_pos: Vector2, end_pos: Vector2) -> void:
+	rope_segment_start = start_pos
+	rope_segment_end = end_pos
+	has_rope_segment = true
+
+	if rope_visual != null:
+		rope_visual.clear_points()
+		rope_visual.add_point(start_pos)
+		rope_visual.add_point(end_pos)
+
+	if rope_glow_visual != null:
+		rope_glow_visual.clear_points()
+		rope_glow_visual.add_point(start_pos)
+		rope_glow_visual.add_point(end_pos)
+
+	update_rope_pulse_points()
+
+func clear_rope_visual_points() -> void:
+	has_rope_segment = false
+	if rope_visual != null:
+		rope_visual.clear_points()
+	if rope_glow_visual != null:
+		rope_glow_visual.clear_points()
+	for pulse_line in rope_pulse_lines:
+		pulse_line.clear_points()
+
+func set_rope_visual_color(core_color: Color) -> void:
+	if rope_visual != null:
+		rope_visual.default_color = core_color.lerp(Color.WHITE, rope_core_brightness)
+
+	if rope_glow_visual != null:
+		var glow_color := core_color
+		glow_color.a = rope_glow_alpha
+		rope_glow_visual.default_color = glow_color
+
+	for pulse_line in rope_pulse_lines:
+		var pulse_color := core_color.lerp(Color.WHITE, 0.65)
+		pulse_color.a = rope_pulse_alpha
+		pulse_line.default_color = pulse_color
+
+func create_rope_pulse_lines() -> void:
+	rope_pulse_lines.clear()
+	if rope_pulse_container == null:
+		return
+
+	for child in rope_pulse_container.get_children():
+		child.queue_free()
+
+	for index in range(rope_pulse_count):
+		var pulse_line := Line2D.new()
+		pulse_line.name = "Pulse%s" % index
+		pulse_line.width = rope_pulse_width
+		pulse_line.begin_cap_mode = Line2D.LINE_CAP_ROUND
+		pulse_line.end_cap_mode = Line2D.LINE_CAP_ROUND
+		pulse_line.joint_mode = Line2D.LINE_JOINT_ROUND
+		rope_pulse_container.add_child(pulse_line)
+		rope_pulse_lines.append(pulse_line)
+
+func update_rope_pulse_phase(delta: float) -> void:
+	if not rope_pulse_enabled:
+		return
+
+	rope_pulse_phase = fmod(rope_pulse_phase + delta * rope_pulse_speed, 1.0)
+
+func update_rope_pulse_points() -> void:
+	if not rope_pulse_enabled or not has_rope_segment:
+		set_rope_pulses_visible(false)
+		return
+
+	set_rope_pulses_visible(tether_connected)
+
+	var rope_vector := rope_segment_end - rope_segment_start
+	var rope_length := rope_vector.length()
+	if rope_length <= 0.001:
+		for pulse_line in rope_pulse_lines:
+			pulse_line.clear_points()
+		return
+
+	var direction := rope_vector / rope_length
+	var segment_ratio := clampf(rope_pulse_length / rope_length, 0.02, 0.24)
+
+	for index in range(rope_pulse_lines.size()):
+		var pulse_line := rope_pulse_lines[index]
+		var center_t := fmod(rope_pulse_phase + float(index) / max(rope_pulse_lines.size(), 1), 1.0)
+		var start_t := clampf(center_t - segment_ratio * 0.5, 0.0, 1.0)
+		var end_t := clampf(center_t + segment_ratio * 0.5, 0.0, 1.0)
+		pulse_line.clear_points()
+		pulse_line.add_point(rope_segment_start + direction * rope_length * start_t)
+		pulse_line.add_point(rope_segment_start + direction * rope_length * end_t)
+
+func set_rope_pulses_visible(value: bool) -> void:
+	if rope_pulse_container != null:
+		rope_pulse_container.visible = value
+	for pulse_line in rope_pulse_lines:
+		pulse_line.visible = value
 
 func apply_throw_visual_colors() -> void:
 	aim_indicator.default_color = throw_aim_color
