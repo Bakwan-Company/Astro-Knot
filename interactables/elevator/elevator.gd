@@ -3,7 +3,7 @@ extends AnimatableBody2D
 @export var rise_distance: float = 256.0
 @export var move_duration: float = 1.25
 @export var can_return: bool = false
-@export var valid_body_names: PackedStringArray = ["Castor", "Pollux"]
+@export var valid_body_names: PackedStringArray = ["Pollux"]
 
 var _start_position: Vector2
 var _is_up: bool = false
