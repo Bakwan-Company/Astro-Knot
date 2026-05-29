@@ -34,6 +34,8 @@ func update_copy() -> void:
 func get_title_copy() -> String:
 	if death_type == "fall":
 		return "SYSTEM FAILURE"
+	if death_type == "spike":
+		return "SYSTEM FAILURE"
 
 	return "LINK FAILURE"
 
@@ -42,6 +44,8 @@ func get_death_detail() -> String:
 		return "> HARDLIGHT_LINK_RANGE_EXCEEDED\n> SAFETY ROUTINE: RESTART REQUIRED"
 	if death_type == "fall":
 		return "> STABLE_FOOTING_LOST\n> CASTOR/POLLUX RECOVERY FAILED\n> REBOOT FROM LAST CHECKPOINT"
+	if death_type == "spike":
+		return "> HULL_BREACH_DETECTED\n> HAZARD_CONTACT\n> REBOOT FROM LAST CHECKPOINT"
 
 	return "> UNKNOWN_FAILURE_STATE\n> RESTART REQUIRED"
 

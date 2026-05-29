@@ -25,8 +25,8 @@
 [ext_resource type="Texture2D" uid="uid://cukf4tlqghemo" path="res://asset/Platfromer/lv1/Background/3.png" id="23_o7sth"]
 [ext_resource type="Texture2D" uid="uid://bjt50vhm7tj8i" path="res://asset/Platfromer/lv1/Background/4.png" id="24_382gh"]
 [ext_resource type="Texture2D" uid="uid://hcire8kksdo5" path="res://asset/Platfromer/lv1/Background/5.png" id="25_ylfrx"]
-[ext_resource type="Texture2D" uid="uid://wovydx02i7" path="res://asset/Interactables and Hazards/damaged-beacon.png" id="26_o7sth"]
-[ext_resource type="Script" path="res://levels/level_1_tutorial/level_1_tutorial.gd" id="26_tutorial"]
+[ext_resource type="Script" uid="uid://vsw6m6isf1qt" path="res://levels/level_1_tutorial/level_1_tutorial.gd" id="26_tutorial"]
+[ext_resource type="PackedScene" path="res://interactables/level_exit/LevelExit.tscn" id="28_382gh"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_itto2"]
 texture = ExtResource("4_edq6o")
@@ -155,9 +155,6 @@ size = Vector2(376, 32)
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_fall_zone"]
 size = Vector2(14000, 280)
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_exit_sign"]
-size = Vector2(160, 180)
-
 [node name="Level1Tutorial" type="Node2D" unique_id=1025983664]
 script = ExtResource("26_tutorial")
 area_title_hold_time = 2.0
@@ -256,7 +253,7 @@ rotation = -0.41001695
 texture = ExtResource("1_ma6cf")
 
 [node name="Castor" parent="." unique_id=583974566 instance=ExtResource("1_castor")]
-position = Vector2(211, 159)
+position = Vector2(2195, 91)
 
 [node name="Pollux" parent="." unique_id=990800502 instance=ExtResource("2_pollux")]
 position = Vector2(2136, 184)
@@ -389,46 +386,6 @@ collision_mask = 7
 [node name="CollisionShape2D" type="CollisionShape2D" parent="FallZone" unique_id=1316753628]
 shape = SubResource("RectangleShape2D_fall_zone")
 
-[node name="SilentRuinsSign" type="Area2D" parent="." unique_id=856190487]
-position = Vector2(7772, 53)
-collision_layer = 0
-collision_mask = 7
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="SilentRuinsSign" unique_id=307984037]
-position = Vector2(0, 70)
-shape = SubResource("RectangleShape2D_exit_sign")
-
-[node name="SignLabel" type="Label" parent="SilentRuinsSign" unique_id=939969469]
-offset_left = -80.0
-offset_top = -28.0
-offset_right = 80.0
-offset_bottom = -5.0
-theme_override_colors/font_color = Color(0.18, 0.11, 0.07, 1)
-theme_override_colors/font_shadow_color = Color(1, 0.78, 0.42, 0.45)
-theme_override_constants/shadow_offset_x = 1
-theme_override_constants/shadow_offset_y = 1
-text = "Old Signal Relay"
-horizontal_alignment = 1
-
-[node name="PromptLabel" type="Label" parent="SilentRuinsSign" unique_id=1977490993]
-visible = false
-offset_left = -122.0
-offset_top = -58.0
-offset_right = 122.0
-offset_bottom = -35.0
-theme_override_colors/font_color = Color(0.18, 0.11, 0.07, 1)
-theme_override_colors/font_shadow_color = Color(1, 0.78, 0.42, 0.75)
-theme_override_constants/shadow_offset_x = 1
-theme_override_constants/shadow_offset_y = 1
-text = "F to continue toward the Silent Ruins"
-horizontal_alignment = 1
-
-[node name="Sprite2D" type="Sprite2D" parent="SilentRuinsSign" unique_id=1312850068]
-z_index = -10
-position = Vector2(-0.49979877, 84)
-scale = Vector2(0.2630715, 0.2745098)
-texture = ExtResource("26_o7sth")
-
 [node name="Camera2D" type="Camera2D" parent="." unique_id=1929636986 node_paths=PackedStringArray("castor", "pollux")]
 position = Vector2(130, 77)
 zoom = Vector2(0.95, 0.95)
@@ -437,3 +394,8 @@ position_smoothing_enabled = true
 script = ExtResource("20_c8kdw")
 castor = NodePath("../Castor")
 pollux = NodePath("../Pollux")
+
+[node name="LevelExit" parent="." unique_id=1578466031 instance=ExtResource("28_382gh")]
+position = Vector2(7824, 52)
+open_confirm_on_body_entered = true
+cancel_walk_distance = 110.0
