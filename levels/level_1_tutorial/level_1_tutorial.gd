@@ -1,6 +1,7 @@
 extends Node2D
 
 const TETHER_CONNECT_COMIC_SCENE := preload("res://comics/level1/ConnectCastor.tscn")
+const UI_FONT := preload("res://asset/Font/SuperMarioDsRegular-Ea4R8.ttf")
 
 @export_group("Level Flow")
 @export var area_title: String = "Crash Site"
@@ -355,6 +356,7 @@ func _create_exit_confirm_ui() -> void:
 	var relay_label := Label.new()
 	relay_label.text = "OLD SIGNAL RELAY"
 	relay_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	relay_label.add_theme_font_override("font", UI_FONT)
 	relay_label.add_theme_font_size_override("font_size", 10)
 	relay_label.add_theme_color_override("font_color", Color(0.52, 0.78, 0.78, 1.0))
 	box.add_child(relay_label)
@@ -362,6 +364,7 @@ func _create_exit_confirm_ui() -> void:
 	var title := Label.new()
 	title.text = exit_confirm_title
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_override("font", UI_FONT)
 	title.add_theme_font_size_override("font_size", 24)
 	title.add_theme_color_override("font_color", Color(0.88, 0.65, 0.34, 1.0))
 	title.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.55))
@@ -372,6 +375,7 @@ func _create_exit_confirm_ui() -> void:
 	var detail := Label.new()
 	detail.text = exit_confirm_detail
 	detail.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	detail.add_theme_font_override("font", UI_FONT)
 	detail.add_theme_font_size_override("font_size", 12)
 	detail.add_theme_color_override("font_color", Color(0.68, 0.82, 0.82, 1.0))
 	box.add_child(detail)
@@ -397,6 +401,7 @@ func _create_exit_confirm_ui() -> void:
 
 func _style_signal_button(button: Button, is_primary: bool) -> void:
 	button.custom_minimum_size = Vector2(88.0, 44.0)
+	button.add_theme_font_override("font", UI_FONT)
 	button.add_theme_font_size_override("font_size", 20)
 	button.add_theme_color_override("font_color", Color(0.04, 0.035, 0.03, 1.0) if is_primary else Color(0.82, 0.94, 0.96, 1.0))
 	button.add_theme_color_override("font_focus_color", Color(0.04, 0.035, 0.03, 1.0))

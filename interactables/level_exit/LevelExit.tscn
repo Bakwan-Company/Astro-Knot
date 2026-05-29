@@ -1,8 +1,9 @@
-[gd_scene load_steps=5 format=4]
+[gd_scene load_steps=6 format=4]
 
 [ext_resource type="Script" path="res://interactables/level_exit/level_exit.gd" id="1_level_exit"]
 [ext_resource type="Texture2D" uid="uid://wovydx02i7" path="res://asset/Interactables and Hazards/damaged-beacon.png" id="2_beacon"]
 [ext_resource type="PackedScene" path="res://interactables/level_exit/LevelExitConfirmWindow.tscn" id="3_confirm_window"]
+[ext_resource type="FontFile" path="res://asset/Font/SuperMarioDsRegular-Ea4R8.ttf" id="4_font"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_exit_area"]
 size = Vector2(160, 180)
@@ -31,6 +32,7 @@ theme_override_colors/font_color = Color(0.18, 0.11, 0.07, 1)
 theme_override_colors/font_shadow_color = Color(1, 0.78, 0.42, 0.45)
 theme_override_constants/shadow_offset_x = 1
 theme_override_constants/shadow_offset_y = 1
+theme_override_fonts/font = ExtResource("4_font")
 text = "Old Signal Relay"
 horizontal_alignment = 1
 
@@ -44,6 +46,7 @@ theme_override_colors/font_color = Color(0.18, 0.11, 0.07, 1)
 theme_override_colors/font_shadow_color = Color(1, 0.78, 0.42, 0.75)
 theme_override_constants/shadow_offset_x = 1
 theme_override_constants/shadow_offset_y = 1
+theme_override_fonts/font = ExtResource("4_font")
 text = "Old signal relay detected"
 horizontal_alignment = 1
 

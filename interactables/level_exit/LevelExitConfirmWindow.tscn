@@ -1,6 +1,7 @@
-[gd_scene load_steps=5 format=4]
+[gd_scene load_steps=6 format=4]
 
 [ext_resource type="Script" path="res://interactables/level_exit/level_exit_confirm_window.gd" id="1_confirm_window"]
+[ext_resource type="FontFile" path="res://asset/Font/SuperMarioDsRegular-Ea4R8.ttf" id="2_font"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
 bg_color = Color(0.07, 0.058, 0.048, 0.9)
@@ -74,6 +75,7 @@ theme_override_constants/separation = 10
 [node name="Heading" type="Label" parent="Dimmer/Panel/Margin/VBox"]
 theme_override_colors/font_color = Color(0.52, 0.78, 0.78, 1)
 theme_override_font_sizes/font_size = 10
+theme_override_fonts/font = ExtResource("2_font")
 text = "OLD SIGNAL RELAY"
 horizontal_alignment = 1
 
@@ -83,12 +85,14 @@ theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.55)
 theme_override_constants/shadow_offset_x = 1
 theme_override_constants/shadow_offset_y = 1
 theme_override_font_sizes/font_size = 24
+theme_override_fonts/font = ExtResource("2_font")
 text = "Follow the signal?"
 horizontal_alignment = 1
 
 [node name="Detail" type="Label" parent="Dimmer/Panel/Margin/VBox"]
 theme_override_colors/font_color = Color(0.68, 0.82, 0.82, 1)
 theme_override_font_sizes/font_size = 12
+theme_override_fonts/font = ExtResource("2_font")
 text = "Continue to the next area"
 horizontal_alignment = 1
 
@@ -101,6 +105,7 @@ custom_minimum_size = Vector2(88, 44)
 theme_override_colors/font_color = Color(0.04, 0.035, 0.03, 1)
 theme_override_colors/font_focus_color = Color(0.04, 0.035, 0.03, 1)
 theme_override_font_sizes/font_size = 20
+theme_override_fonts/font = ExtResource("2_font")
 theme_override_styles/normal = SubResource("StyleBoxFlat_yes")
 theme_override_styles/hover = SubResource("StyleBoxFlat_yes")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_yes")
@@ -112,6 +117,7 @@ custom_minimum_size = Vector2(88, 44)
 theme_override_colors/font_color = Color(0.82, 0.94, 0.96, 1)
 theme_override_colors/font_focus_color = Color(0.04, 0.035, 0.03, 1)
 theme_override_font_sizes/font_size = 20
+theme_override_fonts/font = ExtResource("2_font")
 theme_override_styles/normal = SubResource("StyleBoxFlat_no")
 theme_override_styles/hover = SubResource("StyleBoxFlat_no")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_no")
