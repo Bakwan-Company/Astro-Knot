@@ -312,7 +312,7 @@ func _update_actor_sequence_animation_state() -> void:
 
 	pollux.linear_velocity = Vector2(float(actor_sequence_direction) * actor_sequence_speed, 0.0)
 	if pollux.has_method("update_sprite_animation"):
-		pollux.call("update_sprite_animation")
+		pollux.call("update_sprite_animation", pollux.linear_velocity.x)
 
 func _stop_actor_sequence_animation_state() -> void:
 	actor_sequence_active = false
