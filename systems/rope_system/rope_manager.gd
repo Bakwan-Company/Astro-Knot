@@ -27,6 +27,8 @@ signal tether_broken(death_type: String)
 @onready var power_meter_fill: Line2D = $PowerMeterFill
 @onready var debug_panel: Control = $DebugOverlay/Panel
 @onready var debug_readout: Label = $DebugOverlay/Panel/DebugReadout
+@onready var reel_loop_player: AudioStreamPlayer2D = get_node_or_null("ReelLoopPlayer") as AudioStreamPlayer2D
+@onready var throw_audio_player: AudioStreamPlayer2D = get_node_or_null("ThrowAudioPlayer") as AudioStreamPlayer2D
 
 @export_group("Rope Length")
 @export var current_rope_length: float = 200.0
@@ -112,6 +114,12 @@ signal tether_broken(death_type: String)
 @export var throw_power_meter_bg_color: Color = Color(0.137, 0.161, 0.176, 0.85)
 @export var throw_power_meter_fill_color: Color = Color(1.0, 0.427, 0.114, 1.0)
 
+@export_group("Rope Audio")
+@export var reel_loop_fade_time: float = 0.12
+@export var reel_loop_playing_volume_db: float = -16.0
+@export var reel_loop_silent_volume_db: float = -45.0
+@export var throw_audio_volume_db: float = -8.0
+
 enum ThrowState {
 	NORMAL,
 	THROW_READY,
@@ -156,6 +164,8 @@ var rope_segment_end: Vector2 = Vector2.ZERO
 var has_rope_segment: bool = false
 var aim_dash_lines: Array[Line2D] = []
 var throw_aim_blink_time: float = 0.0
+var reel_loop_tween: Tween
+var reel_loop_active: bool = false
 
 func is_body_grounded(body: Node) -> bool:
 	if not body:
@@ -178,10 +188,79 @@ func is_pollux_side_blocked() -> bool:
 	var wall_right = pollux.get_node_or_null("WallCheckR") as RayCast2D
 	return (wall_left and wall_left.is_colliding()) or (wall_right and wall_right.is_colliding())
 
+func configure_looping_audio(player: AudioStreamPlayer2D) -> void:
+	if player == null or player.stream == null:
+		return
+
+	var wav_stream := player.stream as AudioStreamWAV
+	if wav_stream != null:
+		wav_stream.loop_mode = 2
+
+func should_play_reel_loop_audio() -> bool:
+	return tether_connected \
+		and throw_state == ThrowState.NORMAL \
+		and (Input.is_action_pressed("reel_in") or Input.is_action_pressed("reel_out"))
+
+func update_rope_audio_position() -> void:
+	if castor == null or pollux == null:
+		return
+
+	var audio_position := (castor.global_position + pollux.global_position) * 0.5
+	if reel_loop_player != null:
+		reel_loop_player.global_position = audio_position
+	if throw_audio_player != null:
+		throw_audio_player.global_position = audio_position
+
+func update_reel_loop_audio(should_play: bool) -> void:
+	if reel_loop_player == null:
+		return
+
+	if should_play == reel_loop_active:
+		return
+
+	reel_loop_active = should_play
+	if reel_loop_tween != null:
+		reel_loop_tween.kill()
+
+	reel_loop_tween = create_tween()
+	if should_play:
+		if not reel_loop_player.playing:
+			reel_loop_player.volume_db = reel_loop_silent_volume_db
+			reel_loop_player.play()
+		reel_loop_tween.tween_property(
+			reel_loop_player,
+			"volume_db",
+			reel_loop_playing_volume_db,
+			reel_loop_fade_time
+		)
+	else:
+		reel_loop_tween.tween_property(
+			reel_loop_player,
+			"volume_db",
+			reel_loop_silent_volume_db,
+			reel_loop_fade_time
+		)
+		reel_loop_tween.finished.connect(func() -> void:
+			if not reel_loop_active and reel_loop_player != null:
+				reel_loop_player.stop()
+		)
+
+func play_throw_audio() -> void:
+	if throw_audio_player == null:
+		return
+
+	update_rope_audio_position()
+	throw_audio_player.volume_db = throw_audio_volume_db
+	throw_audio_player.stop()
+	throw_audio_player.play()
+
 func _ready() -> void:
 	rope_default_color = rope_visual.default_color
 	pollux_default_gravity_scale = pollux.gravity_scale
 	pollux_default_linear_damp = pollux.linear_damp
+	configure_looping_audio(reel_loop_player)
+	if throw_audio_player != null:
+		throw_audio_player.volume_db = throw_audio_volume_db
 	create_rope_pulse_lines()
 	create_throw_aim_dashes()
 	initialize_throw_aim_from_current()
@@ -193,6 +272,7 @@ func _process(delta: float) -> void:
 	if not tether_connected:
 		update_rope_visual()
 		update_debug_readout()
+		update_reel_loop_audio(false)
 		return
 
 	update_rope_pulse_phase(delta)
@@ -200,6 +280,8 @@ func _process(delta: float) -> void:
 	update_throw_visuals()
 	update_power_rope_visual()
 	update_debug_readout()
+	update_rope_audio_position()
+	update_reel_loop_audio(should_play_reel_loop_audio())
 
 func _physics_process(delta: float) -> void:
 	if not tether_connected or tether_is_broken or not castor or not pollux:
@@ -849,6 +931,8 @@ func update_throw_aim_direction(_delta: float) -> void:
 
 func release_throw() -> void:
 	var throw_power = lerp(min_throw_power, max_throw_power, get_throw_charge_ratio())
+	update_reel_loop_audio(false)
+	play_throw_audio()
 	pollux.freeze = false
 	pollux.sleeping = false
 	pollux.linear_velocity = throw_aim_dir * throw_power

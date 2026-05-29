@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://cmn0gfamy7yaj"]
 
 [ext_resource type="Script" uid="uid://bqv35qm5018jn" path="res://entities/castor/castor.gd" id="1_n7yow"]
+[ext_resource type="AudioStreamWAV" uid="uid://c0tsa422q12b8" path="res://asset/Audio/suarajalan.wav" id="2_walk_loop"]
 [ext_resource type="Texture2D" uid="uid://6de3ccjpnss" path="res://asset/AstroKnot_Chars/Castor/FirstBattery/CastorV2First.png" id="castor_first_idle"]
 [ext_resource type="Texture2D" uid="uid://bpnyw0inolrsu" path="res://asset/AstroKnot_Chars/Castor/FirstBattery/CastorTurnLeft1First.png" id="castor_first_l1"]
 [ext_resource type="Texture2D" uid="uid://bkvykajpax8su" path="res://asset/AstroKnot_Chars/Castor/FirstBattery/CastorTurnLeft2First.png" id="castor_first_l2"]
@@ -301,3 +302,7 @@ scale = Vector2(0.6875, 0.6875)
 sprite_frames = SubResource("SpriteFrames_castor")
 animation = &"idle_full"
 autoplay = "idle_full"
+
+[node name="MoveLoopPlayer" type="AudioStreamPlayer2D" parent="." unique_id=1626513472]
+stream = ExtResource("2_walk_loop")
+volume_db = -45.0

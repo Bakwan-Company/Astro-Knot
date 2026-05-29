@@ -1,6 +1,8 @@
 [gd_scene format=3 uid="uid://byqxydxhxv7q5"]
 
 [ext_resource type="Script" uid="uid://f523tkvawsaf" path="res://systems/rope_system/rope_manager.gd" id="1_yq5y5"]
+[ext_resource type="AudioStreamWAV" uid="uid://btlc564dnnqw5" path="res://asset/Audio/suarareelinreelout.wav" id="2_reel_loop"]
+[ext_resource type="AudioStreamWAV" uid="uid://dq1vxa1y872ul" path="res://asset/Audio/suarathrow.wav" id="3_throw"]
 
 [node name="RopeManager" type="Node2D" unique_id=709923073]
 script = ExtResource("1_yq5y5")
@@ -41,6 +43,14 @@ visible = false
 z_index = 22
 width = 4.0
 default_color = Color(1, 0.427451, 0.113725, 1)
+
+[node name="ReelLoopPlayer" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("2_reel_loop")
+volume_db = -45.0
+
+[node name="ThrowAudioPlayer" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("3_throw")
+volume_db = -8.0
 
 [node name="DebugOverlay" type="CanvasLayer" parent="." unique_id=1743546038]
 
