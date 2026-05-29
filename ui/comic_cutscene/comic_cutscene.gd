@@ -14,8 +14,13 @@ signal finished
 @export var previous_text: String = "Back"
 @export var skip_text: String = "Skip"
 @export var finish_text: String = "Done"
+@export var page_aspect_ratio: float = 16.0 / 9.0
+@export_range(0.5, 1.0) var page_width_ratio: float = 0.84
+@export_range(0.5, 1.0) var page_height_ratio: float = 0.78
 
 @onready var dimmer: ColorRect = $Dimmer
+@onready var root: VBoxContainer = $Root
+@onready var page_frame: PanelContainer = $Root/PageFrame
 @onready var page_texture: TextureRect = $Root/PageFrame/PageTexture
 @onready var caption_panel: PanelContainer = $Root/CaptionPanel
 @onready var caption_label: Label = $Root/CaptionPanel/Margin/CaptionLabel
@@ -38,7 +43,9 @@ func _ready() -> void:
 	previous_button.pressed.connect(previous_page)
 	next_button.pressed.connect(next_page)
 	skip_button.pressed.connect(skip)
+	get_viewport().size_changed.connect(_fit_page_frame)
 	_apply_style()
+	_fit_page_frame()
 	_refresh_page()
 	next_button.grab_focus()
 
@@ -122,7 +129,7 @@ func _apply_style() -> void:
 	page_style.corner_radius_top_right = 4
 	page_style.corner_radius_bottom_left = 4
 	page_style.corner_radius_bottom_right = 4
-	$Root/PageFrame.add_theme_stylebox_override("panel", page_style)
+	page_frame.add_theme_stylebox_override("panel", page_style)
 
 	var caption_style := StyleBoxFlat.new()
 	caption_style.bg_color = Color(0.03, 0.027, 0.023, 0.92)
@@ -164,3 +171,21 @@ func _style_button(button: Button, primary: bool) -> void:
 	button.add_theme_stylebox_override("hover", style)
 	button.add_theme_stylebox_override("pressed", style)
 	button.add_theme_stylebox_override("focus", style)
+
+func _fit_page_frame() -> void:
+	var viewport_size := get_viewport().get_visible_rect().size
+	var max_width := viewport_size.x * page_width_ratio
+	var max_height := viewport_size.y * page_height_ratio
+	var frame_width := max_width
+	var frame_height := frame_width / page_aspect_ratio
+
+	if frame_height > max_height:
+		frame_height = max_height
+		frame_width = frame_height * page_aspect_ratio
+
+	root.offset_left = (viewport_size.x - frame_width) * 0.5
+	root.offset_right = -root.offset_left
+	root.offset_top = maxf((viewport_size.y - frame_height) * 0.42, 18.0)
+	root.offset_bottom = -22.0
+	page_frame.custom_minimum_size = Vector2(frame_width, frame_height)
+	page_frame.size_flags_vertical = Control.SIZE_SHRINK_CENTER

@@ -22,7 +22,14 @@ func _on_body_entered(body: Node2D) -> void:
 
 	_is_triggered = true
 	triggered.emit(body)
-	show_game_over()
+	var checkpoint_manager := get_node_or_null("/root/CheckpointManager")
+	if checkpoint_manager != null and checkpoint_manager.has_method("kill_with_overlay"):
+		checkpoint_manager.call("kill_with_overlay", death_type, game_over_scene)
+	else:
+		show_game_over()
+
+func reset() -> void:
+	_is_triggered = false
 
 func show_game_over() -> void:
 	if not game_over_scene:

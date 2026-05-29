@@ -1,6 +1,9 @@
 extends CanvasLayer
 
+signal restart_requested
+
 @export var death_type: String = "unknown"
+@export var use_checkpoint_restart: bool = false
 
 @onready var panel: PanelContainer = $Screen/Panel
 @onready var eyebrow_label: Label = $Screen/Panel/Margin/VBox/Eyebrow
@@ -102,4 +105,8 @@ func _apply_terminal_style() -> void:
 
 func restart_level() -> void:
 	get_tree().paused = false
+	if use_checkpoint_restart:
+		restart_requested.emit()
+		queue_free()
+		return
 	get_tree().reload_current_scene()

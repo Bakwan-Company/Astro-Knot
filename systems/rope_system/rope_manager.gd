@@ -100,7 +100,10 @@ signal tether_broken(death_type: String)
 @export var throw_max_bonus_slack: float = 120.0
 @export var throw_auto_extend_limit: float = 220.0
 @export var throw_aim_preview_length: float = 68.0
-@export var throw_aim_arrow_head_size: float = 14.0
+@export var throw_aim_dash_count: int = 5
+@export var throw_aim_dash_gap_ratio: float = 0.34
+@export var throw_aim_blink_speed: float = 5.0
+@export var throw_aim_tip_dark_color: Color = Color(0.04, 0.42, 0.46, 1.0)
 @export var throw_power_meter_width: float = 38.0
 @export var throw_ready_color: Color = Color(1.0, 0.85, 0.26, 1.0)
 @export var throw_flight_color: Color = Color(1.0, 0.48, 0.2, 1.0)
@@ -151,8 +154,8 @@ var rope_pulse_phase: float = 0.0
 var rope_segment_start: Vector2 = Vector2.ZERO
 var rope_segment_end: Vector2 = Vector2.ZERO
 var has_rope_segment: bool = false
-var aim_arrow_head: Line2D
-var aim_arrow_fill: Polygon2D
+var aim_dash_lines: Array[Line2D] = []
+var throw_aim_blink_time: float = 0.0
 
 func is_body_grounded(body: Node) -> bool:
 	if not body:
@@ -180,7 +183,7 @@ func _ready() -> void:
 	pollux_default_gravity_scale = pollux.gravity_scale
 	pollux_default_linear_damp = pollux.linear_damp
 	create_rope_pulse_lines()
-	create_throw_arrow_head()
+	create_throw_aim_dashes()
 	initialize_throw_aim_from_current()
 	apply_throw_visual_colors()
 	set_throw_state(ThrowState.NORMAL)
@@ -238,10 +241,7 @@ func set_tether_connected(value: bool) -> void:
 
 	if aim_indicator != null:
 		aim_indicator.visible = false
-	if aim_arrow_head != null:
-		aim_arrow_head.visible = false
-	if aim_arrow_fill != null:
-		aim_arrow_fill.visible = false
+	set_throw_aim_dashes_visible(false)
 	if power_meter_bg != null:
 		power_meter_bg.visible = false
 	if power_meter_fill != null:
@@ -659,6 +659,11 @@ func trigger_game_over(death_type: String) -> void:
 	set_rope_visual_color(power_break_color)
 	tether_broken.emit(death_type)
 
+	var checkpoint_manager := get_node_or_null("/root/CheckpointManager")
+	if checkpoint_manager != null and checkpoint_manager.has_method("kill_with_overlay"):
+		checkpoint_manager.call("kill_with_overlay", death_type, game_over_scene)
+		return
+
 	if not game_over_scene:
 		get_tree().call_deferred("reload_current_scene")
 		return
@@ -714,7 +719,14 @@ func update_debug_readout() -> void:
 			debug_pollux_side_blocked,
 			debug_grounded_pollux_y_lock,
 		],
+		get_checkpoint_debug_text(),
 	])
+
+func get_checkpoint_debug_text() -> String:
+	var checkpoint_manager := get_node_or_null("/root/CheckpointManager")
+	if checkpoint_manager == null or not checkpoint_manager.has_method("get_debug_summary"):
+		return "cp manager missing"
+	return str(checkpoint_manager.call("get_debug_summary"))
 
 func handle_throw_state(delta: float) -> void:
 	match throw_state:
@@ -726,14 +738,14 @@ func handle_throw_state(delta: float) -> void:
 				cancel_throw_mode()
 				return
 			update_throw_aim_direction(delta)
-			if Input.is_action_just_pressed("interact"):
+			if Input.is_action_just_pressed("throw_pollux"):
 				cancel_throw_mode()
 				return
 			if throw_ready_wait_for_release:
-				if not Input.is_action_pressed("throw_pollux"):
+				if not Input.is_action_pressed("jump"):
 					throw_ready_wait_for_release = false
 				return
-			if Input.is_action_just_pressed("throw_pollux"):
+			if Input.is_action_just_pressed("jump"):
 				set_throw_state(ThrowState.THROW_CHARGING)
 				throw_charge_elapsed = 0.0
 				throw_charge_ratio = 0.0
@@ -742,13 +754,13 @@ func handle_throw_state(delta: float) -> void:
 				cancel_throw_mode()
 				return
 			update_throw_aim_direction(delta)
-			if Input.is_action_just_pressed("interact"):
+			if Input.is_action_just_pressed("throw_pollux"):
 				cancel_throw_mode()
 				return
-			if Input.is_action_pressed("throw_pollux"):
+			if Input.is_action_pressed("jump"):
 				throw_charge_elapsed = min(throw_charge_elapsed + delta, throw_charge_time)
 				throw_charge_ratio = get_throw_charge_ratio()
-			if Input.is_action_just_released("throw_pollux"):
+			if Input.is_action_just_released("jump"):
 				release_throw()
 		ThrowState.THROW_FLIGHT:
 			handle_throw_flight(delta)
@@ -790,7 +802,7 @@ func begin_throw_mode() -> void:
 	throw_cached_rope_length = current_rope_length
 	throw_charge_elapsed = 0.0
 	throw_charge_ratio = 0.0
-	throw_ready_wait_for_release = Input.is_action_pressed("throw_pollux")
+	throw_ready_wait_for_release = Input.is_action_pressed("jump")
 	initialize_throw_aim_from_current()
 	set_throw_state(ThrowState.THROW_READY)
 	sync_pollux_to_throw_anchor()
@@ -805,9 +817,6 @@ func cancel_throw_mode() -> void:
 
 func should_cancel_throw_mode() -> bool:
 	if not is_body_grounded(castor):
-		return true
-
-	if Input.is_action_pressed("reel_in") or Input.is_action_pressed("reel_out"):
 		return true
 
 	return false
@@ -1112,47 +1121,44 @@ func set_rope_pulses_visible(value: bool) -> void:
 
 func apply_throw_visual_colors() -> void:
 	aim_indicator.default_color = throw_aim_color
-	if aim_arrow_head != null:
-		aim_arrow_head.default_color = throw_aim_color
-	if aim_arrow_fill != null:
-		aim_arrow_fill.color = throw_aim_color
+	for dash_line in aim_dash_lines:
+		dash_line.default_color = throw_aim_color
 	power_meter_bg.default_color = throw_power_meter_bg_color
 	power_meter_fill.default_color = throw_power_meter_fill_color
 
-func create_throw_arrow_head() -> void:
-	aim_arrow_head = Line2D.new()
-	aim_arrow_head.name = "AimArrowHead"
-	aim_arrow_head.visible = false
-	aim_arrow_head.z_index = aim_indicator.z_index
-	aim_arrow_head.width = aim_indicator.width
-	add_child(aim_arrow_head)
+func create_throw_aim_dashes() -> void:
+	for dash_line in aim_dash_lines:
+		if is_instance_valid(dash_line):
+			dash_line.queue_free()
 
-	aim_arrow_fill = Polygon2D.new()
-	aim_arrow_fill.name = "AimArrowFill"
-	aim_arrow_fill.visible = false
-	aim_arrow_fill.z_index = aim_indicator.z_index + 1
-	add_child(aim_arrow_fill)
+	aim_dash_lines.clear()
+	for index in range(maxi(throw_aim_dash_count, 1)):
+		var dash_line := Line2D.new()
+		dash_line.name = "AimDash%s" % index
+		dash_line.visible = false
+		dash_line.z_index = aim_indicator.z_index
+		dash_line.width = aim_indicator.width
+		dash_line.begin_cap_mode = Line2D.LINE_CAP_ROUND
+		dash_line.end_cap_mode = Line2D.LINE_CAP_ROUND
+		add_child(dash_line)
+		aim_dash_lines.append(dash_line)
 
 func update_throw_visuals() -> void:
 	apply_throw_visual_colors()
 	var show_throw_visuals = throw_state in [ThrowState.THROW_READY, ThrowState.THROW_CHARGING]
-	aim_indicator.visible = show_throw_visuals
-	if aim_arrow_head != null:
-		aim_arrow_head.visible = show_throw_visuals
-	if aim_arrow_fill != null:
-		aim_arrow_fill.visible = show_throw_visuals
+	aim_indicator.visible = false
+	set_throw_aim_dashes_visible(show_throw_visuals)
 	power_meter_bg.visible = show_throw_visuals
 	power_meter_fill.visible = show_throw_visuals
 
 	if not show_throw_visuals:
 		return
 
+	throw_aim_blink_time += get_process_delta_time() * throw_aim_blink_speed
+	var blink_alpha := 0.55 + sin(throw_aim_blink_time) * 0.25
 	var start = get_throw_ready_anchor_position()
 	var end = start + throw_aim_dir * throw_aim_preview_length
-	aim_indicator.clear_points()
-	aim_indicator.add_point(start)
-	aim_indicator.add_point(end)
-	update_throw_arrow_head(end)
+	update_throw_aim_dashes(start, end, blink_alpha)
 
 	var bar_start = start + Vector2(-throw_power_meter_width * 0.5, -16.0)
 	var bar_end = bar_start + Vector2(throw_power_meter_width, 0.0)
@@ -1164,21 +1170,31 @@ func update_throw_visuals() -> void:
 	power_meter_fill.add_point(bar_start)
 	power_meter_fill.add_point(bar_start + Vector2(throw_power_meter_width * get_throw_charge_ratio(), 0.0))
 
-func update_throw_arrow_head(tip: Vector2) -> void:
-	if aim_arrow_head == null:
+func update_throw_aim_dashes(start: Vector2, end: Vector2, alpha: float) -> void:
+	var aim_vector := end - start
+	var aim_length := aim_vector.length()
+	if aim_length <= 0.001:
+		for dash_line in aim_dash_lines:
+			dash_line.clear_points()
 		return
 
-	var back_dir := -throw_aim_dir
-	var side_dir := throw_aim_dir.orthogonal()
-	var base := tip + back_dir * throw_aim_arrow_head_size
-	var left := base + side_dir * (throw_aim_arrow_head_size * 0.55)
-	var right := base - side_dir * (throw_aim_arrow_head_size * 0.55)
-	var inset := tip + back_dir * (throw_aim_arrow_head_size * 0.36)
+	var direction := aim_vector / aim_length
+	var dash_count: int = maxi(aim_dash_lines.size(), 1)
+	var slot_length: float = aim_length / float(dash_count)
+	var dash_length: float = slot_length * clampf(1.0 - throw_aim_dash_gap_ratio, 0.1, 0.95)
 
-	if aim_arrow_fill != null:
-		aim_arrow_fill.polygon = PackedVector2Array([tip, left, inset, right])
+	for index in range(aim_dash_lines.size()):
+		var progress: float = float(index) / maxf(float(aim_dash_lines.size() - 1), 1.0)
+		var dash_start: Vector2 = start + direction * slot_length * float(index)
+		var dash_end: Vector2 = dash_start + direction * dash_length
+		var dash_color: Color = throw_aim_color.lerp(throw_aim_tip_dark_color, progress * 0.78)
+		dash_color.a *= clampf(alpha * (1.0 - progress * 0.32), 0.0, 1.0)
+		aim_dash_lines[index].width = lerpf(aim_indicator.width * 1.25, aim_indicator.width * 0.82, progress)
+		aim_dash_lines[index].default_color = dash_color
+		aim_dash_lines[index].clear_points()
+		aim_dash_lines[index].add_point(dash_start)
+		aim_dash_lines[index].add_point(dash_end)
 
-	aim_arrow_head.clear_points()
-	aim_arrow_head.add_point(left)
-	aim_arrow_head.add_point(tip)
-	aim_arrow_head.add_point(right)
+func set_throw_aim_dashes_visible(value: bool) -> void:
+	for dash_line in aim_dash_lines:
+		dash_line.visible = value
