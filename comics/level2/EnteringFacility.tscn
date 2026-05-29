@@ -1,0 +1,79 @@
+[gd_scene format=3 uid="uid://b5ydk4d23bgk1"]
+
+[ext_resource type="Script" uid="uid://cwyb0redtunxl" path="res://ui/comic_cutscene/comic_cutscene.gd" id="1_comic"]
+[ext_resource type="Texture2D" uid="uid://cdufmd673i0ph" path="res://asset/Comics/Level2/EnteringFacility/Level2Panel2_202605291938_03467.png" id="2_a8e5r"]
+
+[node name="ComicCutscene" type="CanvasLayer" unique_id=819268320]
+process_mode = 3
+layer = 120
+script = ExtResource("1_comic")
+pages = Array[Texture2D]([ExtResource("2_a8e5r")])
+
+[node name="Dimmer" type="ColorRect" parent="." unique_id=136728855]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.0156863, 0.0156863, 0.0156863, 0.92)
+
+[node name="Root" type="VBoxContainer" parent="." unique_id=1237076045]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 32.0
+offset_top = 24.0
+offset_right = -32.0
+offset_bottom = -22.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 10
+
+[node name="PageFrame" type="PanelContainer" parent="Root" unique_id=237642366]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="PageTexture" type="TextureRect" parent="Root/PageFrame" unique_id=721459629]
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="CaptionPanel" type="PanelContainer" parent="Root" unique_id=2028321035]
+visible = false
+layout_mode = 2
+
+[node name="Margin" type="MarginContainer" parent="Root/CaptionPanel" unique_id=1711439395]
+layout_mode = 2
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_bottom = 10
+
+[node name="CaptionLabel" type="Label" parent="Root/CaptionPanel/Margin" unique_id=2131608389]
+layout_mode = 2
+text = "Caption"
+autowrap_mode = 3
+
+[node name="Footer" type="HBoxContainer" parent="Root" unique_id=289505059]
+layout_mode = 2
+theme_override_constants/separation = 10
+alignment = 2
+
+[node name="PreviousButton" type="Button" parent="Root/Footer" unique_id=330963337]
+layout_mode = 2
+text = "Back"
+
+[node name="PageCounter" type="Label" parent="Root/Footer" unique_id=1389408691]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "1 / 1"
+vertical_alignment = 1
+
+[node name="SkipButton" type="Button" parent="Root/Footer" unique_id=1360818406]
+visible = false
+layout_mode = 2
+text = "Skip"
+
+[node name="NextButton" type="Button" parent="Root/Footer" unique_id=814720405]
+layout_mode = 2
+text = "Next"

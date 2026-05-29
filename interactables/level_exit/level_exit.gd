@@ -11,6 +11,7 @@ signal confirm_opened
 signal confirm_closed
 
 @export var prompt_text: String = "Old signal relay detected"
+@export var allow_direct_interaction: bool = true
 @export var open_confirm_on_body_entered: bool = false
 @export var confirm_heading: String = "OLD SIGNAL RELAY"
 @export var confirm_title: String = "Follow the signal?"
@@ -117,7 +118,7 @@ func _process(_delta: float) -> void:
 		return
 
 	if not confirm_open:
-		if player_in_range and Input.is_action_just_pressed("interact"):
+		if allow_direct_interaction and player_in_range and Input.is_action_just_pressed("interact"):
 			open_confirm()
 		return
 
@@ -144,6 +145,32 @@ func confirm() -> void:
 	close_confirm()
 	exit_confirmed.emit()
 
+	_start_exit_sequence(has_external_handler)
+
+func activate_from_terminal() -> void:
+	if exit_flow_active:
+		return
+
+	var has_external_handler := not get_signal_connection_list(&"exit_confirmed").is_empty()
+	if confirm_open:
+		close_confirm()
+	if prompt_label != null:
+		prompt_label.visible = false
+
+	exit_confirmed.emit()
+	_start_exit_sequence(has_external_handler)
+
+func set_terminal_status(terminal_is_on: bool) -> void:
+	if terminal_is_on:
+		activate_from_terminal()
+	elif confirm_open:
+		cancel()
+
+func _start_exit_sequence(has_external_handler: bool = false) -> void:
+	if exit_flow_active:
+		return
+
+	exit_flow_active = true
 	if play_comic_before_exit and comic_cutscene_scene != null:
 		_play_exit_comic_cutscene()
 		return
@@ -182,10 +209,10 @@ func _on_body_entered(body: Node2D) -> void:
 		return
 
 	player_in_range = true
-	if prompt_label != null:
+	if allow_direct_interaction and prompt_label != null:
 		prompt_label.visible = true
 	player_entered.emit()
-	if open_confirm_on_body_entered:
+	if allow_direct_interaction and open_confirm_on_body_entered:
 		open_confirm()
 
 func _on_body_exited(body: Node2D) -> void:
@@ -231,7 +258,6 @@ func _play_exit_comic_cutscene() -> void:
 
 func _continue_exit_after_comic() -> void:
 	active_comic_cutscene = null
-	exit_flow_active = false
 
 	if handle_actor_sequence:
 		_play_exit_open_animation()
@@ -241,6 +267,8 @@ func _continue_exit_after_comic() -> void:
 		_play_exit_open_animation()
 		await _wait_for_exit_open_animation()
 		get_tree().change_scene_to_file(next_level_scene_path)
+	else:
+		exit_flow_active = false
 
 func _play_exit_open_animation() -> void:
 	if exit_animation_sprite == null:
