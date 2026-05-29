@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cl40s8ea18502"
-path="res://.godot/imported/PolluxTurnLeft2.png-ca286fe2a0eed64ed58fbf4fc3badb31.ctex"
+path="res://.godot/imported/PolluxTurnLeft2.png-2928854b14b6c113fddfe4ed069ef591.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://asset/AstroKnot_Chars/Pollux/PolluxTurnLeft2.png"
-dest_files=["res://.godot/imported/PolluxTurnLeft2.png-ca286fe2a0eed64ed58fbf4fc3badb31.ctex"]
+dest_files=["res://.godot/imported/PolluxTurnLeft2.png-2928854b14b6c113fddfe4ed069ef591.ctex"]
 
 [params]
 
