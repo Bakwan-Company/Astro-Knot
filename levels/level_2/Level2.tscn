@@ -31,6 +31,7 @@
 [ext_resource type="PackedScene" path="res://systems/checkpoint/Checkpoint.tscn" id="29_l5nk2"]
 [ext_resource type="PackedScene" uid="uid://f288rwprueqb" path="res://interactables/terminal/LabTerminal.tscn" id="30_5xb65"]
 [ext_resource type="PackedScene" uid="uid://b5ydk4d23bgk1" path="res://comics/level2/EnteringFacility.tscn" id="31_l7jqn"]
+[ext_resource type="PackedScene" path="res://interactables/level_enter/LevelEnter.tscn" id="32_v1ggv"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_njn5x"]
 texture = ExtResource("11_q15ry")
@@ -523,6 +524,10 @@ lab_door_path = NodePath("../LabDoorExit")
 confirm_heading = "ULBUL FACILTY ACCESS"
 play_comic_before_exit = true
 comic_cutscene_scene = ExtResource("31_l7jqn")
+
+[node name="LevelEnter" parent="." unique_id=2034858953 instance=ExtResource("32_v1ggv")]
+position = Vector2(-54, 2)
+valid_body_names = PackedStringArray("Castor")
 
 [connection signal="terminal_activated" from="Terminal1" to="Door1" method="set_terminal_status"]
 [connection signal="terminal_activated" from="Terminal2" to="Door2" method="set_terminal_status"]
