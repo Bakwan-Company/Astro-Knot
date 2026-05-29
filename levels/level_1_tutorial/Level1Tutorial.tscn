@@ -357,7 +357,7 @@ collision_mask = 7
 shape = SubResource("RectangleShape2D_fall_zone")
 
 [node name="LevelExit" parent="." unique_id=1578466031 instance=ExtResource("28_382gh")]
-position = Vector2(7824, 52)
+position = Vector2(7825, 14)
 open_confirm_on_body_entered = true
 play_comic_before_exit = true
 comic_cutscene_scene = ExtResource("30_n4pll")
