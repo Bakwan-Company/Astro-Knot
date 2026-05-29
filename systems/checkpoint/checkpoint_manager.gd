@@ -53,13 +53,14 @@ func kill(death_type: String = "hazard") -> void:
 
 	last_death_type = death_type
 	if not has_checkpoint or not is_checkpoint_for_current_scene():
-		last_status = "reload: no checkpoint"
-		get_tree().call_deferred("reload_current_scene")
+		death_pending = true
+		last_status = "overlay: no checkpoint"
+		call_deferred("_show_game_over", death_type, game_over_scene, false)
 		return
 
 	death_pending = true
 	last_status = "showing overlay"
-	call_deferred("_show_game_over", death_type, game_over_scene)
+	call_deferred("_show_game_over", death_type, game_over_scene, true)
 
 func kill_with_overlay(death_type: String, overlay_scene: PackedScene) -> void:
 	if respawning or death_pending:
@@ -68,17 +69,22 @@ func kill_with_overlay(death_type: String, overlay_scene: PackedScene) -> void:
 
 	last_death_type = death_type
 	if not has_checkpoint or not is_checkpoint_for_current_scene():
-		last_status = "reload: no checkpoint"
-		get_tree().call_deferred("reload_current_scene")
+		death_pending = true
+		last_status = "overlay: no checkpoint"
+		call_deferred("_show_game_over", death_type, overlay_scene if overlay_scene != null else game_over_scene, false)
 		return
 
 	death_pending = true
 	last_status = "showing overlay"
-	call_deferred("_show_game_over", death_type, overlay_scene if overlay_scene != null else game_over_scene)
+	call_deferred("_show_game_over", death_type, overlay_scene if overlay_scene != null else game_over_scene, true)
 
-func _show_game_over(death_type: String, overlay_scene: PackedScene) -> void:
+func _show_game_over(death_type: String, overlay_scene: PackedScene, use_checkpoint_restart: bool) -> void:
 	if overlay_scene == null:
-		_begin_respawn(death_type)
+		if use_checkpoint_restart:
+			_begin_respawn(death_type)
+		else:
+			death_pending = false
+			get_tree().call_deferred("reload_current_scene")
 		return
 
 	var overlay: Node = overlay_scene.instantiate()
@@ -93,14 +99,19 @@ func _show_game_over(death_type: String, overlay_scene: PackedScene) -> void:
 	if overlay.has_signal("restart_requested"):
 		overlay.connect(
 			"restart_requested",
-			Callable(self, "_on_overlay_restart_requested").bind(death_type),
+			Callable(self, "_on_overlay_restart_requested").bind(death_type, use_checkpoint_restart),
 			CONNECT_ONE_SHOT
 		)
 
 	get_tree().paused = true
 
-func _on_overlay_restart_requested(death_type: String) -> void:
-	_begin_respawn(death_type)
+func _on_overlay_restart_requested(death_type: String, use_checkpoint_restart: bool) -> void:
+	if use_checkpoint_restart:
+		_begin_respawn(death_type)
+	else:
+		death_pending = false
+		get_tree().paused = false
+		get_tree().call_deferred("reload_current_scene")
 
 func _begin_respawn(death_type: String) -> void:
 	get_tree().paused = false

@@ -1,0 +1,14 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://interactables/level_enter/level_enter.gd" id="1_level_enter"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_level_enter"]
+size = Vector2(160, 120)
+
+[node name="LevelEnter" type="Area2D"]
+collision_layer = 0
+collision_mask = 7
+script = ExtResource("1_level_enter")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_level_enter")
