@@ -10,6 +10,7 @@ enum TriggerMode {
 @export var play_once: bool = true
 @export var prompt_text: String = "F to inspect log"
 @export var prompt_offset: Vector2 = Vector2(-48.0, -36.0)
+@export_file("*.tscn") var next_scene_path: String = ""
 
 @export_group("Comic Setup")
 @export var pages: Array[Texture2D] = []
@@ -60,6 +61,8 @@ func play_cutscene() -> void:
 
 func _on_cutscene_finished() -> void:
 	active_cutscene = null
+	if next_scene_path != "" and ResourceLoader.exists(next_scene_path):
+		get_tree().change_scene_to_file(next_scene_path)
 
 func _on_body_entered(body: Node2D) -> void:
 	if not _is_player_body(body):

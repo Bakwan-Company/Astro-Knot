@@ -354,10 +354,10 @@ position = Vector2(3695, -226)
 position = Vector2(3646, -21)
 
 [node name="Castor" parent="." unique_id=975424275 instance=ExtResource("1_ks41y")]
-position = Vector2(229, -22)
+position = Vector2(231, 24)
 
 [node name="Pollux" parent="." unique_id=1878608427 instance=ExtResource("2_747xn")]
-position = Vector2(168, -21)
+position = Vector2(170, 25)
 
 [node name="Elevator2" parent="." unique_id=1460354008 instance=ExtResource("14_njn5x")]
 position = Vector2(3775, -38)
