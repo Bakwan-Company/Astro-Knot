@@ -1,0 +1,85 @@
+[gd_scene format=3 uid="uid://4tgu081leipe"]
+
+[ext_resource type="Script" uid="uid://cwyb0redtunxl" path="res://ui/comic_cutscene/comic_cutscene.gd" id="1_comic"]
+[ext_resource type="Texture2D" uid="uid://csrtame62onfm" path="res://asset/Comics/Level1/CrashLanding/Level1Panel1.png" id="2_ujxa6"]
+[ext_resource type="Texture2D" uid="uid://boyw4823mlpf2" path="res://asset/Comics/Level1/CrashLanding/Level1Panel2.png" id="3_j0lho"]
+[ext_resource type="Texture2D" uid="uid://3qjhu0bp6nyo" path="res://asset/Comics/Level1/CrashLanding/Level1Panel3.png" id="4_phmao"]
+[ext_resource type="Texture2D" uid="uid://cqbspj7j7if5a" path="res://asset/Comics/Level1/CrashLanding/Level1Panel4.png" id="5_n8ycf"]
+[ext_resource type="Texture2D" uid="uid://fhtcr7tey261" path="res://asset/Comics/Level1/CrashLanding/Level1Panel5.png" id="6_i2s02"]
+[ext_resource type="Texture2D" uid="uid://bc2yg2sh2d115" path="res://asset/Comics/Level1/CrashLanding/Level1Panel4-5.png" id="6_j0lho"]
+[ext_resource type="Texture2D" uid="uid://d0j0umiacmcry" path="res://asset/Comics/Level1/CrashLanding/Level1Panel6.png" id="7_i3ulk"]
+
+[node name="ComicCutscene" type="CanvasLayer" unique_id=447837178]
+process_mode = 3
+layer = 120
+script = ExtResource("1_comic")
+pages = Array[Texture2D]([ExtResource("2_ujxa6"), ExtResource("3_j0lho"), ExtResource("4_phmao"), ExtResource("5_n8ycf"), ExtResource("6_j0lho"), ExtResource("6_i2s02"), ExtResource("7_i3ulk")])
+
+[node name="Dimmer" type="ColorRect" parent="." unique_id=1988990970]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.0156863, 0.0156863, 0.0156863, 0.92)
+
+[node name="Root" type="VBoxContainer" parent="." unique_id=597285972]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 32.0
+offset_top = 24.0
+offset_right = -32.0
+offset_bottom = -22.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 10
+
+[node name="PageFrame" type="PanelContainer" parent="Root" unique_id=742552100]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="PageTexture" type="TextureRect" parent="Root/PageFrame" unique_id=956619482]
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="CaptionPanel" type="PanelContainer" parent="Root" unique_id=1915240689]
+visible = false
+layout_mode = 2
+
+[node name="Margin" type="MarginContainer" parent="Root/CaptionPanel" unique_id=1146044166]
+layout_mode = 2
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_bottom = 10
+
+[node name="CaptionLabel" type="Label" parent="Root/CaptionPanel/Margin" unique_id=126727221]
+layout_mode = 2
+text = "Caption"
+autowrap_mode = 3
+
+[node name="Footer" type="HBoxContainer" parent="Root" unique_id=1402054004]
+layout_mode = 2
+theme_override_constants/separation = 10
+alignment = 2
+
+[node name="PreviousButton" type="Button" parent="Root/Footer" unique_id=913693199]
+layout_mode = 2
+text = "Back"
+
+[node name="PageCounter" type="Label" parent="Root/Footer" unique_id=1853642143]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "1 / 1"
+vertical_alignment = 1
+
+[node name="SkipButton" type="Button" parent="Root/Footer" unique_id=1122296355]
+visible = false
+layout_mode = 2
+text = "Skip"
+
+[node name="NextButton" type="Button" parent="Root/Footer" unique_id=1217584097]
+layout_mode = 2
+text = "Next"
