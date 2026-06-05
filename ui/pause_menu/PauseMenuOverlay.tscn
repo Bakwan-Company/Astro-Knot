@@ -22,7 +22,7 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="Panel" type="PanelContainer" parent="Screen"]
-custom_minimum_size = Vector2(320, 210)
+custom_minimum_size = Vector2(380, 176)
 layout_mode = 2
 
 [node name="Margin" type="MarginContainer" parent="Screen/Panel"]
@@ -44,7 +44,7 @@ layout_mode = 2
 
 [node name="Detail" type="Label" parent="Screen/Panel/Margin/VBox"]
 layout_mode = 2
-autowrap_mode = 3
+autowrap_mode = 0
 
 [node name="ResumeButton" type="Button" parent="Screen/Panel/Margin/VBox"]
 layout_mode = 2
@@ -52,7 +52,7 @@ text = "Resume"
 
 [node name="RestartButton" type="Button" parent="Screen/Panel/Margin/VBox"]
 layout_mode = 2
-text = "Restart Level"
+text = "Restart Checkpoint"
 
 [node name="MainMenuButton" type="Button" parent="Screen/Panel/Margin/VBox"]
 layout_mode = 2
