@@ -33,6 +33,7 @@ const UI_FONT := preload("res://asset/Font/SuperMarioDsRegular-Ea4R8.ttf")
 @onready var exit_sign: Area2D = get_node_or_null("SilentRuinsSign") as Area2D
 @onready var exit_prompt: Label = get_node_or_null("SilentRuinsSign/PromptLabel") as Label
 @onready var level_exit: Area2D = get_node_or_null("LevelExit") as Area2D
+@onready var opening_comic: CanvasLayer = get_node_or_null("ComicCutscene") as CanvasLayer
 
 var tether_connected: bool = false
 var castor_in_connect_range: bool = false
@@ -51,6 +52,12 @@ var exit_confirm_open: bool = false
 var tether_connect_comic_active: bool = false
 
 func _ready() -> void:
+	if opening_comic != null and opening_comic.has_signal("finished"):
+		BgmManager.stop()
+		opening_comic.connect("finished", _on_opening_comic_finished)
+	else:
+		BgmManager.play_level_1()
+
 	if fall_zone != null:
 		fall_zone.body_entered.connect(_on_fall_zone_body_entered)
 
@@ -65,6 +72,9 @@ func _ready() -> void:
 	_create_connect_prompt()
 	_apply_connection_state(_is_tether_connected())
 	_show_area_title()
+
+func _on_opening_comic_finished() -> void:
+	BgmManager.play_level_1()
 
 func _process(delta: float) -> void:
 	if level_failed or level_completed:

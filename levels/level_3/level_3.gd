@@ -2,6 +2,7 @@ extends Node2D
 
 const END_ROCK_TEXTURE := preload("res://asset/Interactables and Hazards/Rock1_5_no_shadow.png")
 const THE_END_TEXTURE := preload("res://asset/end/the_end.jpg")
+const ENDING_RUMBLE_SFX := preload("res://asset/Audio/rubble.mp3")
 const MAIN_MENU_PATH := "res://MainMenu.tscn"
 
 @export var bridge_camera_hold_time: float = 0.35
@@ -12,6 +13,9 @@ const MAIN_MENU_PATH := "res://MainMenu.tscn"
 @export var ending_camera_shake_strength: float = 12.0
 @export var ending_fade_duration: float = 1.0
 @export var ending_the_end_hold_time: float = 4.0
+@export var ending_rumble_volume_db: float = -2.0
+@export var ending_rumble_fade_in_time: float = 0.35
+@export var ending_rumble_fade_out_time: float = 0.85
 
 @onready var button_laser = %ButtonLaser 
 @onready var laser_gate = %LaserGate     
@@ -30,8 +34,10 @@ const MAIN_MENU_PATH := "res://MainMenu.tscn"
 var bridge_cutscene_id: int = 0
 var ending_sequence_started: bool = false
 var skeleton_battery_change_applied: bool = false
+var ending_rumble_player: AudioStreamPlayer
 
 func _ready() -> void:
+	BgmManager.play_level_3()
 	_set_castor_battery_second()
 
 	if button_laser and laser_gate:
@@ -84,6 +90,7 @@ func _on_ending_computer_cutscene_finished() -> void:
 
 func _play_ending_sequence() -> void:
 	_freeze_ending_players()
+	_play_ending_rumble()
 
 	if camera and camera.has_method("follow_players"):
 		camera.call("follow_players")
@@ -95,6 +102,7 @@ func _play_ending_sequence() -> void:
 
 	_spawn_ending_rocks()
 	await get_tree().create_timer(minf(ending_fade_start_time, ending_fall_duration)).timeout
+	_fade_out_ending_rumble()
 	await _show_the_end_overlay()
 
 	if ResourceLoader.exists(MAIN_MENU_PATH):
@@ -140,6 +148,32 @@ func _set_castor_battery_first_blinking() -> void:
 		castor.call("set_low_battery_blink", true)
 	else:
 		castor.set("low_battery_blink", true)
+
+func _play_ending_rumble() -> void:
+	ending_rumble_player = AudioStreamPlayer.new()
+	ending_rumble_player.name = "EndingRumbleSfx"
+	ending_rumble_player.bus = "Master"
+	ending_rumble_player.stream = ENDING_RUMBLE_SFX
+	ending_rumble_player.volume_db = -45.0
+	add_child(ending_rumble_player)
+	ending_rumble_player.play()
+
+	var tween := create_tween()
+	tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	tween.tween_property(ending_rumble_player, "volume_db", ending_rumble_volume_db, ending_rumble_fade_in_time)
+
+func _fade_out_ending_rumble() -> void:
+	if ending_rumble_player == null or not is_instance_valid(ending_rumble_player):
+		return
+
+	var tween := create_tween()
+	tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	tween.tween_property(ending_rumble_player, "volume_db", -45.0, ending_rumble_fade_out_time)
+	await tween.finished
+	if is_instance_valid(ending_rumble_player):
+		ending_rumble_player.stop()
+		ending_rumble_player.queue_free()
+	ending_rumble_player = null
 
 func _spawn_ending_rocks() -> void:
 	var rock_layer := Node2D.new()

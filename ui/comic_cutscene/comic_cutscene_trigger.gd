@@ -24,6 +24,7 @@ enum TriggerMode {
 @export var captions: Array[String] = []
 @export var skippable: bool = false
 @export var pause_tree: bool = true
+@export var play_ending_bgm: bool = false
 
 var player_in_range: bool = false
 var has_played: bool = false
@@ -59,6 +60,9 @@ func play_cutscene() -> void:
 
 	if focus_before_cutscene:
 		await _play_focus_intro()
+
+	if play_ending_bgm:
+		BgmManager.play_ending()
 
 	active_cutscene = cutscene_scene.instantiate() as CanvasLayer
 	if pages.size() > 0:

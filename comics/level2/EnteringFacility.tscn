@@ -2,12 +2,17 @@
 
 [ext_resource type="Script" uid="uid://cwyb0redtunxl" path="res://ui/comic_cutscene/comic_cutscene.gd" id="1_comic"]
 [ext_resource type="Texture2D" uid="uid://cdufmd673i0ph" path="res://asset/Comics/Level2/EnteringFacility/Level2Panel2_202605291938_03467.png" id="2_a8e5r"]
+[ext_resource type="AudioStream" uid="uid://2il0cfqdiua4" path="res://asset/Audio/pollux_sound.mp3" id="3_pollux"]
 
 [node name="ComicCutscene" type="CanvasLayer" unique_id=819268320]
 process_mode = 3
 layer = 120
 script = ExtResource("1_comic")
 pages = Array[Texture2D]([ExtResource("2_a8e5r")])
+page_sfx_page_indices = Array[int]([0])
+page_sfx_streams = Array[AudioStream]([ExtResource("3_pollux")])
+page_sfx_durations = Array[float]([3.0])
+page_sfx_start_offsets = Array[float]([0.35])
 
 [node name="Dimmer" type="ColorRect" parent="." unique_id=136728855]
 anchors_preset = 15

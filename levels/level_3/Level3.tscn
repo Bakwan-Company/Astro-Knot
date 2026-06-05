@@ -737,6 +737,7 @@ position = Vector2(11094, 960.00006)
 scale = Vector2(3, 3)
 cutscene_scene = ExtResource("21_1j6ji")
 trigger_mode = 1
+play_ending_bgm = true
 
 [node name="Lift" type="Node2D" parent="." unique_id=629084702]
 
