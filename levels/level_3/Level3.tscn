@@ -837,11 +837,13 @@ position = Vector2(1021, 58)
 activate_once = true
 
 [node name="Checkpoint2" parent="CP" unique_id=362074174 instance=ExtResource("30_27lya")]
-position = Vector2(3354, 781)
+position = Vector2(3515, 642)
+scale = Vector2(1, 5.37)
 activate_once = true
 
 [node name="Checkpoint3" parent="CP" unique_id=94003428 instance=ExtResource("30_27lya")]
-position = Vector2(6239, 816)
+position = Vector2(6256, 660.99994)
+scale = Vector2(1, 5.62)
 
 [node name="LevelEnter" parent="." unique_id=433346747 instance=ExtResource("31_n4gto")]
 position = Vector2(-181, 104)
