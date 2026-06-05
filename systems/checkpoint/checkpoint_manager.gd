@@ -78,6 +78,20 @@ func kill_with_overlay(death_type: String, overlay_scene: PackedScene) -> void:
 	last_status = "showing overlay"
 	call_deferred("_show_game_over", death_type, overlay_scene if overlay_scene != null else game_over_scene, true)
 
+func restart_from_checkpoint(death_type: String = "pause_restart") -> bool:
+	if respawning:
+		last_status = "manual restart blocked: respawning"
+		return false
+
+	if not has_checkpoint or not is_checkpoint_for_current_scene():
+		last_status = "manual restart: no checkpoint"
+		return false
+
+	last_death_type = death_type
+	death_pending = false
+	_begin_respawn(death_type)
+	return true
+
 func _show_game_over(death_type: String, overlay_scene: PackedScene, use_checkpoint_restart: bool) -> void:
 	if overlay_scene == null:
 		if use_checkpoint_restart:
