@@ -186,7 +186,15 @@ func is_body_grounded(body: Node) -> bool:
 func is_pollux_side_blocked() -> bool:
 	var wall_left = pollux.get_node_or_null("WallCheckL") as RayCast2D
 	var wall_right = pollux.get_node_or_null("WallCheckR") as RayCast2D
-	return (wall_left and wall_left.is_colliding()) or (wall_right and wall_right.is_colliding())
+	for wall_check in [wall_left, wall_right]:
+		if wall_check == null or not wall_check.is_colliding():
+			continue
+
+		var normal: Vector2 = wall_check.get_collision_normal()
+		if absf(normal.x) > absf(normal.y) and normal.y > -0.5:
+			return true
+
+	return false
 
 func configure_looping_audio(player: AudioStreamPlayer2D) -> void:
 	if player == null or player.stream == null:
