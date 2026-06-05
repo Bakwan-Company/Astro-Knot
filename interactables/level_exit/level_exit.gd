@@ -24,6 +24,8 @@ signal confirm_closed
 @export_group("Comic Cutscene")
 @export var play_comic_before_exit: bool = false
 @export var comic_cutscene_scene: PackedScene
+@export var comic_focus_duration: float = 1.1
+@export var comic_focus_zoom_multiplier: float = 1.45
 @export_group("Actors")
 @export var handle_actor_sequence: bool = true
 @export var castor_path: NodePath
@@ -62,6 +64,7 @@ var confirm_window: Node
 var prompt_label: Label
 var exit_sprite: Sprite2D
 var active_comic_cutscene: CanvasLayer
+var comic_focus_camera_was_processing: bool = true
 var castor: CharacterBody2D
 var pollux: RigidBody2D
 var rope_manager: Node
@@ -247,6 +250,7 @@ func _create_confirm_window() -> void:
 
 func _play_exit_comic_cutscene() -> void:
 	exit_flow_active = true
+	await _play_comic_focus_intro()
 	active_comic_cutscene = comic_cutscene_scene.instantiate() as CanvasLayer
 	if active_comic_cutscene == null:
 		_continue_exit_after_comic()
@@ -258,6 +262,7 @@ func _play_exit_comic_cutscene() -> void:
 
 func _continue_exit_after_comic() -> void:
 	active_comic_cutscene = null
+	_restore_comic_focus_camera()
 
 	if handle_actor_sequence:
 		_play_exit_open_animation()
@@ -269,6 +274,35 @@ func _continue_exit_after_comic() -> void:
 		get_tree().change_scene_to_file(next_level_scene_path)
 	else:
 		exit_flow_active = false
+
+func _play_comic_focus_intro() -> void:
+	if camera == null:
+		return
+
+	comic_focus_camera_was_processing = camera.is_processing()
+	camera.set_process(false)
+
+	var focus_position := global_position
+	if castor != null and pollux != null:
+		focus_position = (castor.global_position + pollux.global_position) * 0.5
+	elif castor != null:
+		focus_position = castor.global_position
+
+	var tween := create_tween()
+	tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	tween.set_trans(Tween.TRANS_CUBIC)
+	tween.set_ease(Tween.EASE_OUT)
+	tween.parallel().tween_property(camera, "global_position", focus_position, comic_focus_duration)
+	tween.parallel().tween_property(camera, "zoom", camera.zoom * comic_focus_zoom_multiplier, comic_focus_duration)
+	await tween.finished
+
+func _restore_comic_focus_camera() -> void:
+	if camera == null:
+		return
+
+	if camera.has_method("follow_players"):
+		camera.call("follow_players")
+	camera.set_process(comic_focus_camera_was_processing)
 
 func _play_exit_open_animation() -> void:
 	if exit_animation_sprite == null:

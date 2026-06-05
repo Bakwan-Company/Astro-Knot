@@ -18,6 +18,8 @@ const DEFAULT_CONFIRM_WINDOW := preload("res://interactables/level_exit/LevelExi
 @export_group("Comic Cutscene")
 @export var play_comic_before_exit: bool = false
 @export var comic_cutscene_scene: PackedScene
+@export var comic_focus_duration: float = 1.1
+@export var comic_focus_zoom_multiplier: float = 1.45
 
 @onready var visual_sprite: Sprite2D = $Sprite2D
 
@@ -28,6 +30,8 @@ var confirm_input_enabled: bool = false
 var confirm_window: Node
 var confirm_opened_at_msec: int = 0
 var active_comic_cutscene: CanvasLayer
+var comic_focus_camera: Camera2D
+var comic_focus_camera_was_processing: bool = true
 
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)
@@ -110,6 +114,7 @@ func _activate_lab_door() -> void:
 	terminal_activated.emit(true)
 
 func _play_exit_comic_cutscene() -> void:
+	await _play_comic_focus_intro()
 	active_comic_cutscene = comic_cutscene_scene.instantiate() as CanvasLayer
 	if active_comic_cutscene == null:
 		_continue_exit_after_comic()
@@ -122,6 +127,7 @@ func _play_exit_comic_cutscene() -> void:
 
 func _continue_exit_after_comic() -> void:
 	active_comic_cutscene = null
+	_restore_comic_focus_camera()
 	_activate_lab_door()
 
 func _on_body_entered(body: Node2D) -> void:
@@ -177,3 +183,42 @@ func _find_node_recursive(root: Node, target_name: StringName) -> Node:
 			return found
 
 	return null
+
+func _play_comic_focus_intro() -> void:
+	var current_scene := get_tree().current_scene
+	if current_scene == null:
+		return
+
+	comic_focus_camera = current_scene.get_node_or_null("Camera2D") as Camera2D
+	if comic_focus_camera == null:
+		comic_focus_camera = current_scene.find_child("Camera2D", true, false) as Camera2D
+	if comic_focus_camera == null:
+		return
+
+	comic_focus_camera_was_processing = comic_focus_camera.is_processing()
+	comic_focus_camera.set_process(false)
+
+	var castor := _find_node_recursive(current_scene, &"Castor") as Node2D
+	var pollux := _find_node_recursive(current_scene, &"Pollux") as Node2D
+	var focus_position := global_position
+	if castor != null and pollux != null:
+		focus_position = (castor.global_position + pollux.global_position) * 0.5
+	elif castor != null:
+		focus_position = castor.global_position
+
+	var tween := create_tween()
+	tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	tween.set_trans(Tween.TRANS_CUBIC)
+	tween.set_ease(Tween.EASE_OUT)
+	tween.parallel().tween_property(comic_focus_camera, "global_position", focus_position, comic_focus_duration)
+	tween.parallel().tween_property(comic_focus_camera, "zoom", comic_focus_camera.zoom * comic_focus_zoom_multiplier, comic_focus_duration)
+	await tween.finished
+
+func _restore_comic_focus_camera() -> void:
+	if comic_focus_camera == null or not is_instance_valid(comic_focus_camera):
+		return
+
+	if comic_focus_camera.has_method("follow_players"):
+		comic_focus_camera.call("follow_players")
+	comic_focus_camera.set_process(comic_focus_camera_was_processing)
+	comic_focus_camera = null
