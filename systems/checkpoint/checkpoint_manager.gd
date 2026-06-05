@@ -173,6 +173,7 @@ func _respawn(death_type: String) -> void:
 		pollux.sleeping = false
 
 	reset_hazards()
+	reset_level_2_elevators()
 	respawning = false
 	last_status = "respawned"
 	respawned.emit(death_type)
@@ -230,3 +231,19 @@ func reset_hazards_recursive(root: Node) -> void:
 
 	for child in root.get_children():
 		reset_hazards_recursive(child)
+
+func reset_level_2_elevators() -> void:
+	var current_scene := get_tree().current_scene
+	if current_scene == null or current_scene.scene_file_path != "res://levels/level_2/Level2.tscn":
+		return
+
+	reset_level_2_elevators_recursive(current_scene)
+
+func reset_level_2_elevators_recursive(root: Node) -> void:
+	if root.has_method("force_reset_to_start"):
+		root.call("force_reset_to_start")
+	elif root.has_method("reset_to_start"):
+		root.call("reset_to_start")
+
+	for child in root.get_children():
+		reset_level_2_elevators_recursive(child)

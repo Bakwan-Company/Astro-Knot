@@ -513,10 +513,10 @@ next_level_scene_path = "res://levels/level_3/Level3.tscn"
 exit_sprite_path = NodePath("Sprite2D")
 
 [node name="Castor" parent="." unique_id=975424275 instance=ExtResource("1_ks41y")]
-position = Vector2(3350, 343)
+position = Vector2(84, 21)
 
 [node name="Pollux" parent="." unique_id=1878608427 instance=ExtResource("2_747xn")]
-position = Vector2(3275, 344)
+position = Vector2(23, 21)
 
 [node name="Elevator3" parent="." unique_id=1460354008 instance=ExtResource("14_njn5x")]
 position = Vector2(4161, -227)
@@ -537,6 +537,10 @@ can_return = true
 [node name="DeathZone" parent="." unique_id=411436456 instance=ExtResource("15_q15ry")]
 position = Vector2(810, 885)
 game_over_scene = null
+
+[node name="Checkpoint2" parent="." unique_id=330428079 instance=ExtResource("29_l5nk2")]
+position = Vector2(3354, 298.99997)
+scale = Vector2(1, 2.395)
 
 [node name="Checkpoint" parent="." unique_id=1743429087 instance=ExtResource("29_l5nk2")]
 position = Vector2(1414, 285)

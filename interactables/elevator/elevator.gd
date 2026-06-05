@@ -56,6 +56,17 @@ func reset_to_start() -> void:
 
 	_move_to(_start_position, false)
 
+func force_reset_to_start() -> void:
+	if _move_tween:
+		_move_tween.kill()
+
+	_set_lift_controls_frozen(false)
+	_is_up = false
+	_is_moving = false
+	_move_target_is_up = false
+	_bodies_in_range.clear()
+	global_position = _start_position
+
 func _move_to(target_position: Vector2, target_is_up: bool) -> void:
 	_is_moving = true
 	_move_target_is_up = target_is_up
