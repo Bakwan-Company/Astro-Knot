@@ -18,6 +18,7 @@ pollux_path = NodePath("../Pollux")
 rope_manager_path = NodePath("../RopeManager")
 camera_path = NodePath("../Camera2D")
 exit_sprite_texture = ExtResource("2_beacon")
+exit_sprite_path = NodePath("Sprite2D")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(0, 70)

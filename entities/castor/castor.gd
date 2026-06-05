@@ -32,6 +32,7 @@ var blink_timer: float = 0.0
 var blink_show_empty: bool = false
 var move_loop_tween: Tween
 var move_loop_active: bool = false
+var controls_frozen: bool = false
 
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var move_loop_player: AudioStreamPlayer2D = get_node_or_null("MoveLoopPlayer") as AudioStreamPlayer2D
@@ -50,6 +51,13 @@ func _physics_process(delta: float) -> void:
 	
 	# Cap kecepatan jatuh
 	velocity.y = min(velocity.y, terminal_velocity)
+
+	if controls_frozen:
+		velocity.x = 0.0
+		move_and_slide()
+		update_sprite_animation(delta, 0.0)
+		update_move_loop_audio()
+		return
 
 	if is_throw_mode_locked:
 		velocity.x = 0.0
@@ -146,6 +154,12 @@ func update_move_loop_audio() -> void:
 
 func set_throw_mode_locked(locked: bool) -> void:
 	is_throw_mode_locked = locked
+
+func set_controls_frozen(frozen: bool) -> void:
+	controls_frozen = frozen
+	set_meta("controls_frozen", frozen)
+	if frozen:
+		velocity.x = 0.0
 
 func get_facing_direction() -> int:
 	return facing_direction

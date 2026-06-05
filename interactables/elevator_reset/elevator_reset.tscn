@@ -1,0 +1,22 @@
+[gd_scene format=3 uid="uid://dloajsru7765x"]
+
+[ext_resource type="Script" uid="uid://dfkn8dta0maru" path="res://interactables/elevator_reset/elevator_reset.gd" id="1_pmsh1"]
+[ext_resource type="Texture2D" uid="uid://smwjabaqf8ei" path="res://asset/Interactables and Hazards/lab_terminal.png" id="2_dr2k6"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_reset_area"]
+size = Vector2(49, 49)
+
+[node name="ElevatorReset" type="Area2D" unique_id=1244199928]
+collision_layer = 0
+collision_mask = 7
+script = ExtResource("1_pmsh1")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1309650378]
+position = Vector2(-0.5, 5.5)
+shape = SubResource("RectangleShape2D_reset_area")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1062147579]
+position = Vector2(2, 0)
+scale = Vector2(0.6, 0.6)
+texture = ExtResource("2_dr2k6")
+flip_h = true

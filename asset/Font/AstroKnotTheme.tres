@@ -1,6 +1,6 @@
-[gd_resource type="Theme" load_steps=2 format=3]
+[gd_resource type="Theme" format=3 uid="uid://1dke63aq75ds"]
 
-[ext_resource type="FontFile" path="res://asset/Font/SuperMarioDsRegular-Ea4R8.ttf" id="1_font"]
+[ext_resource type="FontFile" uid="uid://b44hwt3ourgt6" path="res://asset/Font/SuperMarioDsRegular-Ea4R8.ttf" id="1_font"]
 
 [resource]
 default_font = ExtResource("1_font")
