@@ -1,10 +1,7 @@
 extends AnimatableBody2D
 
-# Seberapa jauh jembatannya mau ditarik/digeser?
-# Contoh: Vector2(150, 0) berarti geser ke KANAN 150 pixel.
-# Kalau mau geser ke BAWAH (biar jadi jalan), misal Vector2(0, 150)
 @export var retract_offset: Vector2 = Vector2(0, 150) 
-@export var retract_duration: float = 1.0 # Waktu nariknya (1 detik)
+@export var retract_duration: float = 5.0 # Waktu nariknya (1 detik)
 
 @onready var start_position: Vector2 = global_position
 

@@ -2,6 +2,8 @@ extends CanvasLayer
 
 signal finished
 
+const DEFAULT_PAGE_TURN_SFX := preload("res://asset/Audio/page_flip.mp3")
+
 @export_group("Comic Pages")
 @export var pages: Array[Texture2D] = []
 @export var captions: Array[String] = []
@@ -17,6 +19,26 @@ signal finished
 @export var page_aspect_ratio: float = 16.0 / 9.0
 @export_range(0.5, 1.0) var page_width_ratio: float = 0.74
 @export_range(0.5, 1.0) var page_height_ratio: float = 0.72
+
+@export_group("Audio")
+@export var duck_bgm: bool = true
+@export var bgm_duck_volume_db: float = -22.0
+@export var bgm_duck_fade_time: float = 0.25
+@export var page_sfx_page_indices: Array[int] = []
+@export var page_sfx_streams: Array[AudioStream] = []
+@export var page_sfx_pitch_scales: Array[float] = []
+@export var page_sfx_volume_db: Array[float] = []
+@export var page_sfx_durations: Array[float] = []
+@export var page_sfx_start_offsets: Array[float] = []
+@export var page_sfx_start_delays: Array[float] = []
+@export var page_sfx_end_pitch_scales: Array[float] = []
+@export var page_sfx_end_volume_db: Array[float] = []
+@export var page_sfx_fade_in_time: float = 0.16
+@export var page_sfx_fade_out_time: float = 0.32
+@export var page_sfx_fade_floor_db: float = -45.0
+@export var page_turn_sfx: AudioStream = DEFAULT_PAGE_TURN_SFX
+@export var page_turn_sfx_duration: float = 1.0
+@export var page_turn_sfx_volume_db: float = -4.0
 
 @export_group("Intro Transition")
 @export var intro_enabled: bool = true
@@ -56,12 +78,16 @@ var right_preview_frame: PanelContainer
 var left_preview_texture: TextureRect
 var right_preview_texture: TextureRect
 var root_home_position: Vector2
+var played_sfx_events: Dictionary = {}
+var active_sfx_players: Array[AudioStreamPlayer] = []
+var bgm_ducked: bool = false
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	previous_pause_state = get_tree().paused
 	if pause_tree:
 		get_tree().paused = true
+	_duck_bgm()
 
 	current_page = clampi(start_page, 0, maxi(pages.size() - 1, 0))
 	previous_button.pressed.connect(previous_page)
@@ -73,6 +99,7 @@ func _ready() -> void:
 	_prime_intro_state()
 	_fit_page_frame()
 	_refresh_page()
+	_play_current_page_sfx_once()
 	next_button.grab_focus()
 	_play_intro_transition()
 
@@ -92,6 +119,9 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif skippable and event.is_action_pressed("ui_cancel"):
 		get_viewport().set_input_as_handled()
 		skip()
+
+func _exit_tree() -> void:
+	_restore_bgm_duck()
 
 func previous_page() -> void:
 	if is_closing or is_page_animating or current_page <= 0:
@@ -118,7 +148,9 @@ func _close() -> void:
 		return
 
 	is_closing = true
+	_fade_out_active_page_sfx()
 	await _play_close_transition()
+	_restore_bgm_duck()
 	if pause_tree:
 		get_tree().paused = previous_pause_state
 	finished.emit()
@@ -419,6 +451,8 @@ func _slide_to_page(target_page: int, direction: int) -> void:
 		return
 
 	is_page_animating = true
+	_fade_out_active_page_sfx()
+	_play_page_turn_sfx()
 	previous_button.disabled = true
 	next_button.disabled = true
 
@@ -485,6 +519,7 @@ func _slide_to_page(target_page: int, direction: int) -> void:
 	if incoming_outer_frame != null:
 		incoming_outer_frame.queue_free()
 	_refresh_page()
+	_play_current_page_sfx_once()
 	_layout_side_previews()
 	footer.modulate.a = 0.0
 	var footer_tween := create_tween()
@@ -505,3 +540,137 @@ func _play_close_transition() -> void:
 	if film_bars != null:
 		tween.parallel().tween_property(film_bars, "modulate:a", 0.0, close_fade_time)
 	await tween.finished
+
+func _duck_bgm() -> void:
+	if not duck_bgm or bgm_ducked:
+		return
+	if BgmManager != null and BgmManager.has_method("duck"):
+		BgmManager.duck(bgm_duck_volume_db, bgm_duck_fade_time)
+		bgm_ducked = true
+
+func _restore_bgm_duck() -> void:
+	if not bgm_ducked:
+		return
+	if BgmManager != null and BgmManager.has_method("restore_duck"):
+		BgmManager.restore_duck(bgm_duck_fade_time)
+	bgm_ducked = false
+
+func _play_current_page_sfx_once() -> void:
+	for event_index in range(page_sfx_page_indices.size()):
+		if page_sfx_page_indices[event_index] == current_page:
+			_play_page_sfx_event_once(event_index)
+
+func _play_page_sfx_event_once(event_index: int) -> void:
+	if played_sfx_events.has(event_index) or event_index >= page_sfx_streams.size():
+		return
+
+	var stream := page_sfx_streams[event_index]
+	if stream == null:
+		return
+
+	played_sfx_events[event_index] = true
+	var start_delay := page_sfx_start_delays[event_index] if event_index < page_sfx_start_delays.size() else 0.0
+	if start_delay > 0.0:
+		_play_page_sfx_event_after_delay(event_index, start_delay)
+		return
+
+	_play_page_sfx_event(event_index)
+
+func _play_page_sfx_event_after_delay(event_index: int, delay: float) -> void:
+	await get_tree().create_timer(delay, true).timeout
+	_play_page_sfx_event(event_index)
+
+func _play_page_sfx_event(event_index: int) -> void:
+	if event_index >= page_sfx_streams.size():
+		return
+
+	var stream := page_sfx_streams[event_index]
+	if stream == null:
+		return
+
+	var target_volume := page_sfx_volume_db[event_index] if event_index < page_sfx_volume_db.size() else 0.0
+	var pitch_scale := page_sfx_pitch_scales[event_index] if event_index < page_sfx_pitch_scales.size() else 1.0
+	var end_pitch_scale := page_sfx_end_pitch_scales[event_index] if event_index < page_sfx_end_pitch_scales.size() else pitch_scale
+	var end_volume := page_sfx_end_volume_db[event_index] if event_index < page_sfx_end_volume_db.size() else target_volume
+	var player := AudioStreamPlayer.new()
+	player.name = "PageSfxPlayer%d_%d" % [current_page, event_index]
+	player.process_mode = Node.PROCESS_MODE_ALWAYS
+	player.bus = "Master"
+	player.stream = stream
+	player.pitch_scale = pitch_scale
+	player.volume_db = page_sfx_fade_floor_db
+	add_child(player)
+	active_sfx_players.append(player)
+	var start_offset := page_sfx_start_offsets[event_index] if event_index < page_sfx_start_offsets.size() else 0.0
+	player.play(maxf(start_offset, 0.0))
+
+	var fade_in_tween := create_tween()
+	fade_in_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	fade_in_tween.tween_property(player, "volume_db", target_volume, page_sfx_fade_in_time)
+
+	var stream_length := stream.get_length()
+	var requested_duration := page_sfx_durations[event_index] if event_index < page_sfx_durations.size() else 0.0
+	if requested_duration > 0.0 or stream_length > 0.0:
+		var remaining_length := maxf(stream_length - start_offset, 0.0)
+		var playback_length := requested_duration if requested_duration > 0.0 else remaining_length / maxf(pitch_scale, 0.01)
+		var fade_out_delay := maxf(playback_length - page_sfx_fade_out_time, page_sfx_fade_in_time)
+		_shape_sfx_over_time(player, end_pitch_scale, end_volume, fade_out_delay)
+		_fade_out_sfx_after_delay(player, fade_out_delay, page_sfx_fade_out_time)
+
+func _play_page_turn_sfx() -> void:
+	if page_turn_sfx == null:
+		return
+
+	var player := AudioStreamPlayer.new()
+	player.name = "PageTurnSfxPlayer"
+	player.process_mode = Node.PROCESS_MODE_ALWAYS
+	player.bus = "Master"
+	player.stream = page_turn_sfx
+	player.volume_db = page_sfx_fade_floor_db
+	add_child(player)
+	active_sfx_players.append(player)
+	player.play()
+
+	var fade_in_tween := create_tween()
+	fade_in_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	fade_in_tween.tween_property(player, "volume_db", page_turn_sfx_volume_db, minf(page_sfx_fade_in_time, 0.08))
+	var fade_out_delay := maxf(page_turn_sfx_duration - page_sfx_fade_out_time, 0.08)
+	_fade_out_sfx_after_delay(player, fade_out_delay, minf(page_sfx_fade_out_time, 0.22))
+
+func _shape_sfx_over_time(player: AudioStreamPlayer, end_pitch_scale: float, end_volume_db: float, duration: float) -> void:
+	if duration <= page_sfx_fade_in_time:
+		return
+
+	var shape_tween := create_tween()
+	shape_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	shape_tween.set_trans(Tween.TRANS_CUBIC)
+	shape_tween.set_ease(Tween.EASE_IN)
+	shape_tween.tween_interval(page_sfx_fade_in_time)
+	shape_tween.tween_property(player, "pitch_scale", end_pitch_scale, duration - page_sfx_fade_in_time)
+	shape_tween.parallel().tween_property(player, "volume_db", end_volume_db, duration - page_sfx_fade_in_time)
+
+func _fade_out_active_page_sfx(fade_time: float = -1.0) -> void:
+	var duration := page_sfx_fade_out_time if fade_time < 0.0 else fade_time
+	for player in active_sfx_players.duplicate():
+		_fade_out_sfx_player(player, duration)
+
+func _fade_out_sfx_after_delay(player: Variant, delay: float, fade_time: float) -> void:
+	await get_tree().create_timer(delay, true).timeout
+	_fade_out_sfx_player(player, fade_time)
+
+func _fade_out_sfx_player(player: Variant, fade_time: float) -> void:
+	if player == null or not is_instance_valid(player):
+		return
+	if not player is AudioStreamPlayer:
+		return
+	if not active_sfx_players.has(player):
+		return
+
+	active_sfx_players.erase(player)
+	var tween := create_tween()
+	tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	tween.tween_property(player, "volume_db", page_sfx_fade_floor_db, fade_time)
+	await tween.finished
+	if is_instance_valid(player):
+		player.stop()
+		player.queue_free()

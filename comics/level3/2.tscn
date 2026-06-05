@@ -6,13 +6,26 @@
 [ext_resource type="Texture2D" uid="uid://bxpwb8ep7ib8p" path="res://asset/Comics/Level3/last/Level4Panel3_202605291957_37444.png" id="4_gfnxi"]
 [ext_resource type="Texture2D" uid="uid://6nu75pryqyhr" path="res://asset/Comics/Level3/last/Level4Panel4_202605291957_37445.png" id="5_2fuvu"]
 [ext_resource type="Texture2D" uid="uid://na7byy3m0evg" path="res://asset/Comics/Level3/last/Level4Panel5_202605291957_37446.png" id="6_vkvxc"]
-[ext_resource type="Texture2D" uid="uid://du15ltujjjq42" path="res://asset/Comics/Level3/last/Level4Panel6_202605291957_37449.png" id="7_nr3b7"]
+[ext_resource type="AudioStream" uid="uid://bihi72i8husdm" path="res://asset/Audio/castor_sound.mp3" id="7_castor"]
+[ext_resource type="AudioStream" uid="uid://7308qgmfgd5e" path="res://asset/Audio/radio_static.mp3" id="8_static"]
+[ext_resource type="AudioStream" uid="uid://d2cll6f15tvb3" path="res://asset/Audio/storm_magnetic.mp3" id="9_magnetic"]
+[ext_resource type="AudioStream" uid="uid://dmb2faxuh18qk" path="res://asset/Audio/storm_wind.mp3" id="10_wind"]
+[ext_resource type="AudioStream" uid="uid://b3yt4ufc6780g" path="res://asset/Audio/rubbleV2.mp3" id="11_rubble"]
+[ext_resource type="AudioStream" uid="uid://2il0cfqdiua4" path="res://asset/Audio/pollux_sound.mp3" id="12_pollux"]
 
 [node name="ComicCutscene" type="CanvasLayer" unique_id=447837178]
 process_mode = 3
 layer = 120
 script = ExtResource("1_ph8fe")
-pages = Array[Texture2D]([ExtResource("2_honj6"), ExtResource("3_7j1mq"), ExtResource("4_gfnxi"), ExtResource("5_2fuvu"), ExtResource("6_vkvxc"), ExtResource("7_nr3b7")])
+pages = Array[Texture2D]([ExtResource("2_honj6"), ExtResource("3_7j1mq"), ExtResource("4_gfnxi"), ExtResource("5_2fuvu"), ExtResource("6_vkvxc")])
+page_sfx_page_indices = Array[int]([0, 1, 2, 2, 2, 2, 3, 3, 3, 4, 4])
+page_sfx_streams = Array[AudioStream]([ExtResource("7_castor"), ExtResource("8_static"), ExtResource("9_magnetic"), ExtResource("10_wind"), ExtResource("7_castor"), ExtResource("12_pollux"), ExtResource("11_rubble"), ExtResource("7_castor"), ExtResource("12_pollux"), ExtResource("7_castor"), ExtResource("12_pollux")])
+page_sfx_pitch_scales = Array[float]([1.0, 1.0, 1.0, 1.0, 0.78, 0.72, 1.0, 0.62, 0.56, 0.48, 0.42])
+page_sfx_volume_db = Array[float]([0.0, -3.0, -10.0, -5.0, -4.0, -5.0, -2.0, -6.0, -7.0, -4.0, -5.0])
+page_sfx_durations = Array[float]([3.0, 0.0, 5.0, 5.0, 5.0, 5.0, 0.0, 5.0, 5.0, 5.0, 5.0])
+page_sfx_start_offsets = Array[float]([0.2, 0.0, 0.6, 0.0, 0.35, 0.55, 0.0, 0.65, 0.8, 0.9, 1.05])
+page_sfx_end_pitch_scales = Array[float]([1.0, 1.0, 1.0, 1.0, 0.48, 0.42, 1.0, 0.32, 0.28, 0.16, 0.14])
+page_sfx_end_volume_db = Array[float]([0.0, -3.0, -10.0, -5.0, -18.0, -20.0, -2.0, -24.0, -26.0, -36.0, -38.0])
 
 [node name="Dimmer" type="ColorRect" parent="." unique_id=1988990970]
 anchors_preset = 15

@@ -1,5 +1,7 @@
 extends Area2D
 
+signal cutscene_finished
+
 enum TriggerMode {
 	ON_ENTER,
 	INTERACT,
@@ -79,6 +81,7 @@ func play_cutscene() -> void:
 func _on_cutscene_finished() -> void:
 	active_cutscene = null
 	_restore_focus_camera()
+	cutscene_finished.emit()
 	if next_scene_path != "" and ResourceLoader.exists(next_scene_path):
 		get_tree().change_scene_to_file(next_scene_path)
 

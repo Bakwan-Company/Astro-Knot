@@ -2,12 +2,15 @@
 
 [ext_resource type="Script" uid="uid://cwyb0redtunxl" path="res://ui/comic_cutscene/comic_cutscene.gd" id="1_apy6x"]
 [ext_resource type="Texture2D" uid="uid://cvq38dax2gdjm" path="res://asset/Comics/Level1/MeetingCastor/Level1Panel7.png" id="2_py7f5"]
+[ext_resource type="AudioStream" uid="uid://bihi72i8husdm" path="res://asset/Audio/castor_sound.mp3" id="3_castor"]
 
 [node name="ComicCutscene" type="CanvasLayer" unique_id=447837178]
 process_mode = 3
 layer = 120
 script = ExtResource("1_apy6x")
 pages = Array[Texture2D]([ExtResource("2_py7f5")])
+page_sfx_page_indices = Array[int]([0])
+page_sfx_streams = Array[AudioStream]([ExtResource("3_castor")])
 
 [node name="Dimmer" type="ColorRect" parent="." unique_id=1988990970]
 anchors_preset = 15

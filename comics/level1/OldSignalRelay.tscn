@@ -6,12 +6,19 @@
 [ext_resource type="Texture2D" uid="uid://dx0mmr1gut036" path="res://asset/Comics/Level1/OldSignalRelay/Level2Panel7.png" id="4_kprox"]
 [ext_resource type="Texture2D" uid="uid://c7jcymysedabh" path="res://asset/Comics/Level1/OldSignalRelay/Level2Panel8.png" id="5_gewey"]
 [ext_resource type="Texture2D" uid="uid://pl1fmv1x7sgc" path="res://asset/Comics/Level1/OldSignalRelay/Level2Panel9.png" id="6_dkmd4"]
+[ext_resource type="AudioStream" uid="uid://bihi72i8husdm" path="res://asset/Audio/castor_sound.mp3" id="7_castor"]
+[ext_resource type="AudioStream" uid="uid://2il0cfqdiua4" path="res://asset/Audio/pollux_sound.mp3" id="8_pollux"]
+[ext_resource type="AudioStream" uid="uid://7308qgmfgd5e" path="res://asset/Audio/radio_static.mp3" id="9_static"]
 
 [node name="ComicCutscene" type="CanvasLayer" unique_id=447837178]
 process_mode = 3
 layer = 120
 script = ExtResource("1_uf6l1")
 pages = Array[Texture2D]([ExtResource("6_dkmd4"), ExtResource("5_gewey"), ExtResource("4_kprox"), ExtResource("3_dqgi6"), ExtResource("2_4fsch")])
+page_sfx_page_indices = Array[int]([0, 1, 1, 2, 3, 4])
+page_sfx_streams = Array[AudioStream]([ExtResource("7_castor"), ExtResource("8_pollux"), ExtResource("9_static"), ExtResource("8_pollux"), ExtResource("7_castor"), ExtResource("8_pollux")])
+page_sfx_durations = Array[float]([3.0, 4.0, 3.0, 4.0, 3.0, 3.0])
+page_sfx_start_delays = Array[float]([0.0, 0.0, 4.0, 0.0, 0.0, 0.0])
 
 [node name="Dimmer" type="ColorRect" parent="." unique_id=1988990970]
 anchors_preset = 15
