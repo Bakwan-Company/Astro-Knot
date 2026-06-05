@@ -6,10 +6,10 @@ const MAIN_MENU_PATH := "res://MainMenu.tscn"
 
 @export var bridge_camera_hold_time: float = 0.35
 @export var bridge_camera_shake_strength: float = 9.0
-@export var ending_fall_duration: float = 7.0
-@export var ending_fade_start_time: float = 5.8
+@export var ending_fall_duration: float = 9.0
+@export var ending_fade_start_time: float = 7.6
 @export var ending_rock_spawn_interval: float = 0.11
-@export var ending_camera_shake_strength: float = 22.0
+@export var ending_camera_shake_strength: float = 12.0
 @export var ending_fade_duration: float = 1.0
 @export var ending_the_end_hold_time: float = 4.0
 
