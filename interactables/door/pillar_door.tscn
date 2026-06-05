@@ -1,0 +1,74 @@
+[gd_scene format=3 uid="uid://bqoy0rq4y5pr7"]
+
+[ext_resource type="Script" uid="uid://b4ltnr5133gi" path="res://interactables/door/door.gd" id="1_door"]
+[ext_resource type="Texture2D" uid="uid://bl1l2x8635i6q" path="res://asset/Interactables and Hazards/pilar/128x32.png" id="2_closed"]
+[ext_resource type="Texture2D" uid="uid://bn405igjnf0if" path="res://asset/Interactables and Hazards/pilar/128x32quarter_half.png" id="3_quarter"]
+[ext_resource type="Texture2D" uid="uid://c12yc7qhwdidb" path="res://asset/Interactables and Hazards/pilar/128x32_half.png" id="4_half"]
+[ext_resource type="Texture2D" uid="uid://jiuv34cghrwr" path="res://asset/Interactables and Hazards/pilar/128x32_open.png" id="5_open"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_pillar_door"]
+size = Vector2(39, 128)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_pillar_door"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("5_open")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_half")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3_quarter")
+}, {
+"duration": 1.0,
+"texture": ExtResource("2_closed")
+}],
+"loop": false,
+"name": &"close",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_closed")
+}],
+"loop": true,
+"name": &"closed",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_closed")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3_quarter")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_half")
+}, {
+"duration": 1.0,
+"texture": ExtResource("5_open")
+}],
+"loop": false,
+"name": &"open",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("5_open")
+}],
+"loop": true,
+"name": &"opened",
+"speed": 5.0
+}]
+
+[node name="PillarDoor" type="StaticBody2D" unique_id=1100794833]
+script = ExtResource("1_door")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1185074297]
+position = Vector2(0.5, 0)
+shape = SubResource("RectangleShape2D_pillar_door")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=891600769]
+sprite_frames = SubResource("SpriteFrames_pillar_door")
+animation = &"opened"
