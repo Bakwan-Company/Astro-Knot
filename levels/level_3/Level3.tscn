@@ -773,7 +773,8 @@ tile_set = SubResource("TileSet_1s8r7")
 [node name="Castor" parent="." unique_id=975424275 instance=ExtResource("2_wh162")]
 z_index = 12
 position = Vector2(-154, 117)
-battery_state = 2
+battery_state = 3
+low_battery_blink = true
 
 [node name="Pollux" parent="." unique_id=1878608427 instance=ExtResource("3_1s8r7")]
 z_index = 12

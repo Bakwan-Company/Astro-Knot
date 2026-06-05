@@ -21,6 +21,7 @@ const MAIN_MENU_PATH := "res://MainMenu.tscn"
 @onready var bridge_manager = %BridgeManager
 @onready var bridge_camera_focus: Marker2D = %BridgeCameraFocus
 @onready var camera: Camera2D = $Camera2D
+@onready var skeleton_cutscene_trigger: Area2D = $EndLv/skeleton/ComicCutsceneTrigger
 @onready var ending_computer_trigger: Area2D = $EndLv/computer/ComicCutsceneTrigger
 @onready var castor: CharacterBody2D = $Castor
 @onready var pollux: RigidBody2D = $Pollux
@@ -28,14 +29,19 @@ const MAIN_MENU_PATH := "res://MainMenu.tscn"
 
 var bridge_cutscene_id: int = 0
 var ending_sequence_started: bool = false
+var skeleton_battery_change_applied: bool = false
 
 func _ready() -> void:
+	_set_castor_battery_second()
+
 	if button_laser and laser_gate:
 		button_laser.button_toggled.connect(laser_gate._on_button_toggled)
 	if button_pillar and laser_gate_pillar:
 		button_pillar.button_toggled.connect(_on_button_pillar_toggled)
 	if terminal and bridge_manager:
 		terminal.terminal_activated.connect(_on_terminal_activated)
+	if skeleton_cutscene_trigger and skeleton_cutscene_trigger.has_signal("cutscene_finished"):
+		skeleton_cutscene_trigger.connect("cutscene_finished", _on_skeleton_cutscene_finished)
 	if ending_computer_trigger and ending_computer_trigger.has_signal("cutscene_finished"):
 		ending_computer_trigger.connect("cutscene_finished", _on_ending_computer_cutscene_finished)
 
@@ -61,6 +67,13 @@ func _on_terminal_activated(is_on: bool) -> void:
 
 	if camera and camera.has_method("follow_players"):
 		camera.call("follow_players")
+
+func _on_skeleton_cutscene_finished() -> void:
+	if skeleton_battery_change_applied:
+		return
+
+	skeleton_battery_change_applied = true
+	_set_castor_battery_first_blinking()
 
 func _on_ending_computer_cutscene_finished() -> void:
 	if ending_sequence_started:
@@ -99,6 +112,34 @@ func _freeze_ending_players() -> void:
 		pollux.angular_velocity = 0.0
 		pollux.freeze = true
 		pollux.sleeping = true
+
+func _set_castor_battery_second() -> void:
+	if castor == null:
+		return
+
+	if castor.has_method("set_battery_state"):
+		castor.call("set_battery_state", 2)
+	else:
+		castor.set("battery_state", 2)
+
+	if castor.has_method("set_low_battery_blink"):
+		castor.call("set_low_battery_blink", false)
+	else:
+		castor.set("low_battery_blink", false)
+
+func _set_castor_battery_first_blinking() -> void:
+	if castor == null:
+		return
+
+	if castor.has_method("set_battery_state"):
+		castor.call("set_battery_state", 3)
+	else:
+		castor.set("battery_state", 3)
+
+	if castor.has_method("set_low_battery_blink"):
+		castor.call("set_low_battery_blink", true)
+	else:
+		castor.set("low_battery_blink", true)
 
 func _spawn_ending_rocks() -> void:
 	var rock_layer := Node2D.new()
