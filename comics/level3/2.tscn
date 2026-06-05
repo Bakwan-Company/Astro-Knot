@@ -6,13 +6,12 @@
 [ext_resource type="Texture2D" uid="uid://bxpwb8ep7ib8p" path="res://asset/Comics/Level3/last/Level4Panel3_202605291957_37444.png" id="4_gfnxi"]
 [ext_resource type="Texture2D" uid="uid://6nu75pryqyhr" path="res://asset/Comics/Level3/last/Level4Panel4_202605291957_37445.png" id="5_2fuvu"]
 [ext_resource type="Texture2D" uid="uid://na7byy3m0evg" path="res://asset/Comics/Level3/last/Level4Panel5_202605291957_37446.png" id="6_vkvxc"]
-[ext_resource type="Texture2D" uid="uid://du15ltujjjq42" path="res://asset/Comics/Level3/last/Level4Panel6_202605291957_37449.png" id="7_nr3b7"]
 
 [node name="ComicCutscene" type="CanvasLayer" unique_id=447837178]
 process_mode = 3
 layer = 120
 script = ExtResource("1_ph8fe")
-pages = Array[Texture2D]([ExtResource("2_honj6"), ExtResource("3_7j1mq"), ExtResource("4_gfnxi"), ExtResource("5_2fuvu"), ExtResource("6_vkvxc"), ExtResource("7_nr3b7")])
+pages = Array[Texture2D]([ExtResource("2_honj6"), ExtResource("3_7j1mq"), ExtResource("4_gfnxi"), ExtResource("5_2fuvu"), ExtResource("6_vkvxc")])
 
 [node name="Dimmer" type="ColorRect" parent="." unique_id=1988990970]
 anchors_preset = 15
