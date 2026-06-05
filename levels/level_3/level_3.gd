@@ -7,8 +7,10 @@ const MAIN_MENU_PATH := "res://MainMenu.tscn"
 @export var bridge_camera_hold_time: float = 0.35
 @export var bridge_camera_shake_strength: float = 9.0
 @export var ending_fall_duration: float = 7.0
+@export var ending_fade_start_time: float = 5.8
 @export var ending_rock_spawn_interval: float = 0.11
 @export var ending_camera_shake_strength: float = 22.0
+@export var ending_fade_duration: float = 1.0
 @export var ending_the_end_hold_time: float = 4.0
 
 @onready var button_laser = %ButtonLaser 
@@ -72,10 +74,14 @@ func _play_ending_sequence() -> void:
 
 	if camera and camera.has_method("follow_players"):
 		camera.call("follow_players")
-	if camera and camera.has_method("shake"):
-		camera.call("shake", ending_fall_duration, ending_camera_shake_strength)
+	var shake_duration := ending_fall_duration + ending_fade_duration + 0.25
+	if camera and camera.has_method("shake_constant"):
+		camera.call("shake_constant", shake_duration, ending_camera_shake_strength)
+	elif camera and camera.has_method("shake"):
+		camera.call("shake", shake_duration, ending_camera_shake_strength)
 
-	await _spawn_ending_rocks()
+	_spawn_ending_rocks()
+	await get_tree().create_timer(minf(ending_fade_start_time, ending_fall_duration)).timeout
 	await _show_the_end_overlay()
 
 	if ResourceLoader.exists(MAIN_MENU_PATH):
@@ -153,7 +159,7 @@ func _show_the_end_overlay() -> void:
 	overlay.add_child(end_image)
 
 	var tween := create_tween()
-	tween.tween_property(fade, "color:a", 1.0, 1.0)
+	tween.tween_property(fade, "color:a", 1.0, ending_fade_duration)
 	tween.tween_property(end_image, "modulate:a", 1.0, 1.2)
 	await tween.finished
 	await get_tree().create_timer(ending_the_end_hold_time).timeout
