@@ -295,6 +295,11 @@ func _physics_process(delta: float) -> void:
 	if not tether_connected or tether_is_broken or not castor or not pollux:
 		return
 
+	if are_controls_frozen():
+		update_reel_loop_audio(false)
+		update_rope_debug_snapshot()
+		return
+
 	throw_cooldown_timer = max(throw_cooldown_timer - delta, 0.0)
 	throw_state_timer += delta
 
@@ -316,6 +321,9 @@ func _physics_process(delta: float) -> void:
 	apply_solid_constraint(delta)
 	update_rope_debug_snapshot()
 	update_power_limit(delta)
+
+func are_controls_frozen() -> bool:
+	return castor.get_meta("controls_frozen", false) or pollux.get_meta("controls_frozen", false)
 
 func set_tether_connected(value: bool) -> void:
 	tether_connected = value

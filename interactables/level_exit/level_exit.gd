@@ -50,7 +50,7 @@ signal confirm_closed
 	set(value):
 		exit_sprite_scale = value
 		apply_visual()
-@export var exit_sprite_path: NodePath = NodePath("Sprite2D"):
+@export var exit_sprite_path: NodePath:
 	set(value):
 		exit_sprite_path = value
 		exit_sprite = null
@@ -101,6 +101,9 @@ func apply_text() -> void:
 		prompt_label.text = prompt_text
 
 func apply_visual() -> void:
+	if exit_sprite_path.is_empty():
+		return
+
 	if exit_sprite == null:
 		exit_sprite = get_node_or_null(exit_sprite_path) as Sprite2D
 
