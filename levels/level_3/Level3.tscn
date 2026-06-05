@@ -849,7 +849,7 @@ position = Vector2(6239, 816)
 position = Vector2(-181, 104)
 valid_body_names = PackedStringArray("Castor")
 
-[node name="PauseMenuOverlay" parent="." instance=ExtResource("32_pause")]
+[node name="PauseMenuOverlay" parent="." unique_id=1708138309 instance=ExtResource("32_pause")]
 
 [connection signal="body_entered" from="Trap/ButtonLaser" to="." method="_on_button_laser_body_entered"]
 [connection signal="body_entered" from="Trap/LaserGate" to="." method="_on_laser_gate_body_entered"]
