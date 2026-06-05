@@ -738,6 +738,7 @@ scale = Vector2(3, 3)
 cutscene_scene = ExtResource("21_1j6ji")
 trigger_mode = 1
 next_scene_path = "res://MainMenu.tscn"
+play_ending_bgm = true
 
 [node name="Lift" type="Node2D" parent="." unique_id=629084702]
 

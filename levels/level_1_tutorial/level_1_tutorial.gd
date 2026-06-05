@@ -51,6 +51,8 @@ var exit_confirm_open: bool = false
 var tether_connect_comic_active: bool = false
 
 func _ready() -> void:
+	BgmManager.play_level_1()
+
 	if fall_zone != null:
 		fall_zone.body_entered.connect(_on_fall_zone_body_entered)
 

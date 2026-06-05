@@ -14,6 +14,8 @@ extends Node2D
 var bridge_cutscene_id: int = 0
 
 func _ready() -> void:
+	BgmManager.play_level_3()
+
 	if button_laser and laser_gate:
 		button_laser.button_toggled.connect(laser_gate._on_button_toggled)
 	if button_pillar and laser_gate_pillar:

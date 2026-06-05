@@ -33,6 +33,7 @@
 [ext_resource type="PackedScene" uid="uid://b5ydk4d23bgk1" path="res://comics/level2/EnteringFacility.tscn" id="31_l7jqn"]
 [ext_resource type="PackedScene" path="res://interactables/level_enter/LevelEnter.tscn" id="32_v1ggv"]
 [ext_resource type="PackedScene" path="res://ui/pause_menu/PauseMenuOverlay.tscn" id="33_pause"]
+[ext_resource type="Script" path="res://levels/level_2/level_2.gd" id="34_level2"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_njn5x"]
 texture = ExtResource("11_q15ry")
@@ -257,6 +258,7 @@ sources/1 = SubResource("TileSetAtlasSource_747xn")
 sources/0 = SubResource("TileSetAtlasSource_njn5x")
 
 [node name="Level2" type="Node2D" unique_id=1697006600]
+script = ExtResource("34_level2")
 
 [node name="AreaTitleOverlay" parent="." unique_id=2112526401 instance=ExtResource("28_area_title")]
 area_title = "The Silent Ruins"

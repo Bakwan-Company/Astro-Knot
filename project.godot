@@ -17,6 +17,7 @@ config/icon="res://icon.svg"
 
 [autoload]
 
+BgmManager="*res://systems/bgm_manager.gd"
 CheckpointManager="*res://systems/checkpoint/checkpoint_manager.gd"
 
 [display]
