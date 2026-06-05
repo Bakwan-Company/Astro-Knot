@@ -35,6 +35,7 @@
 [ext_resource type="PackedScene" uid="uid://dlepfljhjqbnx" path="res://comics/level1/OldSignalRelay.tscn" id="30_n4pll"]
 [ext_resource type="PackedScene" path="res://systems/checkpoint/Checkpoint.tscn" id="32_uy4n7"]
 [ext_resource type="PackedScene" path="res://interactables/level_enter/LevelEnter.tscn" id="33_enter"]
+[ext_resource type="PackedScene" path="res://ui/pause_menu/PauseMenuOverlay.tscn" id="34_pause"]
 
 [sub_resource type="TileSetScenesCollectionSource" id="TileSetScenesCollectionSource_ng882"]
 
@@ -421,3 +422,5 @@ position = Vector2(-144, 104)
 position = Vector2(0, 10.000008)
 scale = Vector2(1.335, 4.025)
 shape = SubResource("RectangleShape2D_67vpr")
+
+[node name="PauseMenuOverlay" parent="." instance=ExtResource("34_pause")]

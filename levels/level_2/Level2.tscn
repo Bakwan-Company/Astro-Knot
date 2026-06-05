@@ -32,6 +32,7 @@
 [ext_resource type="PackedScene" path="res://interactables/terminal/LabTerminal.tscn" id="30_5xb65"]
 [ext_resource type="PackedScene" uid="uid://b5ydk4d23bgk1" path="res://comics/level2/EnteringFacility.tscn" id="31_l7jqn"]
 [ext_resource type="PackedScene" path="res://interactables/level_enter/LevelEnter.tscn" id="32_v1ggv"]
+[ext_resource type="PackedScene" path="res://ui/pause_menu/PauseMenuOverlay.tscn" id="33_pause"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_njn5x"]
 texture = ExtResource("11_q15ry")
@@ -536,6 +537,8 @@ offset_top = -49.0
 offset_right = 1014.0
 offset_bottom = 17.0
 text = "Press F to let Pollux interact"
+
+[node name="PauseMenuOverlay" parent="." instance=ExtResource("33_pause")]
 
 [connection signal="terminal_activated" from="Terminal1" to="Door1" method="set_terminal_status"]
 [connection signal="terminal_activated" from="Terminal2" to="Door2" method="set_terminal_status"]

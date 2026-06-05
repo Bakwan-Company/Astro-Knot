@@ -3,6 +3,7 @@
 [ext_resource type="PackedScene" uid="uid://cmn0gfamy7yaj" path="res://entities/castor/Castor.tscn" id="1_sjoxp"]
 [ext_resource type="PackedScene" uid="uid://d3rhk612sc0pl" path="res://entities/pollux/Pollux.tscn" id="2_1qa4p"]
 [ext_resource type="PackedScene" uid="uid://byqxydxhxv7q5" path="res://systems/rope_system/RopeManager.tscn" id="3_1qa4p"]
+[ext_resource type="PackedScene" path="res://ui/pause_menu/PauseMenuOverlay.tscn" id="4_pause"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_xhwnm"]
 size = Vector2(1149.5, 81)
@@ -39,3 +40,5 @@ position = Vector2(1020, 194)
 
 [node name="PolluxSpawn" type="Marker2D" parent="." unique_id=196168164]
 position = Vector2(1250, 405)
+
+[node name="PauseMenuOverlay" parent="." instance=ExtResource("4_pause")]

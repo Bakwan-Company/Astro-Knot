@@ -34,6 +34,7 @@
 [ext_resource type="Texture2D" uid="uid://dhmiyt5g6su0q" path="res://asset/sign/Untitled4_20260529154948.png" id="29_1x6yt"]
 [ext_resource type="PackedScene" path="res://systems/checkpoint/Checkpoint.tscn" id="30_27lya"]
 [ext_resource type="PackedScene" path="res://interactables/level_enter/LevelEnter.tscn" id="31_n4gto"]
+[ext_resource type="PackedScene" path="res://ui/pause_menu/PauseMenuOverlay.tscn" id="32_pause"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_su23m"]
 texture = ExtResource("3_1pwd6")
@@ -846,6 +847,8 @@ position = Vector2(6239, 816)
 [node name="LevelEnter" parent="." unique_id=433346747 instance=ExtResource("31_n4gto")]
 position = Vector2(-181, 104)
 valid_body_names = PackedStringArray("Castor")
+
+[node name="PauseMenuOverlay" parent="." instance=ExtResource("32_pause")]
 
 [connection signal="body_entered" from="Trap/ButtonLaser" to="." method="_on_button_laser_body_entered"]
 [connection signal="body_entered" from="Trap/LaserGate" to="." method="_on_laser_gate_body_entered"]
