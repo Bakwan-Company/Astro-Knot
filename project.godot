@@ -20,6 +20,7 @@ config/icon="res://icon.svg"
 BgmManager="*res://systems/bgm_manager.gd"
 UiSfx="*res://systems/ui_sfx.gd"
 CheckpointManager="*res://systems/checkpoint/checkpoint_manager.gd"
+InputPromptManager="*res://systems/input_prompt_manager.gd"
 
 [display]
 
