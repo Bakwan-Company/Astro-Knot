@@ -18,7 +18,7 @@ func _ready() -> void:
 	visible = false
 	_apply_placeholder_style()
 	resume_button.pressed.connect(resume_game)
-	restart_button.pressed.connect(restart_level)
+	restart_button.pressed.connect(restart_checkpoint)
 	main_menu_button.pressed.connect(go_to_main_menu)
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -43,8 +43,15 @@ func resume_game() -> void:
 	visible = false
 	get_tree().paused = false
 
-func restart_level() -> void:
+func restart_checkpoint() -> void:
 	get_tree().paused = false
+	var checkpoint_manager := get_node_or_null("/root/CheckpointManager")
+	if checkpoint_manager != null and checkpoint_manager.has_method("restart_from_checkpoint"):
+		if bool(checkpoint_manager.call("restart_from_checkpoint", "pause_restart")):
+			is_open = false
+			visible = false
+			return
+
 	get_tree().reload_current_scene()
 
 func go_to_main_menu() -> void:
@@ -66,6 +73,7 @@ func _apply_placeholder_style() -> void:
 	panel_style.corner_radius_bottom_left = 4
 	panel_style.corner_radius_bottom_right = 4
 	panel.add_theme_stylebox_override("panel", panel_style)
+	panel.custom_minimum_size = Vector2(380, 176)
 
 	heading_label.text = "ASTRO-KNOT // PAUSE TERMINAL"
 	heading_label.add_theme_font_size_override("font_size", 12)
@@ -76,16 +84,18 @@ func _apply_placeholder_style() -> void:
 	title_label.add_theme_color_override("font_color", Color(0.86, 0.74, 0.42, 1.0))
 
 	detail_label.text = "> MISSION TEMPORARILY SUSPENDED"
-	detail_label.add_theme_font_size_override("font_size", 14)
+	detail_label.add_theme_font_size_override("font_size", 11)
 	detail_label.add_theme_color_override("font_color", Color(0.68, 0.86, 0.78, 1.0))
+	detail_label.autowrap_mode = TextServer.AUTOWRAP_OFF
 
 	_style_button(resume_button, "> RESUME")
-	_style_button(restart_button, "> RESTART LEVEL")
+	_style_button(restart_button, "> RESTART CHECKPOINT")
 	_style_button(main_menu_button, "> MAIN MENU")
 
 func _style_button(button: Button, label: String) -> void:
 	button.text = label
-	button.add_theme_font_size_override("font_size", 18)
+	button.custom_minimum_size = Vector2(0, 24)
+	button.add_theme_font_size_override("font_size", 14)
 	button.add_theme_color_override("font_color", Color(0.04, 0.07, 0.06, 1.0))
 	button.add_theme_color_override("font_focus_color", Color(0.04, 0.07, 0.06, 1.0))
 

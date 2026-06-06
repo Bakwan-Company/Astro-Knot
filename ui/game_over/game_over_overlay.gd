@@ -33,6 +33,7 @@ func update_copy() -> void:
 	title_label.text = get_title_copy()
 	death_type_label.text = "> ERROR_TYPE: %s" % death_type.to_upper()
 	detail_label.text = get_death_detail()
+	restart_button.text = "> RESTART CHECKPOINT" if use_checkpoint_restart else "> RESTART LEVEL"
 
 func get_title_copy() -> String:
 	if death_type == "fall":
@@ -65,25 +66,28 @@ func _apply_terminal_style() -> void:
 	panel_style.corner_radius_bottom_left = 4
 	panel_style.corner_radius_bottom_right = 4
 	panel.add_theme_stylebox_override("panel", panel_style)
+	panel.custom_minimum_size = Vector2(420, 184)
 
 	eyebrow_label.text = "ASTRO-KNOT // EMERGENCY TERMINAL"
-	eyebrow_label.add_theme_font_size_override("font_size", 12)
+	eyebrow_label.add_theme_font_size_override("font_size", 11)
 	eyebrow_label.add_theme_color_override("font_color", Color(0.44, 0.82, 0.72, 1.0))
 
-	title_label.add_theme_font_size_override("font_size", 28)
+	title_label.add_theme_font_size_override("font_size", 24)
 	title_label.add_theme_color_override("font_color", Color(0.78, 0.28, 0.22, 1.0))
 	title_label.add_theme_color_override("font_shadow_color", Color(0.78, 0.28, 0.22, 0.16))
 	title_label.add_theme_constant_override("shadow_offset_x", 1)
 	title_label.add_theme_constant_override("shadow_offset_y", 0)
 
-	death_type_label.add_theme_font_size_override("font_size", 13)
+	death_type_label.add_theme_font_size_override("font_size", 11)
 	death_type_label.add_theme_color_override("font_color", Color(0.44, 0.82, 0.72, 1.0))
+	death_type_label.autowrap_mode = TextServer.AUTOWRAP_OFF
 
-	detail_label.add_theme_font_size_override("font_size", 15)
+	detail_label.add_theme_font_size_override("font_size", 11)
 	detail_label.add_theme_color_override("font_color", Color(0.68, 0.86, 0.78, 1.0))
+	detail_label.autowrap_mode = TextServer.AUTOWRAP_OFF
 
-	restart_button.text = "> RESTART"
-	restart_button.add_theme_font_size_override("font_size", 18)
+	restart_button.text = "> RESTART CHECKPOINT" if use_checkpoint_restart else "> RESTART LEVEL"
+	restart_button.add_theme_font_size_override("font_size", 13)
 	restart_button.add_theme_color_override("font_color", Color(0.04, 0.07, 0.06, 1.0))
 	restart_button.add_theme_color_override("font_focus_color", Color(0.04, 0.07, 0.06, 1.0))
 

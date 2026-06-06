@@ -78,6 +78,20 @@ func kill_with_overlay(death_type: String, overlay_scene: PackedScene) -> void:
 	last_status = "showing overlay"
 	call_deferred("_show_game_over", death_type, overlay_scene if overlay_scene != null else game_over_scene, true)
 
+func restart_from_checkpoint(death_type: String = "pause_restart") -> bool:
+	if respawning:
+		last_status = "manual restart blocked: respawning"
+		return false
+
+	if not has_checkpoint or not is_checkpoint_for_current_scene():
+		last_status = "manual restart: no checkpoint"
+		return false
+
+	last_death_type = death_type
+	death_pending = false
+	_begin_respawn(death_type)
+	return true
+
 func _show_game_over(death_type: String, overlay_scene: PackedScene, use_checkpoint_restart: bool) -> void:
 	if overlay_scene == null:
 		if use_checkpoint_restart:
@@ -159,6 +173,7 @@ func _respawn(death_type: String) -> void:
 		pollux.sleeping = false
 
 	reset_hazards()
+	reset_level_2_elevators()
 	respawning = false
 	last_status = "respawned"
 	respawned.emit(death_type)
@@ -216,3 +231,19 @@ func reset_hazards_recursive(root: Node) -> void:
 
 	for child in root.get_children():
 		reset_hazards_recursive(child)
+
+func reset_level_2_elevators() -> void:
+	var current_scene := get_tree().current_scene
+	if current_scene == null or current_scene.scene_file_path != "res://levels/level_2/Level2.tscn":
+		return
+
+	reset_level_2_elevators_recursive(current_scene)
+
+func reset_level_2_elevators_recursive(root: Node) -> void:
+	if root.has_method("force_reset_to_start"):
+		root.call("force_reset_to_start")
+	elif root.has_method("reset_to_start"):
+		root.call("reset_to_start")
+
+	for child in root.get_children():
+		reset_level_2_elevators_recursive(child)

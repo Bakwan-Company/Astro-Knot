@@ -7,9 +7,11 @@ const MAIN_MENU_PATH := "res://MainMenu.tscn"
 
 @export var bridge_camera_hold_time: float = 0.35
 @export var bridge_camera_shake_strength: float = 9.0
-@export var ending_fall_duration: float = 7.0
+@export var ending_fall_duration: float = 9.0
+@export var ending_fade_start_time: float = 7.6
 @export var ending_rock_spawn_interval: float = 0.11
-@export var ending_camera_shake_strength: float = 22.0
+@export var ending_camera_shake_strength: float = 12.0
+@export var ending_fade_duration: float = 1.0
 @export var ending_the_end_hold_time: float = 4.0
 @export var ending_rumble_volume_db: float = -2.0
 @export var ending_rumble_fade_in_time: float = 0.35
@@ -23,6 +25,7 @@ const MAIN_MENU_PATH := "res://MainMenu.tscn"
 @onready var bridge_manager = %BridgeManager
 @onready var bridge_camera_focus: Marker2D = %BridgeCameraFocus
 @onready var camera: Camera2D = $Camera2D
+@onready var skeleton_cutscene_trigger: Area2D = $EndLv/skeleton/ComicCutsceneTrigger
 @onready var ending_computer_trigger: Area2D = $EndLv/computer/ComicCutsceneTrigger
 @onready var castor: CharacterBody2D = $Castor
 @onready var pollux: RigidBody2D = $Pollux
@@ -30,10 +33,12 @@ const MAIN_MENU_PATH := "res://MainMenu.tscn"
 
 var bridge_cutscene_id: int = 0
 var ending_sequence_started: bool = false
+var skeleton_battery_change_applied: bool = false
 var ending_rumble_player: AudioStreamPlayer
 
 func _ready() -> void:
 	BgmManager.play_level_3()
+	_set_castor_battery_second()
 
 	if button_laser and laser_gate:
 		button_laser.button_toggled.connect(laser_gate._on_button_toggled)
@@ -41,6 +46,8 @@ func _ready() -> void:
 		button_pillar.button_toggled.connect(_on_button_pillar_toggled)
 	if terminal and bridge_manager:
 		terminal.terminal_activated.connect(_on_terminal_activated)
+	if skeleton_cutscene_trigger and skeleton_cutscene_trigger.has_signal("cutscene_finished"):
+		skeleton_cutscene_trigger.connect("cutscene_finished", _on_skeleton_cutscene_finished)
 	if ending_computer_trigger and ending_computer_trigger.has_signal("cutscene_finished"):
 		ending_computer_trigger.connect("cutscene_finished", _on_ending_computer_cutscene_finished)
 
@@ -67,6 +74,13 @@ func _on_terminal_activated(is_on: bool) -> void:
 	if camera and camera.has_method("follow_players"):
 		camera.call("follow_players")
 
+func _on_skeleton_cutscene_finished() -> void:
+	if skeleton_battery_change_applied:
+		return
+
+	skeleton_battery_change_applied = true
+	_set_castor_battery_first_blinking()
+
 func _on_ending_computer_cutscene_finished() -> void:
 	if ending_sequence_started:
 		return
@@ -80,11 +94,15 @@ func _play_ending_sequence() -> void:
 
 	if camera and camera.has_method("follow_players"):
 		camera.call("follow_players")
-	if camera and camera.has_method("shake"):
-		camera.call("shake", ending_fall_duration, ending_camera_shake_strength)
+	var shake_duration := ending_fall_duration + ending_fade_duration + 0.25
+	if camera and camera.has_method("shake_constant"):
+		camera.call("shake_constant", shake_duration, ending_camera_shake_strength)
+	elif camera and camera.has_method("shake"):
+		camera.call("shake", shake_duration, ending_camera_shake_strength)
 
-	await _spawn_ending_rocks()
-	await _fade_out_ending_rumble()
+	_spawn_ending_rocks()
+	await get_tree().create_timer(minf(ending_fade_start_time, ending_fall_duration)).timeout
+	_fade_out_ending_rumble()
 	await _show_the_end_overlay()
 
 	if ResourceLoader.exists(MAIN_MENU_PATH):
@@ -102,6 +120,34 @@ func _freeze_ending_players() -> void:
 		pollux.angular_velocity = 0.0
 		pollux.freeze = true
 		pollux.sleeping = true
+
+func _set_castor_battery_second() -> void:
+	if castor == null:
+		return
+
+	if castor.has_method("set_battery_state"):
+		castor.call("set_battery_state", 2)
+	else:
+		castor.set("battery_state", 2)
+
+	if castor.has_method("set_low_battery_blink"):
+		castor.call("set_low_battery_blink", false)
+	else:
+		castor.set("low_battery_blink", false)
+
+func _set_castor_battery_first_blinking() -> void:
+	if castor == null:
+		return
+
+	if castor.has_method("set_battery_state"):
+		castor.call("set_battery_state", 3)
+	else:
+		castor.set("battery_state", 3)
+
+	if castor.has_method("set_low_battery_blink"):
+		castor.call("set_low_battery_blink", true)
+	else:
+		castor.set("low_battery_blink", true)
 
 func _play_ending_rumble() -> void:
 	ending_rumble_player = AudioStreamPlayer.new()
@@ -188,7 +234,7 @@ func _show_the_end_overlay() -> void:
 	overlay.add_child(end_image)
 
 	var tween := create_tween()
-	tween.tween_property(fade, "color:a", 1.0, 1.0)
+	tween.tween_property(fade, "color:a", 1.0, ending_fade_duration)
 	tween.tween_property(end_image, "modulate:a", 1.0, 1.2)
 	await tween.finished
 	await get_tree().create_timer(ending_the_end_hold_time).timeout
