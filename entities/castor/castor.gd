@@ -1,5 +1,7 @@
 extends CharacterBody2D
 
+const JUMP_SFX := preload("res://asset/Audio/jump.mp3")
+
 enum BatteryState {
 	FULL,
 	THIRD,
@@ -21,6 +23,8 @@ enum BatteryState {
 @export var move_loop_playing_volume_db: float = -18.0
 @export var move_loop_silent_volume_db: float = -45.0
 @export var move_loop_min_speed: float = 8.0
+@export var jump_volume_db: float = -3.0
+@export var jump_start_offset: float = 0.05
 
 var gravity: float = ProjectSettings.get_setting("physics/2d/default_gravity")
 var facing_direction: int = 1
@@ -37,7 +41,15 @@ var controls_frozen: bool = false
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var move_loop_player: AudioStreamPlayer2D = get_node_or_null("MoveLoopPlayer") as AudioStreamPlayer2D
 
+var jump_player: AudioStreamPlayer2D
+
 func _ready() -> void:
+	jump_player = AudioStreamPlayer2D.new()
+	jump_player.name = "JumpSfx"
+	jump_player.stream = JUMP_SFX
+	jump_player.volume_db = jump_volume_db
+	add_child(jump_player)
+
 	configure_looping_audio(move_loop_player)
 	if animated_sprite:
 		animated_sprite.animation_finished.connect(_on_animation_finished)
@@ -76,6 +88,10 @@ func _physics_process(delta: float) -> void:
 	# 2. LOMPAT
 	if Input.is_action_just_pressed("jump") and is_on_floor() and not GameplayInputGate.is_jump_suppressed():
 		velocity.y = jump_velocity
+		if jump_player:
+			jump_player.stop()
+			jump_player.volume_db = jump_volume_db
+			jump_player.play(jump_start_offset)
 
 	# 3. INPUT GERAK HORIZONTAL
 	var direction = Input.get_axis("move_left", "move_right")
