@@ -16,6 +16,7 @@ signal canceled
 @onready var no_button: Button = $Dimmer/Panel/Margin/VBox/Buttons/NoButton
 
 func _ready() -> void:
+	add_to_group("gameplay_input_blocker")
 	apply_text()
 	yes_button.pressed.connect(_on_yes_pressed)
 	no_button.pressed.connect(_on_no_pressed)

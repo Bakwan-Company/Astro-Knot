@@ -92,6 +92,7 @@ signal tether_broken(death_type: String)
 @export var throw_aim_rotate_speed_deg: float = 180.0
 @export var throw_max_up_angle_deg: float = 75.0
 @export var throw_max_down_angle_deg: float = 60.0
+@export var throw_gamepad_aim_deadzone: float = 0.25
 @export var throw_gravity_scale: float = 1.1
 @export var throw_linear_damp: float = 0.1
 @export var throw_flight_grace_time: float = 0.18
@@ -207,6 +208,7 @@ func configure_looping_audio(player: AudioStreamPlayer2D) -> void:
 func should_play_reel_loop_audio() -> bool:
 	return tether_connected \
 		and throw_state == ThrowState.NORMAL \
+		and not is_gameplay_input_blocked() \
 		and (Input.is_action_pressed("reel_in") or Input.is_action_pressed("reel_out"))
 
 func update_rope_audio_position() -> void:
@@ -295,7 +297,7 @@ func _physics_process(delta: float) -> void:
 	if not tether_connected or tether_is_broken or not castor or not pollux:
 		return
 
-	if are_controls_frozen():
+	if are_controls_frozen() or is_gameplay_input_blocked():
 		update_reel_loop_audio(false)
 		update_rope_debug_snapshot()
 		return
@@ -324,6 +326,9 @@ func _physics_process(delta: float) -> void:
 
 func are_controls_frozen() -> bool:
 	return castor.get_meta("controls_frozen", false) or pollux.get_meta("controls_frozen", false)
+
+func is_gameplay_input_blocked() -> bool:
+	return get_tree().get_node_count_in_group("gameplay_input_blocker") > 0
 
 func set_tether_connected(value: bool) -> void:
 	tether_connected = value
@@ -937,6 +942,11 @@ func get_throw_ready_position() -> Vector2:
 	return get_throw_ready_anchor_position() - pollux_anchor_offset
 
 func update_throw_aim_direction(_delta: float) -> void:
+	var aim_vector := Input.get_vector("aim_left", "aim_right", "aim_up", "aim_down", throw_gamepad_aim_deadzone)
+	if aim_vector.length() >= throw_gamepad_aim_deadzone:
+		set_throw_aim_from_vector(aim_vector)
+		return
+
 	var horizontal_input = Input.get_action_strength("move_right") - Input.get_action_strength("move_left")
 
 	if abs(horizontal_input) > 0.001:
@@ -944,6 +954,23 @@ func update_throw_aim_direction(_delta: float) -> void:
 		throw_aim_angle_deg = clamp(throw_aim_angle_deg, -180.0, 0.0)
 
 	rebuild_throw_aim_dir()
+
+func set_throw_aim_from_vector(aim_vector: Vector2) -> void:
+	if aim_vector.length() <= 0.001:
+		return
+
+	var side := -1 if aim_vector.x < -0.001 else 1
+	if abs(aim_vector.x) <= 0.001:
+		side = get_throw_ready_facing()
+
+	var local_vector := Vector2(abs(aim_vector.x), aim_vector.y).normalized()
+	var local_angle_deg := rad_to_deg(local_vector.angle())
+	local_angle_deg = clamp(local_angle_deg, -throw_max_up_angle_deg, throw_max_down_angle_deg)
+
+	var local_angle_rad := deg_to_rad(local_angle_deg)
+	throw_aim_side = side
+	throw_aim_dir = Vector2(cos(local_angle_rad) * float(side), sin(local_angle_rad)).normalized()
+	throw_aim_angle_deg = rad_to_deg(throw_aim_dir.angle())
 
 func release_throw() -> void:
 	var throw_power = lerp(min_throw_power, max_throw_power, get_throw_charge_ratio())

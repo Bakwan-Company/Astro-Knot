@@ -128,7 +128,7 @@ func _process(_delta: float) -> void:
 			open_confirm()
 		return
 
-	if Input.is_action_just_pressed("interact") or Input.is_action_just_pressed("ui_accept"):
+	if Input.is_action_just_pressed("ui_accept"):
 		confirm()
 	elif Input.is_action_just_pressed("ui_cancel"):
 		cancel()

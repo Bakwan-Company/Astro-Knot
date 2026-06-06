@@ -22,12 +22,15 @@ func _ready() -> void:
 	main_menu_button.pressed.connect(go_to_main_menu)
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("ui_cancel"):
+	if event.is_action_pressed("pause"):
 		get_viewport().set_input_as_handled()
 		if is_open:
 			resume_game()
 		elif not get_tree().paused:
 			pause_game()
+	elif is_open and event.is_action_pressed("ui_cancel"):
+		get_viewport().set_input_as_handled()
+		resume_game()
 
 func pause_game() -> void:
 	is_open = true

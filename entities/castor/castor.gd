@@ -59,6 +59,13 @@ func _physics_process(delta: float) -> void:
 		update_move_loop_audio()
 		return
 
+	if is_gameplay_input_blocked():
+		velocity.x = 0.0
+		move_and_slide()
+		update_sprite_animation(delta, 0.0)
+		update_move_loop_audio()
+		return
+
 	if is_throw_mode_locked:
 		velocity.x = 0.0
 		move_and_slide()
@@ -160,6 +167,9 @@ func set_controls_frozen(frozen: bool) -> void:
 	set_meta("controls_frozen", frozen)
 	if frozen:
 		velocity.x = 0.0
+
+func is_gameplay_input_blocked() -> bool:
+	return get_tree().get_node_count_in_group("gameplay_input_blocker") > 0
 
 func get_facing_direction() -> int:
 	return facing_direction

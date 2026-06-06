@@ -107,9 +107,12 @@ func _unhandled_input(event: InputEvent) -> void:
 	if is_closing or is_intro_playing or is_page_animating:
 		return
 
-	if event.is_action_pressed("ui_accept") or event.is_action_pressed("interact") or event.is_action_pressed("jump"):
+	if event.is_action_pressed("ui_accept") or event.is_action_pressed("jump"):
 		get_viewport().set_input_as_handled()
 		next_page()
+	elif event.is_action_pressed("ui_cancel") or event.is_action_pressed("interact"):
+		get_viewport().set_input_as_handled()
+		previous_page()
 	elif event.is_action_pressed("ui_left"):
 		get_viewport().set_input_as_handled()
 		previous_page()

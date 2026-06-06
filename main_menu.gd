@@ -1,10 +1,13 @@
 extends Control
 
+@onready var play_button: Button = $VBoxContainer/Play
+
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
 	get_tree().paused = false
 	BgmManager.play_main_menu()
+	play_button.grab_focus()
 
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
