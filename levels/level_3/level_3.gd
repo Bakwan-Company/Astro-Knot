@@ -1,9 +1,9 @@
 extends Node2D
 
 const END_ROCK_TEXTURE := preload("res://asset/Interactables and Hazards/Rock1_5_no_shadow.png")
-const THE_END_TEXTURE := preload("res://asset/end/the_end.jpg")
+const ENDING_PANEL_TEXTURE := preload("res://asset/Comics/Level3/last/Level4Panel6_202605291957_37449.png")
 const ENDING_RUMBLE_SFX := preload("res://asset/Audio/rubble.mp3")
-const MAIN_MENU_PATH := "res://MainMenu.tscn"
+const MAIN_MENU_PATH := "res://ui/main_menu/MainMenu.tscn"
 
 @export var bridge_camera_hold_time: float = 0.35
 @export var bridge_camera_shake_strength: float = 9.0
@@ -12,7 +12,7 @@ const MAIN_MENU_PATH := "res://MainMenu.tscn"
 @export var ending_rock_spawn_interval: float = 0.11
 @export var ending_camera_shake_strength: float = 12.0
 @export var ending_fade_duration: float = 1.0
-@export var ending_the_end_hold_time: float = 4.0
+@export var ending_input_arm_delay: float = 0.2
 @export var ending_rumble_volume_db: float = -2.0
 @export var ending_rumble_fade_in_time: float = 0.35
 @export var ending_rumble_fade_out_time: float = 0.85
@@ -33,6 +33,8 @@ const MAIN_MENU_PATH := "res://MainMenu.tscn"
 
 var bridge_cutscene_id: int = 0
 var ending_sequence_started: bool = false
+var ending_waiting_for_input: bool = false
+var ending_input_received: bool = false
 var skeleton_battery_change_applied: bool = false
 var ending_rumble_player: AudioStreamPlayer
 
@@ -104,9 +106,6 @@ func _play_ending_sequence() -> void:
 	await get_tree().create_timer(minf(ending_fade_start_time, ending_fall_duration)).timeout
 	_fade_out_ending_rumble()
 	await _show_the_end_overlay()
-
-	if ResourceLoader.exists(MAIN_MENU_PATH):
-		get_tree().change_scene_to_file(MAIN_MENU_PATH)
 
 func _freeze_ending_players() -> void:
 	if rope_manager:
@@ -220,21 +219,59 @@ func _show_the_end_overlay() -> void:
 	overlay.layer = 100
 	add_child(overlay)
 
-	var fade := ColorRect.new()
-	fade.color = Color(0, 0, 0, 0)
-	fade.set_anchors_preset(Control.PRESET_FULL_RECT)
-	overlay.add_child(fade)
+	var black_background := ColorRect.new()
+	black_background.color = Color(0, 0, 0, 0)
+	black_background.set_anchors_preset(Control.PRESET_FULL_RECT)
+	overlay.add_child(black_background)
 
 	var end_image := TextureRect.new()
-	end_image.texture = THE_END_TEXTURE
+	end_image.texture = ENDING_PANEL_TEXTURE
 	end_image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	end_image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	end_image.modulate = Color(1, 1, 1, 0)
 	end_image.set_anchors_preset(Control.PRESET_FULL_RECT)
 	overlay.add_child(end_image)
 
+	var fade_to_black := ColorRect.new()
+	fade_to_black.color = Color(0, 0, 0, 0)
+	fade_to_black.set_anchors_preset(Control.PRESET_FULL_RECT)
+	overlay.add_child(fade_to_black)
+
 	var tween := create_tween()
-	tween.tween_property(fade, "color:a", 1.0, ending_fade_duration)
+	tween.tween_property(black_background, "color:a", 1.0, ending_fade_duration)
 	tween.tween_property(end_image, "modulate:a", 1.0, 1.2)
 	await tween.finished
-	await get_tree().create_timer(ending_the_end_hold_time).timeout
+	await get_tree().create_timer(ending_input_arm_delay).timeout
+
+	ending_input_received = false
+	ending_waiting_for_input = true
+	while not ending_input_received:
+		await get_tree().process_frame
+	ending_waiting_for_input = false
+
+	var exit_tween := create_tween()
+	exit_tween.tween_property(fade_to_black, "color:a", 1.0, ending_fade_duration)
+	await exit_tween.finished
+
+	if ResourceLoader.exists(MAIN_MENU_PATH):
+		get_tree().change_scene_to_file(MAIN_MENU_PATH)
+
+func _input(event: InputEvent) -> void:
+	if not ending_waiting_for_input or ending_input_received:
+		return
+
+	if _is_ending_continue_event(event):
+		ending_input_received = true
+
+func _is_ending_continue_event(event: InputEvent) -> bool:
+	if event is InputEventKey:
+		return event.pressed and not event.echo
+	if event is InputEventMouseButton:
+		return event.pressed
+	if event is InputEventJoypadButton:
+		return event.pressed
+	if event is InputEventScreenTouch:
+		return event.pressed
+	if event is InputEventAction:
+		return event.pressed
+	return false
