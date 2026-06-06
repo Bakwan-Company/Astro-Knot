@@ -74,7 +74,7 @@ func _physics_process(delta: float) -> void:
 		return
 
 	# 2. LOMPAT
-	if Input.is_action_just_pressed("jump") and is_on_floor():
+	if Input.is_action_just_pressed("jump") and is_on_floor() and not GameplayInputGate.is_jump_suppressed():
 		velocity.y = jump_velocity
 
 	# 3. INPUT GERAK HORIZONTAL

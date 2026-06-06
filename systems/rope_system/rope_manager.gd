@@ -845,10 +845,10 @@ func handle_throw_state(delta: float) -> void:
 				cancel_throw_mode()
 				return
 			if throw_ready_wait_for_release:
-				if not Input.is_action_pressed("jump"):
+				if not is_jump_pressed_for_gameplay():
 					throw_ready_wait_for_release = false
 				return
-			if Input.is_action_just_pressed("jump"):
+			if Input.is_action_just_pressed("jump") and not GameplayInputGate.is_jump_suppressed():
 				set_throw_state(ThrowState.THROW_CHARGING)
 				throw_charge_elapsed = 0.0
 				throw_charge_ratio = 0.0
@@ -860,7 +860,7 @@ func handle_throw_state(delta: float) -> void:
 			if Input.is_action_just_pressed("throw_pollux"):
 				cancel_throw_mode()
 				return
-			if Input.is_action_pressed("jump"):
+			if is_jump_pressed_for_gameplay():
 				throw_charge_elapsed = min(throw_charge_elapsed + delta, throw_charge_time)
 				throw_charge_ratio = get_throw_charge_ratio()
 			if Input.is_action_just_released("jump"):
@@ -905,7 +905,7 @@ func begin_throw_mode() -> void:
 	throw_cached_rope_length = current_rope_length
 	throw_charge_elapsed = 0.0
 	throw_charge_ratio = 0.0
-	throw_ready_wait_for_release = Input.is_action_pressed("jump")
+	throw_ready_wait_for_release = is_jump_pressed_for_gameplay()
 	initialize_throw_aim_from_current()
 	set_throw_state(ThrowState.THROW_READY)
 	sync_pollux_to_throw_anchor()
@@ -954,6 +954,9 @@ func update_throw_aim_direction(_delta: float) -> void:
 		throw_aim_angle_deg = clamp(throw_aim_angle_deg, -180.0, 0.0)
 
 	rebuild_throw_aim_dir()
+
+func is_jump_pressed_for_gameplay() -> bool:
+	return Input.is_action_pressed("jump") and not GameplayInputGate.is_jump_suppressed()
 
 func set_throw_aim_from_vector(aim_vector: Vector2) -> void:
 	if aim_vector.length() <= 0.001:

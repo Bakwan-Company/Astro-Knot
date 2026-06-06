@@ -149,6 +149,7 @@ func confirm() -> void:
 	if not confirm_open:
 		return
 
+	GameplayInputGate.suppress_jump()
 	var has_external_handler := not get_signal_connection_list(&"exit_confirmed").is_empty()
 	close_confirm()
 	exit_confirmed.emit()

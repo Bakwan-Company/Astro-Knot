@@ -299,6 +299,7 @@ func _open_exit_confirm() -> void:
 	_create_exit_confirm_ui()
 
 func _confirm_exit() -> void:
+	GameplayInputGate.suppress_jump()
 	_begin_finish_sequence()
 
 func _cancel_exit() -> void:

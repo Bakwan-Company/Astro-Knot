@@ -9,17 +9,19 @@
 [ext_resource type="AudioStream" uid="uid://2il0cfqdiua4" path="res://asset/Audio/pollux_sound.mp3" id="7_pollux"]
 [ext_resource type="AudioStream" uid="uid://d2cll6f15tvb3" path="res://asset/Audio/storm_magnetic.mp3" id="8_magnetic"]
 [ext_resource type="AudioStream" uid="uid://dmb2faxuh18qk" path="res://asset/Audio/storm_wind.mp3" id="9_wind"]
+[ext_resource type="AudioStream" uid="uid://7308qgmfgd5e" path="res://asset/Audio/radio_static.mp3" id="10_static"]
 
 [node name="ComicCutscene" type="CanvasLayer" unique_id=447837178]
 process_mode = 3
 layer = 120
 script = ExtResource("1_bjv3o")
 pages = Array[Texture2D]([ExtResource("2_qq8fs"), ExtResource("3_y8n11"), ExtResource("4_dqrjk"), ExtResource("5_il5c8")])
-page_sfx_page_indices = Array[int]([0, 1, 2, 2, 3])
-page_sfx_streams = Array[AudioStream]([ExtResource("6_castor"), ExtResource("7_pollux"), ExtResource("8_magnetic"), ExtResource("9_wind"), ExtResource("6_castor")])
-page_sfx_volume_db = Array[float]([0.0, 0.0, -10.0, -5.0, 0.0])
-page_sfx_durations = Array[float]([3.0, 3.0, 5.0, 5.0, 3.0])
-page_sfx_start_offsets = Array[float]([0.0, 0.25, 0.6, 0.0, 0.45])
+page_sfx_page_indices = Array[int]([0, 1, 2, 2, 3, 3])
+page_sfx_streams = Array[AudioStream]([ExtResource("6_castor"), ExtResource("7_pollux"), ExtResource("8_magnetic"), ExtResource("9_wind"), ExtResource("6_castor"), ExtResource("10_static")])
+page_sfx_volume_db = Array[float]([0.0, 0.0, -10.0, -5.0, 0.0, -3.0])
+page_sfx_durations = Array[float]([3.0, 3.0, 5.0, 5.0, 3.0, 3.0])
+page_sfx_start_offsets = Array[float]([0.0, 0.25, 0.6, 0.0, 0.45, 0.0])
+page_sfx_start_delays = Array[float]([0.0, 0.0, 0.0, 0.0, 0.0, 3.45])
 
 [node name="Dimmer" type="ColorRect" parent="." unique_id=1988990970]
 anchors_preset = 15

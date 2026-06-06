@@ -85,6 +85,7 @@ func confirm() -> void:
 	if Time.get_ticks_msec() - confirm_opened_at_msec < 200:
 		return
 
+	GameplayInputGate.suppress_jump()
 	close_confirm()
 	is_active = true
 	_update_visual()

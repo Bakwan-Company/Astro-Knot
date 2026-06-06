@@ -16,18 +16,19 @@
 [ext_resource type="AudioStream" uid="uid://bihi72i8husdm" path="res://asset/Audio/castor_sound.mp3" id="13_castor"]
 [ext_resource type="AudioStream" uid="uid://d2cll6f15tvb3" path="res://asset/Audio/storm_magnetic.mp3" id="14_magnetic"]
 [ext_resource type="AudioStream" uid="uid://dmb2faxuh18qk" path="res://asset/Audio/storm_wind.mp3" id="15_wind"]
+[ext_resource type="AudioStream" uid="uid://7308qgmfgd5e" path="res://asset/Audio/radio_static.mp3" id="16_static"]
 
 [node name="ComicCutscene" type="CanvasLayer" unique_id=447837178]
 process_mode = 3
 layer = 120
 script = ExtResource("1_comic")
 pages = Array[Texture2D]([ExtResource("2_ujxa6"), ExtResource("3_j0lho"), ExtResource("4_phmao"), ExtResource("5_n8ycf"), ExtResource("6_j0lho"), ExtResource("6_i2s02"), ExtResource("7_i3ulk")])
-page_sfx_page_indices = Array[int]([0, 2, 2, 2, 3, 4, 5, 6])
-page_sfx_streams = Array[AudioStream]([ExtResource("8_ambient"), ExtResource("9_alarm"), ExtResource("14_magnetic"), ExtResource("15_wind"), ExtResource("10_whoosh"), ExtResource("11_crash"), ExtResource("12_burning"), ExtResource("13_castor")])
-page_sfx_pitch_scales = Array[float]([1.0, 0.44, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0])
-page_sfx_volume_db = Array[float]([0.0, 0.0, -11.0, -6.0, 0.0, 0.0, 0.0, 0.0])
-page_sfx_durations = Array[float]([0.0, 0.0, 5.0, 5.0, 0.0, 0.0, 0.0, 0.0])
-page_sfx_start_offsets = Array[float]([0.0, 0.0, 0.6, 0.0, 0.0, 0.0, 0.0, 0.0])
+page_sfx_page_indices = Array[int]([0, 2, 2, 2, 3, 4, 5, 5, 6])
+page_sfx_streams = Array[AudioStream]([ExtResource("8_ambient"), ExtResource("9_alarm"), ExtResource("14_magnetic"), ExtResource("15_wind"), ExtResource("10_whoosh"), ExtResource("11_crash"), ExtResource("12_burning"), ExtResource("16_static"), ExtResource("13_castor")])
+page_sfx_pitch_scales = Array[float]([1.0, 0.44, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0])
+page_sfx_volume_db = Array[float]([0.0, 0.0, -11.0, -6.0, 0.0, 0.0, 0.0, -3.0, 0.0])
+page_sfx_durations = Array[float]([0.0, 0.0, 5.0, 5.0, 0.0, 0.0, 0.0, 3.0, 0.0])
+page_sfx_start_offsets = Array[float]([0.0, 0.0, 0.6, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
 
 [node name="Dimmer" type="ColorRect" parent="." unique_id=1988990970]
 anchors_preset = 15
