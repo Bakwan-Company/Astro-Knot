@@ -15,6 +15,7 @@ signal restart_requested
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_apply_terminal_style()
+	UiSfx.bind_button(restart_button, false)
 	restart_button.pressed.connect(restart_level)
 	update_copy()
 	restart_button.grab_focus()
@@ -108,6 +109,7 @@ func _apply_terminal_style() -> void:
 	restart_button.add_theme_stylebox_override("focus", button_style)
 
 func restart_level() -> void:
+	UiSfx.play_click()
 	get_tree().paused = false
 	if use_checkpoint_restart:
 		restart_requested.emit()

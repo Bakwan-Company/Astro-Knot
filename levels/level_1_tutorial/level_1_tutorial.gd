@@ -11,6 +11,8 @@ const UI_FONT := preload("res://asset/Font/SuperMarioDsRegular-Ea4R8.ttf")
 @export var area_title_shadow_color: Color = Color(1.0, 0.78, 0.42, 0.45)
 @export var area_title_hold_time: float = 1.4
 @export var area_title_fade_time: float = 0.8
+@export var entry_fade_delay: float = 0.12
+@export var entry_fade_time: float = 0.85
 @export var next_level_scene_path: String = ""
 @export var exit_prompt_text: String = "Old signal relay detected"
 @export var exit_confirm_title: String = "Follow the signal?"
@@ -48,10 +50,13 @@ var exit_canceling: bool = false
 var title_layer: CanvasLayer
 var title_group: Control
 var exit_confirm_layer: CanvasLayer
+var entry_fade_layer: CanvasLayer
 var exit_confirm_open: bool = false
 var tether_connect_comic_active: bool = false
 
 func _ready() -> void:
+	_play_entry_fade()
+
 	if opening_comic != null and opening_comic.has_signal("finished"):
 		BgmManager.stop()
 		opening_comic.connect("finished", _on_opening_comic_finished)
@@ -75,6 +80,34 @@ func _ready() -> void:
 
 func _on_opening_comic_finished() -> void:
 	BgmManager.play_level_1()
+
+func _play_entry_fade() -> void:
+	entry_fade_layer = CanvasLayer.new()
+	entry_fade_layer.name = "LevelEntryFade"
+	entry_fade_layer.layer = 200
+	entry_fade_layer.process_mode = Node.PROCESS_MODE_ALWAYS
+	add_child(entry_fade_layer)
+
+	var fade_rect: ColorRect = ColorRect.new()
+	fade_rect.name = "FadeBlack"
+	fade_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+	fade_rect.anchor_right = 1.0
+	fade_rect.anchor_bottom = 1.0
+	fade_rect.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	fade_rect.grow_vertical = Control.GROW_DIRECTION_BOTH
+	fade_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	fade_rect.color = Color(0.0, 0.0, 0.0, 1.0)
+	entry_fade_layer.add_child(fade_rect)
+
+	var tween: Tween = create_tween()
+	tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	tween.tween_interval(entry_fade_delay)
+	tween.tween_property(fade_rect, "color:a", 0.0, entry_fade_time).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tween.tween_callback(func() -> void:
+		if entry_fade_layer != null and is_instance_valid(entry_fade_layer):
+			entry_fade_layer.queue_free()
+		entry_fade_layer = null
+	)
 
 func _process(delta: float) -> void:
 	if level_failed or level_completed:

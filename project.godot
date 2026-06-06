@@ -11,13 +11,14 @@ config_version=5
 [application]
 
 config/name="Astro-Knot"
-run/main_scene="uid://caluvysxhdvw1"
+run/main_scene="res://ui/main_menu/MainMenu.tscn"
 config/features=PackedStringArray("4.6", "GL Compatibility")
 config/icon="res://icon.svg"
 
 [autoload]
 
 BgmManager="*res://systems/bgm_manager.gd"
+UiSfx="*res://systems/ui_sfx.gd"
 CheckpointManager="*res://systems/checkpoint/checkpoint_manager.gd"
 
 [display]

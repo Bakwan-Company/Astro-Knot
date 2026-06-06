@@ -1,6 +1,6 @@
 extends CanvasLayer
 
-@export var main_menu_scene_path: String = "res://MainMenu.tscn"
+@export var main_menu_scene_path: String = "res://ui/main_menu/MainMenu.tscn"
 
 @onready var dimmer: ColorRect = $Dimmer
 @onready var panel: PanelContainer = $Screen/Panel
@@ -17,6 +17,9 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	visible = false
 	_apply_placeholder_style()
+	UiSfx.bind_button(resume_button)
+	UiSfx.bind_button(restart_button)
+	UiSfx.bind_button(main_menu_button)
 	resume_button.pressed.connect(resume_game)
 	restart_button.pressed.connect(restart_checkpoint)
 	main_menu_button.pressed.connect(go_to_main_menu)
@@ -25,11 +28,14 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("pause"):
 		get_viewport().set_input_as_handled()
 		if is_open:
+			UiSfx.play_browse()
 			resume_game()
 		elif not get_tree().paused:
+			UiSfx.play_browse()
 			pause_game()
 	elif is_open and event.is_action_pressed("ui_cancel"):
 		get_viewport().set_input_as_handled()
+		UiSfx.play_browse()
 		resume_game()
 
 func pause_game() -> void:

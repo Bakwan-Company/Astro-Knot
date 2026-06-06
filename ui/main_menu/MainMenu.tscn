@@ -1,0 +1,174 @@
+[gd_scene load_steps=6 format=3 uid="uid://caluvysxhdvw1"]
+
+[ext_resource type="Script" uid="uid://co6jaixkjgm16" path="res://ui/main_menu/main_menu.gd" id="1_menu_script"]
+[ext_resource type="Texture2D" uid="uid://fp2taoj6ya8w" path="res://asset/MainMenu/bg_space.png" id="2_bg_space"]
+[ext_resource type="Texture2D" uid="uid://d15ao5smkhuj0" path="res://asset/MainMenu/planet_ulbul.png" id="3_planet_ulbul"]
+[ext_resource type="Texture2D" uid="uid://c7hsp2kas7dbt" path="res://asset/MainMenu/title_astroknot.png" id="4_title_astroknot"]
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_glow"]
+blend_mode = 1
+
+[node name="MainMenu" type="Control" unique_id=1258392142]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_menu_script")
+
+[node name="BaseBlack" type="ColorRect" parent="." unique_id=307498655]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 1)
+
+[node name="Visuals" type="Control" parent="." unique_id=1731046896]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="BgSpace" type="TextureRect" parent="Visuals" unique_id=1920759732]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("2_bg_space")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="ShootingStars" type="CPUParticles2D" parent="Visuals" unique_id=1812531673]
+unique_name_in_owner = true
+position = Vector2(700, 12)
+emitting = false
+amount = 3
+lifetime = 0.78
+explosiveness = 0.92
+randomness = 0.18
+emission_shape = 3
+emission_rect_extents = Vector2(448, 64.8)
+direction = Vector2(-0.864, 0.503)
+spread = 2.0
+gravity = Vector2(0, 0)
+initial_velocity_min = 860.0
+initial_velocity_max = 1040.0
+scale_amount_min = 0.85
+scale_amount_max = 1.15
+color = Color(0.72, 0.92, 1, 0.95)
+
+[node name="PlanetLayer" type="Control" parent="Visuals" unique_id=1347605944]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="PlanetGlow" type="TextureRect" parent="Visuals/PlanetLayer" unique_id=37791671]
+unique_name_in_owner = true
+material = SubResource("CanvasItemMaterial_glow")
+layout_mode = 0
+offset_left = -108.0
+offset_top = -218.0
+offset_right = 204.5
+offset_bottom = 94.5
+scale = Vector2(2.56, 2.56)
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Planet" type="TextureRect" parent="Visuals/PlanetLayer" unique_id=603606293]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 0.4
+offset_top = -139.905
+offset_right = 250.40012
+offset_bottom = 110.09491
+scale = Vector2(2.56, 2.56)
+mouse_filter = 2
+texture = ExtResource("3_planet_ulbul")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="MenuLayer" type="Control" parent="." unique_id=1171142250]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Title" type="TextureRect" parent="MenuLayer" unique_id=106792847]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -446.02
+offset_top = 26.47
+offset_right = -136.01999
+offset_bottom = 116.47
+grow_horizontal = 2
+scale = Vector2(1.725, 1.725)
+mouse_filter = 2
+texture = ExtResource("4_title_astroknot")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ButtonStack" type="VBoxContainer" parent="MenuLayer" unique_id=462436848]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -235.625
+offset_top = 34.0
+offset_right = -111.62491
+offset_bottom = 108.00003
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 10
+
+[node name="PlayButton" type="Button" parent="MenuLayer/ButtonStack" unique_id=2145013640]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(120, 28)
+layout_mode = 2
+focus_neighbor_bottom = NodePath("../QuitButton")
+text = "PLAY"
+
+[node name="QuitButton" type="Button" parent="MenuLayer/ButtonStack" unique_id=322063938]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(120, 28)
+layout_mode = 2
+focus_neighbor_top = NodePath("../PlayButton")
+text = "QUIT"
+
+[node name="FadeBlack" type="ColorRect" parent="." unique_id=1784264092]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0)
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=2121362555]
+unique_name_in_owner = true
+
+[connection signal="pressed" from="MenuLayer/ButtonStack/PlayButton" to="." method="_on_play_button_pressed"]
+[connection signal="pressed" from="MenuLayer/ButtonStack/QuitButton" to="." method="_on_quit_button_pressed"]

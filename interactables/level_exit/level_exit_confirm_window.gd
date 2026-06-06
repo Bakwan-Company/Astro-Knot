@@ -18,6 +18,8 @@ signal canceled
 func _ready() -> void:
 	add_to_group("gameplay_input_blocker")
 	apply_text()
+	UiSfx.bind_button(yes_button, false)
+	UiSfx.bind_button(no_button, false)
 	yes_button.pressed.connect(_on_yes_pressed)
 	no_button.pressed.connect(_on_no_pressed)
 	yes_button.grab_focus()
@@ -33,7 +35,9 @@ func apply_text() -> void:
 	no_button.text = no_text
 
 func _on_yes_pressed() -> void:
+	UiSfx.play_click()
 	confirmed.emit()
 
 func _on_no_pressed() -> void:
+	UiSfx.play_click()
 	canceled.emit()
