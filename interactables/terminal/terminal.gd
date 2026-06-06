@@ -2,6 +2,9 @@ extends Area2D
 
 signal terminal_activated(is_on: bool)
 
+const InteractableOutline := preload("res://interactables/interactable_outline.gd")
+const PolluxInteractSfx := preload("res://systems/pollux_interact_sfx.gd")
+
 @export var terminal_off: Texture2D
 @export var terminal_on: Texture2D
 @export var activation_speed_threshold: float = 40.0
@@ -10,11 +13,18 @@ signal terminal_activated(is_on: bool)
 
 var is_active: bool = false
 var pollux_body: RigidBody2D
+var interact_outline: Node
 
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)
 	body_exited.connect(_on_body_exited)
+	interact_outline = InteractableOutline.new()
+	visual_sprite.add_child(interact_outline)
+	interact_outline.setup(visual_sprite)
 	_update_visual()
+
+func _process(_delta: float) -> void:
+	_update_interact_outline()
 
 func _on_body_entered(body: Node2D) -> void:
 	if body.name == "Pollux" and body is RigidBody2D:
@@ -29,6 +39,7 @@ func _input(event: InputEvent) -> void:
 		toggle_terminal()
 
 func toggle_terminal() -> void:
+	PolluxInteractSfx.play_at(self, global_position)
 	is_active = !is_active
 	terminal_activated.emit(is_active)
 	_update_visual()
@@ -38,6 +49,11 @@ func _update_visual() -> void:
 		return
 
 	visual_sprite.texture = terminal_on if is_active else terminal_off
+	_update_interact_outline()
+
+func _update_interact_outline() -> void:
+	if interact_outline != null:
+		interact_outline.set_active(can_pollux_activate_terminal())
 
 func can_pollux_activate_terminal() -> bool:
 	if not is_instance_valid(pollux_body):

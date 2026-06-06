@@ -3,6 +3,8 @@ extends Area2D
 signal terminal_activated(is_on: bool)
 
 const DEFAULT_CONFIRM_WINDOW := preload("res://interactables/level_exit/LevelExitConfirmWindow.tscn")
+const InteractableOutline := preload("res://interactables/interactable_outline.gd")
+const PolluxInteractSfx := preload("res://systems/pollux_interact_sfx.gd")
 
 @export var terminal_off: Texture2D
 @export var terminal_on: Texture2D
@@ -32,13 +34,19 @@ var confirm_opened_at_msec: int = 0
 var active_comic_cutscene: CanvasLayer
 var comic_focus_camera: Camera2D
 var comic_focus_camera_was_processing: bool = true
+var interact_outline: Node
 
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)
 	body_exited.connect(_on_body_exited)
+	interact_outline = InteractableOutline.new()
+	visual_sprite.add_child(interact_outline)
+	interact_outline.setup(visual_sprite)
 	_update_visual()
 
 func _process(_delta: float) -> void:
+	_update_interact_outline()
+
 	if not confirm_open and Input.is_action_just_pressed("interact") and _can_open_confirm():
 		open_confirm()
 		return
@@ -57,6 +65,7 @@ func open_confirm() -> void:
 	if is_active or confirm_open or confirm_window_scene == null:
 		return
 
+	PolluxInteractSfx.play_at(self, global_position)
 	confirm_open = true
 	confirm_input_enabled = false
 	confirm_opened_at_msec = Time.get_ticks_msec()
@@ -163,6 +172,11 @@ func _update_visual() -> void:
 		return
 
 	visual_sprite.texture = terminal_on if is_active else terminal_off
+	_update_interact_outline()
+
+func _update_interact_outline() -> void:
+	if interact_outline != null:
+		interact_outline.set_active(_can_open_confirm())
 
 func _has_valid_body_nearby() -> bool:
 	var current_scene := get_tree().current_scene

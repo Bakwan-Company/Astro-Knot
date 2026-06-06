@@ -1,9 +1,14 @@
 extends AnimatableBody2D
 
+const InteractableOutline := preload("res://interactables/interactable_outline.gd")
+const PolluxInteractSfx := preload("res://systems/pollux_interact_sfx.gd")
+
 @export var rise_distance: float = 256.0
 @export var move_duration: float = 1.25
 @export var can_return: bool = false
 @export var required_body_names: PackedStringArray = ["Castor", "Pollux"]
+
+@onready var visual_sprite: Sprite2D = $Sprite2D
 
 var _start_position: Vector2
 var _is_up: bool = false
@@ -13,11 +18,18 @@ var _bodies_in_range: Array[Node2D] = []
 var _frozen_bodies: Array[Node2D] = []
 var _previous_body_frozen_meta: Dictionary = {}
 var _move_tween: Tween
+var _interact_outline: Node
 
 func _ready() -> void:
 	_start_position = global_position
 	$InteractionArea.body_entered.connect(_on_interaction_area_body_entered)
 	$InteractionArea.body_exited.connect(_on_interaction_area_body_exited)
+	_interact_outline = InteractableOutline.new()
+	visual_sprite.add_child(_interact_outline)
+	_interact_outline.setup(visual_sprite)
+
+func _process(_delta: float) -> void:
+	_update_interact_outline()
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("interact") and can_interact():
@@ -34,6 +46,7 @@ func can_interact() -> bool:
 	return _has_all_required_bodies()
 
 func activate() -> void:
+	PolluxInteractSfx.play_at(self, global_position)
 	var target_is_up := not _is_up
 	var target_position := _start_position
 	if target_is_up:
@@ -55,6 +68,12 @@ func reset_to_start() -> void:
 		return
 
 	_move_to(_start_position, false)
+
+func can_reset_to_start() -> bool:
+	if _is_moving:
+		return false
+
+	return _is_up or global_position.distance_to(_start_position) > 0.1
 
 func force_reset_to_start() -> void:
 	if _move_tween:
@@ -83,13 +102,16 @@ func _on_move_finished() -> void:
 	_is_up = _move_target_is_up
 	_is_moving = false
 	_set_lift_controls_frozen(false)
+	_update_interact_outline()
 
 func _on_interaction_area_body_entered(body: Node2D) -> void:
 	if _is_valid_interactor(body) and body not in _bodies_in_range:
 		_bodies_in_range.append(body)
+	_update_interact_outline()
 
 func _on_interaction_area_body_exited(body: Node2D) -> void:
 	_bodies_in_range.erase(body)
+	_update_interact_outline()
 
 func _is_valid_interactor(body: Node2D) -> bool:
 	return required_body_names.is_empty() or body.name in required_body_names
@@ -113,6 +135,10 @@ func _has_all_required_bodies() -> bool:
 			return false
 
 	return true
+
+func _update_interact_outline() -> void:
+	if _interact_outline != null:
+		_interact_outline.set_active(can_interact())
 
 func _set_lift_controls_frozen(frozen: bool) -> void:
 	if frozen:
