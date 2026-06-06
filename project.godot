@@ -13,7 +13,7 @@ config_version=5
 config/name="Astro-Knot"
 run/main_scene="res://ui/main_menu/MainMenu.tscn"
 config/features=PackedStringArray("4.6", "GL Compatibility")
-config/icon="res://icon.svg"
+config/icon="uid://c7hsp2kas7dbt"
 
 [autoload]
 
