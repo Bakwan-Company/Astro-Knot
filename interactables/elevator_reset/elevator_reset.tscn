@@ -10,6 +10,7 @@ size = Vector2(49, 49)
 collision_layer = 0
 collision_mask = 7
 script = ExtResource("1_pmsh1")
+valid_body_names = PackedStringArray("Pollux")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1309650378]
 position = Vector2(-0.5, 5.5)

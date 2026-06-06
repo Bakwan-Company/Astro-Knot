@@ -35,7 +35,7 @@
 [ext_resource type="PackedScene" uid="uid://b5ydk4d23bgk1" path="res://comics/level2/EnteringFacility.tscn" id="31_l7jqn"]
 [ext_resource type="PackedScene" path="res://interactables/level_enter/LevelEnter.tscn" id="32_v1ggv"]
 [ext_resource type="PackedScene" path="res://ui/pause_menu/PauseMenuOverlay.tscn" id="33_pause"]
-[ext_resource type="Script" path="res://levels/level_2/level_2.gd" id="34_level2"]
+[ext_resource type="Script" uid="uid://craupsevj2lbi" path="res://levels/level_2/level_2.gd" id="34_level2"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_njn5x"]
 texture = ExtResource("11_q15ry")
@@ -273,7 +273,7 @@ subtitle_color = Color(0.41960785, 0.61960787, 0.72156864, 1)
 shadow_color = Color(0.050980393, 0.078431375, 0.16078432, 1)
 
 [node name="Background" type="Node2D" parent="." unique_id=46571647]
-position = Vector2(0, 34)
+position = Vector2(0, 100)
 
 [node name="BackgroundParallax" type="Parallax2D" parent="Background" unique_id=1883964568]
 scroll_scale = Vector2(0.02, 0)
@@ -333,6 +333,7 @@ tile_set = SubResource("TileSet_a8vd6")
 [node name="ElevatorReset" parent="." unique_id=1244199928 instance=ExtResource("9_f6fu8")]
 position = Vector2(3546, 345)
 elevator_paths = Array[NodePath]([NodePath("../Elevator1"), NodePath("../Elevator2"), NodePath("../Elevator3")])
+valid_body_names = ["Pollux"]
 
 [node name="Decorations" type="Node2D" parent="." unique_id=230296413]
 
@@ -486,7 +487,7 @@ position = Vector2(1008, 69)
 position = Vector2(1631, 293)
 
 [node name="TerminalBigBuilding" parent="." unique_id=1201567820 instance=ExtResource("7_qvv1u")]
-position = Vector2(4509, 297)
+position = Vector2(4509, 299)
 
 [node name="DoorBigBulding" parent="." unique_id=1911176345 instance=ExtResource("6_a8vd6")]
 position = Vector2(4464, 358)
@@ -515,10 +516,10 @@ next_level_scene_path = "res://levels/level_3/Level3.tscn"
 exit_sprite_path = NodePath("Sprite2D")
 
 [node name="Castor" parent="." unique_id=975424275 instance=ExtResource("1_ks41y")]
-position = Vector2(84, 21)
+position = Vector2(84, 22)
 
 [node name="Pollux" parent="." unique_id=1878608427 instance=ExtResource("2_747xn")]
-position = Vector2(23, 21)
+position = Vector2(23, 24)
 
 [node name="Elevator3" parent="." unique_id=1460354008 instance=ExtResource("14_njn5x")]
 position = Vector2(4161, -227)
@@ -563,7 +564,7 @@ position = Vector2(5313, 376)
 [node name="LabTerminal" parent="." unique_id=2049690976 instance=ExtResource("30_5xb65")]
 position = Vector2(5634, 370)
 lab_door_path = NodePath("../LabDoorExit")
-confirm_heading = "ULBUL FACILTY ACCESS"
+confirm_heading = "ULBUL FACILITY ACCESS"
 play_comic_before_exit = true
 comic_cutscene_scene = ExtResource("31_l7jqn")
 
@@ -587,6 +588,14 @@ offset_right = 3619.0
 offset_bottom = 343.0
 theme_override_font_sizes/font_size = 5
 text = "Call Lift"
+
+[node name="Label" type="Label" parent="." unique_id=1217640683]
+offset_left = 848.0
+offset_top = 33.0
+offset_right = 983.0
+offset_bottom = 47.0
+theme_override_font_sizes/font_size = 6
+text = "Bring Pollux closer to the terminal!"
 
 [connection signal="terminal_activated" from="Terminal1" to="Door1" method="set_terminal_status"]
 [connection signal="terminal_activated" from="Terminal2" to="Door2" method="set_terminal_status"]
